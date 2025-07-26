@@ -1,0 +1,22 @@
+[package]
+name = "state"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "States"
+readme.workspace = true
+homepage.workspace = true
+repository.workspace = true
+keywords.workspace = true
+publish = false
+
+[dependencies]
+bevy = {workspace = true}
+serde = { workspace = true }
+dotenvy = { workspace = true }
+rand = { workspace = true }
+rand_chacha = { workspace = true }
+
+[lints]
+workspace = true

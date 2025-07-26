@@ -1,0 +1,28 @@
+[package]
+name = "data"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "World data"
+readme.workspace = true
+homepage.workspace = true
+repository.workspace = true
+keywords.workspace = true
+publish = false
+
+[dependencies]
+bevy = {workspace = true}
+# bevy_rapier2d = { workspace = true, features = [ "simd-stable", "debug-render-2d", "parallel" ] }
+# bevy_flowfield_tiles_plugin = { workspace = true, features = [ "2d", "ron"]}
+rand = { workspace = true, features = [ "alloc" ] }
+dirs = {workspace = true}
+ron = {workspace = true}
+# csv = "1"
+serde = { workspace = true, features = ["derive"] }
+settings = { workspace = true }
+state = { workspace = true }
+# petgraph = { workspace = true }
+
+[lints]
+workspace = true

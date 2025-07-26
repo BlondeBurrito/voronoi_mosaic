@@ -1,0 +1,96 @@
+[workspace.package]
+version = "0.1.0"
+authors = ["BlondeBurrito"]
+edition = "2024"
+rust-version = "1.88"
+readme = "README.md"
+homepage = "https://github.com/BlondeBurrito/bevy_repo_template"
+repository = "https://github.com/BlondeBurrito/bevy_repo_template"
+keywords = ["utility"]
+
+[workspace]
+members = ["crates/*"]
+
+[workspace.lints.rust]
+missing_docs = "deny"
+
+[workspace.lints.clippy]
+cargo_common_metadata = "deny"
+missing_docs_in_private_items = "deny"
+todo = "deny"
+unimplemented = "warn"
+
+# Centralised way of managing versions across all crates and packages
+[workspace.dependencies]
+settings = { path = "crates/settings" }
+state = { path = "crates/state" }
+data = { path = "crates/data" }
+menu_data = { path = "crates/menu_data" }
+utility = { path = "crates/utility" }
+register = { path = "crates/register" }
+bevy = { version = "0.16", features = ["ktx2"] }
+# bevy_avian = "0.22"
+# bevy_flowfield_tiles_plugin = "0.4"
+# bevy_replicon = "0.34"
+dirs = "6"
+rand = "0.9"
+rand_chacha = { version = "0.9", features = ["serde"] }
+ron = "0.10"
+serde = "1"
+# photon-rs = "0.3"
+dotenvy = "0.15"
+strum = { version = "0.27", features = ["derive"] }
+# diesel = { version = "2", features = [ "postgres" ] }
+
+[package]
+name = "bevy_repo_template"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "A skeleton repo"
+readme.workspace = true
+homepage.workspace = true
+repository.workspace = true
+keywords.workspace = true
+publish = false
+
+[lints]
+workspace = true
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dev-dependencies]
+criterion = "0.6"
+
+[dependencies]
+bevy = { workspace = true }
+# bevy_flowfield_tiles_plugin = { workspace = true, features = [ "2d", "ron"]}
+# photon-rs = { workspace = true }
+settings = { workspace = true }
+state = { workspace = true }
+utility = { workspace = true }
+rand = { workspace = true }
+data = { workspace = true }
+menu_data = { workspace = true }
+register = { workspace = true }
+
+[profile.dev]
+opt-level = 1
+
+[profile.flamegraph]
+inherits = "release"
+debug = true
+strip = false
+
+[profile.release]
+codegen-units = 1
+strip = true # strip symbols to reduce binary size on linux and mac
+
+[[bench]]
+name = "fib"
+harness = false
+
+[[example]]
+name = "hello"
+path = "examples/hello.rs"
