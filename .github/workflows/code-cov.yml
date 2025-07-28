@@ -2,9 +2,9 @@ name: Code-cov
 
 on:
   push:
-    branches: [ none ]
+    branches: [ main ]
   pull_request:
-    branches: [ none ]
+    branches: [ main ]
   workflow_dispatch:
     
 env:
@@ -16,9 +16,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Nix dependencies
-        run: sudo apt-get update; sudo apt-get -y install libasound2-dev libudev-dev lld
+        run: sudo apt-get update; sudo apt-get -y install libasound2-dev libudev-dev lld libwayland-dev
       - uses: actions/checkout@v3
-      - uses: dtolnay/rust-toolchain@nightly
+      - uses: dtolnay/rust-toolchain@stable
       - run: |
           cargo install cargo-tarpaulin
-          cargo tarpaulin --release --workspace --all-features --include-tests --engine=llvm --fail-under 85 --ignore-panics
+          cargo tarpaulin --profile codecov --workspace --all-features --include-tests --engine=llvm --fail-under 85 --ignore-panics

@@ -18,8 +18,6 @@ export RUST_BACKTRACE := bt
 default:
   just --list
 # lint the code aggressively
-copyassets:
-  ./copy_assets.ps1
 clippy:
   cargo clippy --workspace --all-targets --all-features
 # run a chosen example
@@ -28,6 +26,21 @@ example NAME:
 # run benchmarks
 bench:
   cargo bench -q --benches --workspace --all-features
+# run a particular benchmark
+bench-one BENCH:
+  cargo bench -q --bench {{BENCH}} --workspace --all-features
+# save each benchmark, this should be run on the main branch for comparing with your own branch
+bench-save-main: build
+  cargo bench -q --bench 2d_delaunay --workspace --all-features -- --save-baseline main_2d_delaunay
+  cargo bench -q --bench 2d_voronoi --workspace --all-features -- --save-baseline main_2d_voronoi
+  cargo bench -q --bench 3d_delaunay --workspace --all-features -- --save-baseline main_3d_delaunay
+  cargo bench -q --bench 3d_voronoi --workspace --all-features -- --save-baseline main_3d_voronoi
+# compare each benchmark against a saved bench taken from main
+bench-compare: build
+  cargo bench -q --bench 2d_delaunay --workspace --all-features -- --baseline main_2d_delaunay
+  cargo bench -q --bench 2d_voronoi --workspace --all-features -- --baseline main_2d_voronoi
+  cargo bench -q --bench 3d_delaunay --workspace --all-features -- --baseline main_3d_delaunay
+  cargo bench -q --bench 3d_voronoi --workspace --all-features -- --baseline main_3d_voronoi
 # run a debug build so the compiler can call out overflow errors etc, rather than making assumptions
 debug:
   cargo build --workspace --all-features
@@ -42,7 +55,7 @@ build: test doc
   cargo build --release --workspace --all-features
 # build and execute bin
 run: build
-  cargo run --release --all-features --package bevy_repo_template
+  cargo run --release --all-features --package voronoi_mosaic
 # delete `target` directory
 clean:
   cargo clean
