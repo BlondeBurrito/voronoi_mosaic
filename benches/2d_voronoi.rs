@@ -1,9 +1,9 @@
-//! Measure calculating the 2d Voronoi
+//! Measure calculating the 2d Voronoi derived from a 2d Delaunay
 //!
 
 #![allow(missing_docs)]
 use bevy::prelude::*;
-use criterion::{criterion_group, criterion_main, Criterion, Throughput};
+use criterion::{Criterion, Throughput, criterion_group, criterion_main};
 use rand::{SeedableRng, seq::IteratorRandom};
 use rand_chacha::ChaCha20Rng;
 use std::hint::black_box;
@@ -37,7 +37,7 @@ fn prepare_data() -> DelaunayData<triangle_2d::Triangle2d> {
 
 /// Call the code to benchmark
 fn init(delaunay: &DelaunayData<triangle_2d::Triangle2d>) {
-	let _v = VoronoiData::cells_from_delaunay_2d(delaunay);
+	let _v = VoronoiData::from_delaunay_2d(delaunay);
 }
 /// Benchmark
 pub fn criterion_benchmark(c: &mut Criterion) {

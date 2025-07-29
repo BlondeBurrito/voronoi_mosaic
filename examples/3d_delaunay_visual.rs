@@ -8,6 +8,9 @@ use std::f32::consts::PI;
 use bevy::prelude::*;
 use voronoi_mosaic::prelude::*;
 
+const DELAUNAY_EDGE_COLOUR: Color = Color::srgb(1.0, 0.0, 0.0);
+const DELAUNAY_VERTEX_COLOUR: Color = Color::srgb(0.0, 0.0, 1.0);
+
 fn main() {
 	App::new()
 		.add_plugins(DefaultPlugins)
@@ -91,7 +94,7 @@ fn visuals(
 			// create markers for vertices
 			let mesh = meshes.add(Sphere::new(0.5));
 			let material = materials.add(StandardMaterial {
-				base_color: Color::srgb(1.0, 0.0, 0.0),
+				base_color: DELAUNAY_VERTEX_COLOUR,
 				..default()
 			});
 			// vertices
@@ -110,7 +113,7 @@ fn visuals(
 			}
 			// create markers for edges
 			let mat = materials.add(StandardMaterial {
-				base_color: Color::srgb(0.0, 0.0, 1.0),
+				base_color: DELAUNAY_EDGE_COLOUR,
 				..default()
 			});
 			for edge in tetra.get_edges().iter() {

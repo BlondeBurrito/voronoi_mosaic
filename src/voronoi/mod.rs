@@ -11,4 +11,3 @@ pub mod voronoi_3d;
 pub struct VoronoiData<T> {
 	cells: Vec<T>,
 }
-

@@ -2,7 +2,10 @@
 //!
 //!
 
-use std::{cmp::Ordering, collections::{HashMap, HashSet}};
+use std::{
+	cmp::Ordering,
+	collections::{HashMap, HashSet},
+};
 
 use bevy::prelude::*;
 
@@ -113,6 +116,6 @@ fn find_shared_sets(map: &HashMap<usize, &tetrahedron::Tetrahedron>) -> HashSet<
 				set.insert(ids);
 			}
 		}
-		}
-		set
+	}
+	set
 }

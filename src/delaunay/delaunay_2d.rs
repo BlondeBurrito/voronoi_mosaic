@@ -1,16 +1,17 @@
 //!
 //!
 
-use std::cmp::Ordering;
-
 use bevy::prelude::*;
 
-use crate::{prelude::DelaunayData, triangle_2d};
+use crate::{
+	prelude::{DelaunayData, sort_vertices_2d},
+	triangle_2d,
+};
 
 impl DelaunayData<triangle_2d::Triangle2d> {
 	/// From a series of 2d points in a plane compute the Delaunay
 	/// Triangulation with the Bowyer-Watson algorithm.
-	pub fn compute_triangulation_2d(points: &mut Vec<Vec2>) -> Option<Self> {
+	pub fn compute_triangulation_2d(points: &Vec<Vec2>) -> Option<Self> {
 		if points.len() < 3 {
 			warn!(
 				"Minimum of 3 points required for triangulation, supplied {} points",
@@ -20,11 +21,12 @@ impl DelaunayData<triangle_2d::Triangle2d> {
 		}
 		//TODO ensure no dupciates in points
 		// find the dimensions of a plane that the points occupy
-		let (minimum_world_dimensions, maximum_world_dimensions) = compute_dimension_bounds(points);
+		let (minimum_world_dimensions, maximum_world_dimensions) =
+			compute_dimension_bounds(&points);
 		// compute the vertices of a super triangle which encompassess all the points
 		let super_vertices =
 			compute_super_triangle(&minimum_world_dimensions, &maximum_world_dimensions);
-		info!("Super vertices {:?}", super_vertices);
+		trace!("Super vertices {:?}", super_vertices);
 		// store triangles generaterd starting with the super triangle
 		let mut triangles = vec![triangle_2d::Triangle2d::new(
 			super_vertices[0],
@@ -32,17 +34,21 @@ impl DelaunayData<triangle_2d::Triangle2d> {
 			super_vertices[2],
 		)];
 		// add each point at a time to the triangulation
-		while !points.is_empty() {
-			let point = points.pop().unwrap();
-			info!("Adding point to triangulation: {:?}", point);
+		for point in points {
+			trace!("Adding point to triangulation: {:?}", point);
 			// record triangles that don't qualify as Delaunay
 			let mut bad_triangles = vec![];
 			// check if the point lies within the circumcircle of a triangle
 			for tri in triangles.iter() {
 				if let Some(circumcircle) = tri.compute_circumcircle() {
-					info!("Circumcircle from triangle {:?} with centre {} and radius {}", tri, circumcircle.get_centre(), circumcircle.get_radius());
+					trace!(
+						"Circumcircle from triangle {:?} with centre {} and radius {}",
+						tri.get_vertices(),
+						circumcircle.get_centre(),
+						circumcircle.get_radius()
+					);
 					if circumcircle.is_point_within_circle(point) {
-						info!("Point {:?} is within circumcircle", point);
+						trace!("Point {:?} is within circumcircle", point);
 						// if a point is within then it is not a delaunay triangle,
 						// record this triangle for removal
 						bad_triangles.push(tri.clone());
@@ -51,10 +57,11 @@ impl DelaunayData<triangle_2d::Triangle2d> {
 					warn!("Unable to compute circumcircle of triangle {:?}", tri);
 				}
 			}
-			info!("Bad triangles contains {:?}", bad_triangles);
+			trace!("Bad triangles contains {:?}", bad_triangles);
 			// remove any bad triangles from the triangle list
 			if !bad_triangles.is_empty() {
 				triangles.retain(|t| !bad_triangles.contains(&t));
+				trace!("Triangles after removing bads contains {:?}", triangles);
 				// we have a polyhedral hole around the point,
 				// by using the known bad triangles we can join the point to
 				// the vertex of each edge near it, thereby creating new triangles
@@ -75,29 +82,20 @@ impl DelaunayData<triangle_2d::Triangle2d> {
 				}
 				// sort the vertices in anti-clockwise order by comparing the
 				// angle between the point and a vertex
-				//TODO both vertices len squared cannot be zero
-				vertices.sort_by(|a, b| {
-					if let Some(ordering) = point.angle_to(*a).partial_cmp(&point.angle_to(*b)) {
-						ordering
-					} else {
-						warn!("Unable to find Ordering between {} and {}", a, b);
-						Ordering::Less
-					}
-				});
+				sort_vertices_2d(&mut vertices, &point);
+				trace!("Verts to use in new triangles {:?}", vertices);
 				// walk through vertex pairs creating new triangles
 				for i in 0..vertices.len() {
 					if i < vertices.len() - 1 {
-						triangles.push(triangle_2d::Triangle2d::new(
-							point,
-							vertices[i],
-							vertices[i + 1],
-						));
+						let (a, b, c) = (*point, vertices[i], vertices[i + 1]);
+						let new_tri = triangle_2d::Triangle2d::new(a, b, c);
+						trace!("Adding new triangle {:?}", new_tri.get_vertices());
+						triangles.push(new_tri);
 					} else {
-						triangles.push(triangle_2d::Triangle2d::new(
-							point,
-							vertices[i],
-							vertices[0],
-						));
+						let (a, b, c) = (*point, vertices[i], vertices[0]);
+						let new_tri = triangle_2d::Triangle2d::new(a, b, c);
+						trace!("Adding new triangle {:?}", new_tri.get_vertices());
+						triangles.push(new_tri);
 					}
 				}
 			}
@@ -106,19 +104,20 @@ impl DelaunayData<triangle_2d::Triangle2d> {
 		// real point supplied
 		let mut final_triangles = vec![];
 		for triangle in triangles.iter_mut() {
-			let a = *triangle.get_vertex_a();
-			let b = *triangle.get_vertex_b();
-			let c = *triangle.get_vertex_c();
 			let s_a = super_vertices[0];
 			let s_b = super_vertices[1];
 			let s_c = super_vertices[2];
-			if (a != s_a && a != s_b && a != s_c)
-				&& (b != s_a && b != s_b && b != s_c)
-				&& (c != s_a && c != s_b && c != s_c)
+			let tri_verts = triangle.get_vertices();
+			if !tri_verts.contains(&&s_a)
+				&& !tri_verts.contains(&&s_b)
+				&& !tri_verts.contains(&&s_c)
 			{
 				final_triangles.push(triangle.clone());
+			} else {
+				trace!("Discarding triangle {:?}", triangle.get_vertices());
 			}
 		}
+		trace!("Computed final triangles {:?}", final_triangles);
 		Some(DelaunayData {
 			shapes: final_triangles,
 		})
@@ -130,7 +129,7 @@ impl DelaunayData<triangle_2d::Triangle2d> {
 }
 
 /// Find the minimum `x-y` and maximum `x-y` of a plane that contains all points
-fn compute_dimension_bounds(points: &mut Vec<Vec2>) -> (Vec2, Vec2) {
+fn compute_dimension_bounds(points: &Vec<Vec2>) -> (Vec2, Vec2) {
 	let mut minimum_world_dimensions = Vec2::ZERO;
 	let mut maximum_world_dimensions = Vec2::ZERO;
 	for point in points.iter() {
@@ -177,8 +176,9 @@ fn compute_super_triangle(
 	let bottom_left = minimum_world_dimensions;
 	let bottom_right = Vec2::new(maximum_world_dimensions.x, minimum_world_dimensions.y);
 	let x = bottom_left.x + (bottom_right.x - bottom_left.x) / 2.0;
+	// we actually scale it away from the corners of the plane by a factor of 2 as if the plane is wide but thin then a very acute super triangle is produced which can cause holes in the triangualtion (all triangles formed with super verts that get removed at the end) when the data set is very small
 	let y = minimum_world_dimensions.y as f32
-		- 0.5 * (maximum_world_dimensions.y - minimum_world_dimensions.y) as f32;
+		- 2.0 * (maximum_world_dimensions.y - minimum_world_dimensions.y) as f32;
 	let sup_triangle_vert_a = Vec2::new(x, y);
 	// by treating the maximum y of the plane as a striahgt line parallel to x we can
 	// take line equations from the furthest point sup_triangle_vert_a with the
@@ -199,16 +199,16 @@ fn compute_super_triangle(
 	// using y=mx + c we can find the point of y = max (plus a bit of wiggle room) for x giving us another
 	// vertex of the super triangle
 	let sup_triangle_vert_b = Vec2::new(
-		(1.5 *maximum_world_dimensions.y - intercept_b) / gradient_b,
-		1.5 *maximum_world_dimensions.y,
+		(2.0 * maximum_world_dimensions.y - intercept_b) / gradient_b,
+		2.0 * maximum_world_dimensions.y,
 	);
 	// repeat for the final vertex
 	let gradient_c =
 		(sup_triangle_vert_a.y - bottom_right.y) / (sup_triangle_vert_a.x - bottom_right.x);
-	let intercept_c = bottom_right.y -  gradient_c * bottom_right.x;
+	let intercept_c = bottom_right.y - gradient_c * bottom_right.x;
 	let sup_triangle_vert_c = Vec2::new(
-		(1.5 *maximum_world_dimensions.y - intercept_c) / gradient_c,
-		1.5 *maximum_world_dimensions.y,
+		(2.0 * maximum_world_dimensions.y - intercept_c) / gradient_c,
+		2.0 * maximum_world_dimensions.y,
 	);
 	// we now have the vertices of a triangle that contains all cell origins
 	[
@@ -238,9 +238,9 @@ mod tests {
 		let minimum_world_dimensions = Vec2::new(-100.0, -200.0);
 		let maximum_world_dimensions = Vec2::new(100.0, 200.0);
 		let s = compute_super_triangle(&minimum_world_dimensions, &maximum_world_dimensions);
-		let a = Vec2::new(0.0, -400.0);
-		let b = Vec2::new(-350.0, 300.0);
-		let c = Vec2::new(350.0, 300.0);
+		let a = Vec2::new(0.0, -1000.0);
+		let b = Vec2::new(-175.0, 400.0);
+		let c = Vec2::new(175.0, 400.0);
 		assert_eq!([a, b, c], s);
 	}
 	#[test]
@@ -250,11 +250,11 @@ mod tests {
 			Vec2::new(-50.0, 0.0),
 			Vec2::new(0.0, 50.0),
 		];
-		let d= compute_dimension_bounds(&mut points);
+		let d = compute_dimension_bounds(&mut points);
 		println!("D: {:?}", d);
 		let sup = compute_super_triangle(&d.0, &d.1);
 		println!("sup : {:?}", sup);
-		let data = DelaunayData::compute_triangulation_2d(&mut points).unwrap();
+		let data = DelaunayData::compute_triangulation_2d(&points).unwrap();
 		// should only be 1 triangle
 		assert_eq!(1, data.get().len());
 		assert_eq!(3, data.get().first().unwrap().get_edges().len());

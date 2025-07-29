@@ -3,7 +3,7 @@
 
 #![allow(missing_docs)]
 use bevy::prelude::*;
-use criterion::{criterion_group, criterion_main, Criterion, Throughput};
+use criterion::{Criterion, Throughput, criterion_group, criterion_main};
 use rand::{SeedableRng, seq::IteratorRandom};
 use rand_chacha::ChaCha20Rng;
 use std::hint::black_box;

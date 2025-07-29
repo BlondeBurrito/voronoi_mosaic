@@ -9,6 +9,9 @@ use voronoi_mosaic::prelude::*;
 const VERTEX_Z: f32 = 2.0;
 const EDGE_Z: f32 = 1.0;
 
+const DELAUNAY_EDGE_COLOUR: Color = Color::srgb(1.0, 0.0, 0.0);
+const DELAUNAY_VERTEX_COLOUR: Color = Color::srgb(0.0, 0.0, 1.0);
+
 fn main() {
 	App::new()
 		.add_plugins(DefaultPlugins)
@@ -35,27 +38,28 @@ fn visuals(
 	mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
 	// points to be used
-	let mut points = vec![
+	let points = vec![
 		Vec2::new(-190.0, 90.0),
-		Vec2::new(-60.0, -120.0),
+		Vec2::new(-145.0, 120.0),
 		Vec2::new(-120.0, -45.0),
+		Vec2::new(-60.0, -120.0),
 		Vec2::new(-20.0, 190.0),
 		Vec2::new(60.0, -10.0),
 		Vec2::new(80.0, -190.0),
 		Vec2::new(100.0, 140.0),
 		Vec2::new(190.0, -60.0),
 	];
-	let mut points = vec![
-			Vec2::new(50.0, 0.0),
-			Vec2::new(-50.0, 0.0),
-			Vec2::new(0.0, 50.0),
-		];
+	// let points = vec![
+	// 		Vec2::new(50.0, 0.0),
+	// 		Vec2::new(-50.0, 0.0),
+	// 		Vec2::new(0.0, 50.0),
+	// 	];
 	// compute data
-	if let Some(data) = DelaunayData::compute_triangulation_2d(&mut points) {
+	if let Some(data) = DelaunayData::compute_triangulation_2d(&points) {
 		for triangle in data.get().iter() {
 			// create markers for vertices
 			let mesh = meshes.add(Circle::new(10.0));
-			let material = materials.add(Color::srgb(1.0, 0.0, 0.0));
+			let material = materials.add(DELAUNAY_VERTEX_COLOUR);
 			// vertices
 			let translations = [
 				triangle.get_vertex_a(),
@@ -70,7 +74,7 @@ fn visuals(
 				));
 			}
 			// create markers for edges
-			let mat = materials.add(Color::srgb(0.0, 0.0, 1.0));
+			let mat = materials.add(DELAUNAY_EDGE_COLOUR);
 			for edge in triangle.get_edges().iter() {
 				let y_len = (edge.1 - edge.0).length();
 				let mesh = meshes.add(Rectangle::from_size(Vec2::new(5.0, y_len)));

@@ -55,7 +55,7 @@ rand_chacha = { version = "0.9" }
 # examples_utils = { path = "crates/examples_utils" }
 
 [dependencies]
-bevy = { workspace = true }
+bevy = { workspace = true, default-features = false, features = ["bevy_render", "bevy_asset", "wayland"] }
 
 [features]
 # serde = ["dep:serde"]
@@ -88,6 +88,9 @@ harness = false
 name = "2d_voronoi"
 harness = false
 [[bench]]
+name = "2d_meshes"
+harness = false
+[[bench]]
 name = "3d_delaunay"
 harness = false
 [[bench]]
@@ -102,6 +105,10 @@ path = "examples/2d_delaunay_visual.rs"
 [[example]]
 name = "2d_voronoi_visual"
 path = "examples/2d_voronoi_visual.rs"
+# required-features = ["ron"]
+[[example]]
+name = "2d_toggle"
+path = "examples/2d_toggle.rs"
 # required-features = ["ron"]
 [[example]]
 name = "3d_delaunay_visual"

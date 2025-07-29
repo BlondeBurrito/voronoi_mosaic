@@ -63,7 +63,12 @@ impl Tetrahedron {
 	}
 	/// Get all vertices of the [Tetrahedron] as an array
 	pub fn get_vertices(&self) -> [&Vec3; 4] {
-		[self.get_vertex_a(), self.get_vertex_b(), self.get_vertex_c(), self.get_vertex_d()]
+		[
+			self.get_vertex_a(),
+			self.get_vertex_b(),
+			self.get_vertex_c(),
+			self.get_vertex_d(),
+		]
 	}
 	/// Get the edges along each face
 	pub fn get_edges(&self) -> [(Vec3, Vec3); 6] {

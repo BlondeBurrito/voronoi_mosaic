@@ -72,11 +72,11 @@ impl DelaunayData<tetrahedron::Tetrahedron> {
 					if let Some(ordering) = point
 						.angle_between(*a)
 						.partial_cmp(&point.angle_between(*b))
-						{
-							ordering 
-						} else {
-							Ordering::Less
-						}
+					{
+						ordering
+					} else {
+						Ordering::Less
+					}
 				});
 				// walk through vertex pairs creating new tetrahedrons
 				for i in 0..vertices.len() {

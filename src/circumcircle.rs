@@ -50,7 +50,7 @@ impl Circumcircle {
 				+ (vertex_b.x * (vertex_c.y - vertex_a.y))
 				+ (vertex_c.x * (vertex_a.y - vertex_b.y)));
 
-		if denom > 0.0 || denom < 0.0 {
+		if denom != 0.0 {
 			let centre_x = ((vertex_a.x.powf(2.0) + vertex_a.y.powf(2.0))
 				* (vertex_b.y - vertex_c.y)
 				+ (vertex_b.x.powf(2.0) + vertex_b.y.powf(2.0)) * (vertex_c.y - vertex_a.y)
@@ -82,7 +82,7 @@ impl Circumcircle {
 		self.radius
 	}
 	/// Check if a point is within the circumcircle
-	pub fn is_point_within_circle(&self, point: Vec2) -> bool {
+	pub fn is_point_within_circle(&self, point: &Vec2) -> bool {
 		// (y - center_y)^2 + (x - center_x)^2 < radius^2
 		(point.y - self.circumcentre.y).powf(2.0) + (point.x - self.circumcentre.x).powf(2.0)
 			< self.radius.powf(2.0)
@@ -126,7 +126,7 @@ mod tests {
 		let v_c = Vec2::new(2.0, 5.0);
 		let circumcircle = Circumcircle::new(v_a, v_b, v_c).unwrap();
 		let point = Vec2::new(5.0, 3.0);
-		assert!(circumcircle.is_point_within_circle(point));
+		assert!(circumcircle.is_point_within_circle(&point));
 	}
 	#[test]
 	fn point_is_not_within_circumcircle() {
@@ -135,7 +135,7 @@ mod tests {
 		let v_c = Vec2::new(2.0, 5.0);
 		let circumcircle = Circumcircle::new(v_a, v_b, v_c).unwrap();
 		let point = Vec2::new(10.0, 3.0);
-		assert!(!circumcircle.is_point_within_circle(point));
+		assert!(!circumcircle.is_point_within_circle(&point));
 	}
 	//TODO test for None in invalid triangle setup
 }

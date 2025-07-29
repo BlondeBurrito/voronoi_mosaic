@@ -8,6 +8,9 @@ use std::f32::consts::PI;
 use bevy::prelude::*;
 use voronoi_mosaic::prelude::*;
 
+const VORONOI_EDGE_COLOUR: Color = Color::srgb(1.0, 0.5, 0.0);
+const VORONOI_VERTEX_COLOUR: Color = Color::srgb(0.5, 1.0, 0.0);
+
 fn main() {
 	App::new()
 		.add_plugins(DefaultPlugins)
@@ -94,7 +97,7 @@ fn visuals(
 					// mark each vertex of every cell
 					let mesh = meshes.add(Sphere::new(0.5));
 					let material = materials.add(StandardMaterial {
-						base_color: Color::srgb(1.0, 0.0, 0.0),
+						base_color: VORONOI_VERTEX_COLOUR,
 						..default()
 					});
 					cmds.spawn((
@@ -111,7 +114,7 @@ fn visuals(
 					let len = (v1 - v0).length();
 					let mesh = meshes.add(Cuboid::new(0.25, 0.25, len));
 					let mat = materials.add(StandardMaterial {
-						base_color: Color::srgb(0.0, 0.0, 1.0),
+						base_color: VORONOI_EDGE_COLOUR,
 						..default()
 					});
 					let translation = (v1 + v0) / 2.0;
