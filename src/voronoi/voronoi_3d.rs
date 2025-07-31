@@ -23,7 +23,7 @@ impl VoronoiCell3d {
 
 impl VoronoiData<VoronoiCell3d> {
 	/// Get a reference to the list of Voronoi Cells
-	pub fn get_cells(&self) -> &Vec<VoronoiCell3d> {
+	pub fn get_cells(&self) -> &HashMap<u32, VoronoiCell3d> {
 		&self.cells
 	}
 	/// Froma  series of 2d points in space compute the Voronoi Cells
@@ -53,8 +53,8 @@ impl VoronoiData<VoronoiCell3d> {
 		let id_sets = find_shared_sets(&tetra_store);
 
 		// from the set of IDs find each circumsphere as a vertex on a voronoi cell
-		let mut cells = vec![];
-		for ids in id_sets.iter() {
+		let mut cells = HashMap::new();
+		for (i, ids) in id_sets.iter().enumerate() {
 			let mut cell_vertices = vec![];
 			for id in ids.iter() {
 				if let Some(tetra) = tetra_store.get(id) {
@@ -83,7 +83,7 @@ impl VoronoiData<VoronoiCell3d> {
 					Ordering::Less
 				}
 			});
-			cells.push(VoronoiCell3d(cell_vertices));
+			cells.insert(i as u32, VoronoiCell3d(cell_vertices));
 		}
 
 		Some(VoronoiData { cells })

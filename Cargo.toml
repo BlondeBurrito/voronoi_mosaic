@@ -88,6 +88,9 @@ harness = false
 name = "2d_voronoi"
 harness = false
 [[bench]]
+name = "2d_voronoi_clipped"
+harness = false
+[[bench]]
 name = "2d_meshes"
 harness = false
 [[bench]]
@@ -99,16 +102,20 @@ harness = false
 ###################
 
 [[example]]
-name = "2d_delaunay_visual"
-path = "examples/2d_delaunay_visual.rs"
+name = "2d_delaunay"
+path = "examples/2d_delaunay.rs"
 # required-features = ["ron"]
 [[example]]
-name = "2d_voronoi_visual"
-path = "examples/2d_voronoi_visual.rs"
+name = "2d_voronoi"
+path = "examples/2d_voronoi.rs"
 # required-features = ["ron"]
 [[example]]
-name = "2d_toggle"
-path = "examples/2d_toggle.rs"
+name = "2d_meshes"
+path = "examples/2d_meshes.rs"
+# required-features = ["ron"]
+[[example]]
+name = "2d_meshes_clipped"
+path = "examples/2d_meshes_clipped.rs"
 # required-features = ["ron"]
 [[example]]
 name = "3d_delaunay_visual"

@@ -1,4 +1,4 @@
-//! Generates Delaunay Triangles, uses them to construct Voronoi Cells and then
+//! Generates Delaunay Triangles, uses them to construct unbounded Voronoi Cells and then
 //! produces Bevy meshes from the cells
 //!
 //! The visibility of each layer can be toggled with the buttons
@@ -39,15 +39,15 @@ fn main() {
 /// Requirements
 fn setup(
 	mut cmds: Commands,
-	mut meshes: ResMut<Assets<Mesh>>,
-	mut materials: ResMut<Assets<ColorMaterial>>,
+	// mut meshes: ResMut<Assets<Mesh>>,
+	// mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
 	// camera
 	cmds.spawn((Camera2d,));
-	// background plane
-	let mesh = meshes.add(Rectangle::from_length(800.0));
-	let material = materials.add(Color::srgb(0.75, 0.75, 0.75));
-	cmds.spawn((Transform::default(), Mesh2d(mesh), MeshMaterial2d(material)));
+	// // background plane
+	// let mesh = meshes.add(Rectangle::from_length(800.0));
+	// let material = materials.add(Color::srgb(0.75, 0.75, 0.75));
+	// cmds.spawn((Transform::default(), Mesh2d(mesh), MeshMaterial2d(material)));
 }
 /// Compute triangluation and dispay it with simple shapes
 fn visuals(
@@ -96,6 +96,16 @@ fn visuals(
 		Vec2::new(-84.0, 196.0),
 		Vec2::new(-63.0, 241.0),
 		Vec2::new(-24.0, 202.0),
+		//
+		Vec2::new(399.0, 399.0),
+		Vec2::new(-399.0, 399.0),
+		Vec2::new(-399.0, -399.0),
+		Vec2::new(399.0, -399.0),
+		//
+		Vec2::new(0.0, 399.0),
+		Vec2::new(-399.0, 0.0),
+		Vec2::new(0.0, -399.0),
+		Vec2::new(399.0, 0.0),
 	];
 	// compute data
 	if let Some(data) = DelaunayData::compute_triangulation_2d(&points) {
@@ -103,7 +113,6 @@ fn visuals(
 		if let Some(voronoi) = VoronoiData::from_delaunay_2d(&data) {
 			// add simple shapes to showcase what the data looks like
 			create_voronoi_cell_visuals(&mut cmds, &mut meshes, &mut materials, &voronoi);
-			//TODO
 			create_mesh_visuals(&mut cmds, &mut meshes, &mut materials, &voronoi);
 		}
 	} else {
@@ -173,7 +182,7 @@ fn create_voronoi_cell_visuals(
 	materials: &mut ResMut<Assets<ColorMaterial>>,
 	voronoi: &VoronoiData<VoronoiCell2d>,
 ) {
-	for cell in voronoi.get_cells().iter() {
+	for cell in voronoi.get_cells().values() {
 		for (i, point) in cell.get_vertices().iter().enumerate() {
 			// mark each vertex of every cell
 			let mesh = meshes.add(Circle::new(10.0));

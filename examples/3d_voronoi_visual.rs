@@ -92,7 +92,7 @@ fn visuals(
 	if let Some(data) = DelaunayData::compute_triangulation_3d(&mut points) {
 		if let Some(voronoi) = VoronoiData::cells_from_delaunay_3d(&data) {
 			// add simple shapes to showcase what the data looks like
-			for cell in voronoi.get_cells().iter() {
+			for cell in voronoi.get_cells().values() {
 				for (i, point) in cell.get_vertices().iter().enumerate() {
 					// mark each vertex of every cell
 					let mesh = meshes.add(Sphere::new(0.5));

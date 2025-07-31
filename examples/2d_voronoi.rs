@@ -53,7 +53,7 @@ fn visuals(
 	if let Some(data) = DelaunayData::compute_triangulation_2d(&points) {
 		if let Some(voronoi) = VoronoiData::from_delaunay_2d(&data) {
 			// add simple shapes to showcase what the data looks like
-			for cell in voronoi.get_cells().iter() {
+			for cell in voronoi.get_cells().values() {
 				for (i, point) in cell.get_vertices().iter().enumerate() {
 					// mark each vertex of every cell
 					let mesh = meshes.add(Circle::new(10.0));
