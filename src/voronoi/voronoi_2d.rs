@@ -5,7 +5,9 @@
 use std::collections::HashMap;
 
 use crate::{
-	prelude::{is_vertex_within_polygon, sort_vertices_2d, DelaunayData},
+	prelude::{
+		DelaunayData, is_point_within_edge_range_limt, is_vertex_within_polygon, sort_vertices_2d,
+	},
 	triangle_2d,
 };
 use bevy::{
@@ -58,10 +60,12 @@ impl VoronoiData<VoronoiCell2d> {
 	pub fn get_cells(&self) -> &HashMap<u32, VoronoiCell2d> {
 		&self.cells
 	}
+	/// Get a mutable reference to the map of Voronoi Cells
+	pub fn get_cells_mut(&mut self) -> &mut HashMap<u32, VoronoiCell2d> {
+		&mut self.cells
+	}
 	/// Generate a set of [VoronoiCell2d] from a Delaunay Triangle without any boundary restrictions on the Cells
-	pub fn from_delaunay_2d(
-		delaunay: &DelaunayData<triangle_2d::Triangle2d>,
-	) -> Option<Self> {
+	pub fn from_delaunay_2d(delaunay: &DelaunayData<triangle_2d::Triangle2d>) -> Option<Self> {
 		// each circumcentre of a Delaunay triangle is a vertex of a Voronoi cell
 		let triangles = delaunay.get();
 
@@ -96,10 +100,13 @@ impl VoronoiData<VoronoiCell2d> {
 			let midpoint = total / (cell_vertices.len() as f32);
 			// sort the vertices in anti-clockwise order
 			sort_vertices_2d(&mut cell_vertices, &midpoint);
-			cells.insert(i as u32, VoronoiCell2d {
-				vertices: cell_vertices,
-				source_vertex: *common_vertex,
-			});
+			cells.insert(
+				i as u32,
+				VoronoiCell2d {
+					vertices: cell_vertices,
+					source_vertex: *common_vertex,
+				},
+			);
 		}
 
 		// VoronoiCell2d(cells)
@@ -168,12 +175,12 @@ impl VoronoiData<VoronoiCell2d> {
 
 		meshes
 	}
-	/// Clip all the [VoronoiCell2d] so they cannot extend or exists outside of
+	/// Clip all the [VoronoiCell2d] so they cannot extend or exist outside of
 	/// a boundary polygon
-	/// 
-	/// The boundary polygon must contain at least 3 vertices and the vertice
+	///
+	/// The boundary polygon must contain at least 3 vertices and the vertices
 	/// should be expressed in an anti-clockwise order around their centre
-	/// 
+	///
 	/// *NB: Delaunay and Voronoi are duals - they can precisely be converted from one fomrat to the other back and forth. By applying clipping to the Voronoi, cell vertices may be added/removed which will destroy the duality - i.e if you apply clipping you cannot convert Voronoi into Delaunay and expect to get your oringal dataset back*
 	pub fn clip_cells_to_boundary(&mut self, boundary: &[Vec2]) {
 		//TODO sort the supplied boundary points or trust user input?
@@ -209,10 +216,133 @@ impl VoronoiData<VoronoiCell2d> {
 			}
 		}
 		// clip partial cells to the boundary
-		//TODO
 		for id in partial {
-			if let Some(cell) = self.get_cells().get(&id) {
-				
+			if let Some(cell) = self.get_cells_mut().get_mut(&id) {
+				// store new vertices from intersections with boundary
+				let mut new_vertices = vec![];
+
+				// if any boundary vert lies within the cell then they
+				// will be new verts the cell gets clipped to
+				for bounding_edge in bounding_edges.iter() {
+					
+					if is_vertex_within_polygon(&bounding_edge.0, &cell.get_edges()) {
+						if !new_vertices.contains(&bounding_edge.0) {
+							new_vertices.push(bounding_edge.0);
+						}
+					}
+					if is_vertex_within_polygon(&bounding_edge.1, &cell.get_edges()) {
+						if !new_vertices.contains(&bounding_edge.1) {
+							new_vertices.push(bounding_edge.1);
+						}
+					}
+				}
+
+				// walk around the cell finding which boundary edges it passes through
+				// to find clipping intersections
+				let cell_vertices = cell.get_vertices();
+				for i in 0..cell_vertices.len() {
+					// store cell edge start and end
+					let (cell_edge_start, cell_edge_end) = {
+						if i < cell_vertices.len() - 1 {
+							(cell_vertices[i], cell_vertices[i + 1])
+						} else {
+							(cell_vertices[0], cell_vertices[i])
+						}
+					};
+					// only process it if one of the cell edge vertices is in the boundary and one outside
+					if (is_vertex_within_polygon(&cell_edge_start, &bounding_edges)
+						&& is_vertex_within_polygon(&cell_edge_end, &bounding_edges))
+						|| (!is_vertex_within_polygon(&cell_edge_start, &bounding_edges)
+							&& !is_vertex_within_polygon(&cell_edge_end, &bounding_edges))
+					{
+						continue;
+					}
+					let cell_edge_dy = cell_edge_end.y - cell_edge_start.y;
+					let cell_edge_dx = cell_edge_end.x - cell_edge_start.x;
+					// see if the cell edge crosses a boundary
+					// when a crossing occurs store an index into the bounding_edges
+					for bounding_edge in bounding_edges.iter() {
+						let bounding_edge_dy = bounding_edge.1.y - bounding_edge.0.y;
+						let bounding_edge_dx = bounding_edge.1.x - bounding_edge.0.x;
+
+						let intersection = if cell_edge_dx == 0.0 {
+							// handle vertical line
+							info!("cell vert");
+							//TODO
+							None
+						} else if bounding_edge_dx == 0.0 {
+							// handle vertical boundary
+							// bounding x const so find new y with cell edge
+							// y = mx + c with subbing in boundary x
+							let cell_gradient = cell_edge_dy / cell_edge_dx;
+							let cell_intercept =
+								cell_edge_start.y - (cell_gradient * cell_edge_start.x);
+							let intersect_x = bounding_edge.1.x;
+							let intersect_y = cell_gradient * intersect_x + cell_intercept;
+							// ensure intersection is on the line and not beyond it
+							if is_point_within_edge_range_limt(
+								&Vec2::new(intersect_x, intersect_y),
+								&cell_edge_start,
+								&cell_edge_end,
+							) {
+								// store the intersection
+								Some(Vec2::new(intersect_x, intersect_y))
+							} else {
+								None
+							}
+						} else if (cell_edge_dy / cell_edge_dx)
+							== (bounding_edge_dy / bounding_edge_dx)
+						{
+							// handle case of both edges being parallel
+							info!("para");
+							//TODO
+							None
+						} else {
+							let bounding_gradient = bounding_edge_dy / bounding_edge_dx;
+							let bounding_intercept =
+								bounding_edge.0.y - (bounding_gradient * bounding_edge.0.x);
+							let cell_gradient = cell_edge_dy / cell_edge_dx;
+							let cell_intercept =
+								cell_edge_start.y - (cell_gradient * cell_edge_start.x);
+							let intersect_x = (bounding_intercept - cell_intercept)
+								/ (cell_gradient - bounding_gradient);
+							let intersect_y = (cell_gradient * intersect_x) + cell_intercept;
+							// ensure intersection if on the line and not beyond it
+							if is_point_within_edge_range_limt(
+								&Vec2::new(intersect_x, intersect_y),
+								&cell_edge_start,
+								&cell_edge_end,
+							) {
+								// store the intersection
+								Some(Vec2::new(intersect_x, intersect_y))
+							} else {
+								None
+							}
+						};
+
+						if let Some(point) = intersection {
+							if !new_vertices.contains(&point) {
+								new_vertices.push(point);
+							}
+						}
+					}
+				}
+				// add any original vertices that are inside the boundary to new_vertices
+				for vertex in cell.get_vertices().iter() {
+					if is_vertex_within_polygon(vertex, &bounding_edges) {
+						if !new_vertices.contains(vertex) {
+							new_vertices.push(*vertex);
+						}
+					}
+				}
+				// replace the cell vertices with the new ones
+				cell.vertices = new_vertices;
+				// sort the vertices anti-clockwise
+				let midpoint = cell.get_centre_position();
+				sort_vertices_2d(&mut cell.vertices, &midpoint);
+				// replace the cell source so it cannot possibly be outside the boundary
+				//TODO don't think this is actually needed?
+				cell.source_vertex = midpoint;
 			}
 		}
 		// remove cells that exists completely outside of the boundary

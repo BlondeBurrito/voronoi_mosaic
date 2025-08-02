@@ -23,7 +23,7 @@ pub fn sort_vertices_2d(vertices: &mut Vec<Vec2>, point: &Vec2) {
 	});
 }
 /// Tests if a vertex sits inside of a polygon
-/// 
+///
 /// NB: the polygon edges need to have their own vertices specified in a anti-clockwise order
 pub fn is_vertex_within_polygon(vertex: &Vec2, polygon_edges: &Vec<(Vec2, Vec2)>) -> bool {
 	let mut winding_number: i32 = 0;
@@ -88,13 +88,13 @@ pub fn is_vertex_within_polygon(vertex: &Vec2, polygon_edges: &Vec<(Vec2, Vec2)>
 		//
 		// on the surface looks slower than intersection test as it uses inverse trigononemtry but Dan Sunday proposed an alternative way to deduce the Winding Number without the need for trig:
 		// https://web.archive.org/web/20130126163405/http://geomalgorithms.com/a03-_inclusion.html
-		
+
 		if edge_v1.y <= vertex.y {
 			// if edge crosses upwards
 			if edge_v2.y > vertex.y {
 				// if vertex if left of edge then increment winding number
 				if is_vertex_left_of_edge(vertex, (*edge_v1, *edge_v2)) > 0.0 {
-					winding_number +=1 ;
+					winding_number += 1;
 				}
 			}
 		} else {
@@ -111,11 +111,11 @@ pub fn is_vertex_within_polygon(vertex: &Vec2, polygon_edges: &Vec<(Vec2, Vec2)>
 }
 
 /// Test if `vertex` is located on the left side of `edge`
-/// 
+///
 /// NB: this is considered from the perspective of the direction of the edge
-/// 
+///
 /// NB: to work properly the veritces that make up an edge need to be specified in an anti-clockwise order
-/// 
+///
 /// * Value > 0 means it is on the left
 /// * Value == 0 means it is on the edge
 /// * Value < 0 means it is on the right
@@ -155,9 +155,17 @@ pub fn is_vertex_left_of_edge(vertex: &Vec2, edge: (Vec2, Vec2)) -> f32 {
 	(edge.1.x - edge.0.x) * (vertex.y - edge.0.y) - (vertex.x - edge.0.x) * (edge.1.y - edge.0.y)
 }
 
+/// Checks if a point is within the x-y limts of an edge
+pub fn is_point_within_edge_range_limt(point: &Vec2, edge_start: &Vec2, edge_end: &Vec2) -> bool {
+	((point.x >= edge_start.x && point.x <= edge_end.x)
+		|| (point.x >= edge_end.x && point.x <= edge_start.x))
+		&& ((point.y >= edge_start.y && point.y <= edge_end.y)
+			|| (point.y >= edge_end.y && point.y <= edge_start.y))
+}
+
 #[cfg(test)]
 mod tests {
-use super::*;
+	use super::*;
 
 	#[test]
 	fn vertex_angular_order() {
@@ -277,7 +285,7 @@ use super::*;
 		//
 		let polygon_edges = vec![
 			(Vec2::new(0.0, 0.0), Vec2::new(10.0, 0.0)),
-			(Vec2::new(10.0,0.0), Vec2::new(10.0, 10.0)),
+			(Vec2::new(10.0, 0.0), Vec2::new(10.0, 10.0)),
 			(Vec2::new(10.0, 10.0), Vec2::new(0.0, 10.0)),
 			(Vec2::new(0.0, 10.0), Vec2::new(0.0, 0.0)),
 		];
@@ -297,7 +305,7 @@ use super::*;
 		//
 		let polygon_edges = vec![
 			(Vec2::new(0.0, 0.0), Vec2::new(10.0, 0.0)),
-			(Vec2::new(10.0,0.0), Vec2::new(10.0, 10.0)),
+			(Vec2::new(10.0, 0.0), Vec2::new(10.0, 10.0)),
 			(Vec2::new(10.0, 10.0), Vec2::new(0.0, 10.0)),
 			(Vec2::new(0.0, 10.0), Vec2::new(0.0, 0.0)),
 		];
@@ -317,7 +325,7 @@ use super::*;
 		//
 		let polygon_edges = vec![
 			(Vec2::new(0.0, 0.0), Vec2::new(10.0, 0.0)),
-			(Vec2::new(10.0,0.0), Vec2::new(10.0, 10.0)),
+			(Vec2::new(10.0, 0.0), Vec2::new(10.0, 10.0)),
 			(Vec2::new(10.0, 10.0), Vec2::new(0.0, 10.0)),
 			(Vec2::new(0.0, 10.0), Vec2::new(0.0, 0.0)),
 		];
@@ -336,7 +344,7 @@ use super::*;
 		//
 		let polygon_edges = vec![
 			(Vec2::new(0.0, 0.0), Vec2::new(10.0, 0.0)),
-			(Vec2::new(10.0,0.0), Vec2::new(10.0, 10.0)),
+			(Vec2::new(10.0, 0.0), Vec2::new(10.0, 10.0)),
 			(Vec2::new(10.0, 10.0), Vec2::new(0.0, 10.0)),
 			(Vec2::new(0.0, 10.0), Vec2::new(0.0, 0.0)),
 		];
@@ -348,14 +356,14 @@ use super::*;
 		// polygon
 		//
 		//    (0, 10)         (10, 10)
-		//   
+		//
 		// v(-1,5)
-		//   
+		//
 		//    (0,  0)         (10,  0)
 		//
 		let polygon_edges = vec![
 			(Vec2::new(0.0, 0.0), Vec2::new(10.0, 0.0)),
-			(Vec2::new(10.0,0.0), Vec2::new(10.0, 10.0)),
+			(Vec2::new(10.0, 0.0), Vec2::new(10.0, 10.0)),
 			(Vec2::new(10.0, 10.0), Vec2::new(0.0, 10.0)),
 			(Vec2::new(0.0, 10.0), Vec2::new(0.0, 0.0)),
 		];

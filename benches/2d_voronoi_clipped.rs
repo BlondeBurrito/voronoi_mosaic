@@ -38,7 +38,12 @@ fn prepare_data() -> VoronoiData<VoronoiCell2d> {
 
 /// Call the code to benchmark
 fn init(voronoi: &mut VoronoiData<VoronoiCell2d>) {
-	let boundary = vec![Vec2::new(1000.0, 10000.0), Vec2::new(0.0, 10000.0), Vec2::new(0.0, 0.0), Vec2::new(10000.0, 0.0)];
+	let boundary = vec![
+		Vec2::new(1000.0, 10000.0),
+		Vec2::new(0.0, 10000.0),
+		Vec2::new(0.0, 0.0),
+		Vec2::new(10000.0, 0.0),
+	];
 	let _m = voronoi.clip_cells_to_boundary(&boundary);
 }
 /// Benchmark

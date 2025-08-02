@@ -39,15 +39,23 @@ fn main() {
 /// Requirements
 fn setup(
 	mut cmds: Commands,
-	// mut meshes: ResMut<Assets<Mesh>>,
-	// mut materials: ResMut<Assets<ColorMaterial>>,
+	mut meshes: ResMut<Assets<Mesh>>,
+	mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
 	// camera
 	cmds.spawn((Camera2d,));
-	// // background plane
-	// let mesh = meshes.add(Rectangle::from_length(800.0));
-	// let material = materials.add(Color::srgb(0.75, 0.75, 0.75));
-	// cmds.spawn((Transform::default(), Mesh2d(mesh), MeshMaterial2d(material)));
+	// background plane
+	let mesh = meshes.add(Rectangle::from_length(450.0));
+	let material = materials.add(Color::srgb(0.75, 0.75, 0.75));
+	cmds.spawn((Transform::default(), Mesh2d(mesh), MeshMaterial2d(material)));
+	// background plane matching clip boundary
+	let mesh = meshes.add(Rectangle::from_length(400.0));
+	let material = materials.add(Color::srgb(0.0, 0.0, 0.0));
+	cmds.spawn((
+		Transform::from_xyz(0.0, 0.0, 0.1),
+		Mesh2d(mesh),
+		MeshMaterial2d(material),
+	));
 }
 /// Compute triangluation and dispay it with simple shapes
 fn visuals(
@@ -111,11 +119,17 @@ fn visuals(
 	if let Some(data) = DelaunayData::compute_triangulation_2d(&points) {
 		create_delaunay_visuals(&mut cmds, &mut meshes, &mut materials, &data);
 		if let Some(mut voronoi) = VoronoiData::from_delaunay_2d(&data) {
-			let boundary = vec![Vec2::new(400.0, 400.0), Vec2::new(-400.0, 400.0), Vec2::new(-400.0, -400.0), Vec2::new(400.0, -400.0)];
-			let boundary = vec![Vec2::new(200.0, 200.0), Vec2::new(-200.0, 200.0), Vec2::new(-200.0, -200.0), Vec2::new(200.0, -200.0)];
-			voronoi.clip_cells_to_boundary(&boundary);
-			// add simple shapes to showcase what the data looks like
+			// let boundary = vec![Vec2::new(400.0, 400.0), Vec2::new(-400.0, 400.0), Vec2::new(-400.0, -400.0), Vec2::new(400.0, -400.0)];
+			let boundary = vec![
+				Vec2::new(200.0, 200.0),
+				Vec2::new(-200.0, 200.0),
+				Vec2::new(-200.0, -200.0),
+				Vec2::new(200.0, -200.0),
+			];
+			// create the voronoi markers before mutation so it can be
+			// seen with the actual meshes how they have been clipped
 			create_voronoi_cell_visuals(&mut cmds, &mut meshes, &mut materials, &voronoi);
+			voronoi.clip_cells_to_boundary(&boundary);
 			create_mesh_visuals(&mut cmds, &mut meshes, &mut materials, &voronoi);
 		}
 	} else {
