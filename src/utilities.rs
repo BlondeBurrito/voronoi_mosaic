@@ -465,4 +465,18 @@ mod tests {
 		let vertex = Vec2::new(2.0, 10.0);
 		assert!(!is_vertex_within_polygon(&vertex, &polygon_edges));
 	}
+	#[test]
+	fn point_in_range() {
+		let point = Vec2::new(3.0, 5.0);
+		let edge_start = Vec2::new(1.0, 3.0);
+		let edge_end = Vec2::new(7.0, 9.0);
+		assert!(is_point_within_edge_range_limt(&point, &edge_start, &edge_end));
+	}
+	#[test]
+	fn point_out_range() {
+		let point = Vec2::new(-4.0, 12.0);
+		let edge_start = Vec2::new(1.0, 3.0);
+		let edge_end = Vec2::new(7.0, 9.0);
+		assert!(!is_point_within_edge_range_limt(&point, &edge_start, &edge_end));
+	}
 }

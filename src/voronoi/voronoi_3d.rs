@@ -4,7 +4,7 @@
 
 use std::{
 	cmp::Ordering,
-	collections::{HashMap, HashSet},
+	collections::{BTreeMap, HashSet},
 };
 
 use bevy::prelude::*;
@@ -23,7 +23,7 @@ impl VoronoiCell3d {
 
 impl VoronoiData<VoronoiCell3d> {
 	/// Get a reference to the list of Voronoi Cells
-	pub fn get_cells(&self) -> &HashMap<u32, VoronoiCell3d> {
+	pub fn get_cells(&self) -> &BTreeMap<u32, VoronoiCell3d> {
 		&self.cells
 	}
 	/// Froma  series of 2d points in space compute the Voronoi Cells
@@ -42,7 +42,7 @@ impl VoronoiData<VoronoiCell3d> {
 		let tetras = delaunay.get();
 
 		// uniquely identify each triangle
-		let mut tetra_store: HashMap<usize, &tetrahedron::Tetrahedron> = HashMap::new();
+		let mut tetra_store: BTreeMap<usize, &tetrahedron::Tetrahedron> = BTreeMap::new();
 		for (i, tetra) in tetras.iter().enumerate() {
 			tetra_store.insert(i, tetra);
 		}
@@ -53,7 +53,7 @@ impl VoronoiData<VoronoiCell3d> {
 		let id_sets = find_shared_sets(&tetra_store);
 
 		// from the set of IDs find each circumsphere as a vertex on a voronoi cell
-		let mut cells = HashMap::new();
+		let mut cells = BTreeMap::new();
 		for (i, ids) in id_sets.iter().enumerate() {
 			let mut cell_vertices = vec![];
 			for id in ids.iter() {
@@ -92,7 +92,7 @@ impl VoronoiData<VoronoiCell3d> {
 
 /// Compare the vertices of tetrahedrons and identify groupings of IDs whereby 4
 /// or more tetrahedrons share a vertex
-fn find_shared_sets(map: &HashMap<usize, &tetrahedron::Tetrahedron>) -> HashSet<Vec<usize>> {
+fn find_shared_sets(map: &BTreeMap<usize, &tetrahedron::Tetrahedron>) -> HashSet<Vec<usize>> {
 	let mut set = HashSet::new();
 	for (id, tetra) in map {
 		// compare each vert with the verts of all the other triangles

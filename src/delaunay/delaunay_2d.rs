@@ -19,14 +19,13 @@ impl DelaunayData<triangle_2d::Triangle2d> {
 			);
 			return None;
 		}
-		//TODO ensure no dupciates in points
+		//TODO ensure no dupciates in points?
 		// find the dimensions of a plane that the points occupy
 		let (minimum_world_dimensions, maximum_world_dimensions) =
 			compute_dimension_bounds(&points);
 		// compute the vertices of a super triangle which encompassess all the points
 		let super_vertices =
 			compute_super_triangle(&minimum_world_dimensions, &maximum_world_dimensions);
-		trace!("Super vertices {:?}", super_vertices);
 		// store triangles generaterd starting with the super triangle
 		let mut triangles = vec![triangle_2d::Triangle2d::new(
 			super_vertices[0],
@@ -35,20 +34,12 @@ impl DelaunayData<triangle_2d::Triangle2d> {
 		)];
 		// add each point at a time to the triangulation
 		for point in points {
-			trace!("Adding point to triangulation: {:?}", point);
 			// record triangles that don't qualify as Delaunay
 			let mut bad_triangles = vec![];
 			// check if the point lies within the circumcircle of a triangle
 			for tri in triangles.iter() {
 				if let Some(circumcircle) = tri.compute_circumcircle() {
-					trace!(
-						"Circumcircle from triangle {:?} with centre {} and radius {}",
-						tri.get_vertices(),
-						circumcircle.get_centre(),
-						circumcircle.get_radius()
-					);
 					if circumcircle.is_point_within_circle(point) {
-						trace!("Point {:?} is within circumcircle", point);
 						// if a point is within then it is not a delaunay triangle,
 						// record this triangle for removal
 						bad_triangles.push(tri.clone());
@@ -57,11 +48,9 @@ impl DelaunayData<triangle_2d::Triangle2d> {
 					warn!("Unable to compute circumcircle of triangle {:?}", tri);
 				}
 			}
-			trace!("Bad triangles contains {:?}", bad_triangles);
 			// remove any bad triangles from the triangle list
 			if !bad_triangles.is_empty() {
 				triangles.retain(|t| !bad_triangles.contains(&t));
-				trace!("Triangles after removing bads contains {:?}", triangles);
 				// we have a polyhedral hole around the point,
 				// by using the known bad triangles we can join the point to
 				// the vertex of each edge near it, thereby creating new triangles
@@ -83,18 +72,15 @@ impl DelaunayData<triangle_2d::Triangle2d> {
 				// sort the vertices in anti-clockwise order by comparing the
 				// angle between the point and a vertex
 				sort_vertices_2d(&mut vertices, &point);
-				trace!("Verts to use in new triangles {:?}", vertices);
 				// walk through vertex pairs creating new triangles
 				for i in 0..vertices.len() {
 					if i < vertices.len() - 1 {
 						let (a, b, c) = (*point, vertices[i], vertices[i + 1]);
 						let new_tri = triangle_2d::Triangle2d::new(a, b, c);
-						trace!("Adding new triangle {:?}", new_tri.get_vertices());
 						triangles.push(new_tri);
 					} else {
 						let (a, b, c) = (*point, vertices[i], vertices[0]);
 						let new_tri = triangle_2d::Triangle2d::new(a, b, c);
-						trace!("Adding new triangle {:?}", new_tri.get_vertices());
 						triangles.push(new_tri);
 					}
 				}
@@ -113,11 +99,8 @@ impl DelaunayData<triangle_2d::Triangle2d> {
 				&& !tri_verts.contains(&&s_c)
 			{
 				final_triangles.push(triangle.clone());
-			} else {
-				trace!("Discarding triangle {:?}", triangle.get_vertices());
 			}
 		}
-		trace!("Computed final triangles {:?}", final_triangles);
 		Some(DelaunayData {
 			shapes: final_triangles,
 		})
@@ -245,15 +228,11 @@ mod tests {
 	}
 	#[test]
 	fn edge_count() {
-		let mut points = vec![
+		let points = vec![
 			Vec2::new(50.0, 0.0),
 			Vec2::new(-50.0, 0.0),
 			Vec2::new(0.0, 50.0),
 		];
-		let d = compute_dimension_bounds(&mut points);
-		println!("D: {:?}", d);
-		let sup = compute_super_triangle(&d.0, &d.1);
-		println!("sup : {:?}", sup);
 		let data = DelaunayData::compute_triangulation_2d(&points).unwrap();
 		// should only be 1 triangle
 		assert_eq!(1, data.get().len());

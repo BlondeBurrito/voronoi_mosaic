@@ -47,7 +47,7 @@ fn init(points: &mut Vec<Vec3>) {
 pub fn criterion_benchmark(c: &mut Criterion) {
 	let mut data = prepare_data();
 	let mut group = c.benchmark_group("3d");
-	group.significance_level(0.1).sample_size(1000);
+	group.significance_level(0.1).sample_size(100);
 	group.throughput(Throughput::Bytes(data.len() as u64));
 	group.bench_function("3d_delaunay", |b| b.iter(|| init(black_box(&mut data))));
 	group.finish();

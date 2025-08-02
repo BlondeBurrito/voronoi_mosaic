@@ -50,9 +50,9 @@ fn init(voronoi: &mut VoronoiData<VoronoiCell2d>) {
 pub fn criterion_benchmark(c: &mut Criterion) {
 	let mut data = prepare_data();
 	let mut group = c.benchmark_group("2d");
-	group.significance_level(0.1).sample_size(1000);
+	group.significance_level(0.1).sample_size(100);
 	group.throughput(Throughput::Bytes(data.get_cells().len() as u64));
-	group.bench_function("2d_meshes", |b| b.iter(|| init(black_box(&mut data))));
+	group.bench_function("2d_clipped", |b| b.iter(|| init(black_box(&mut data))));
 	group.finish();
 }
 

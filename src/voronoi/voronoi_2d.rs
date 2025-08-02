@@ -2,7 +2,7 @@
 //!
 //!
 
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use crate::{
 	prelude::{
@@ -57,11 +57,11 @@ impl VoronoiCell2d {
 
 impl VoronoiData<VoronoiCell2d> {
 	/// Get a reference to the map of Voronoi Cells
-	pub fn get_cells(&self) -> &HashMap<u32, VoronoiCell2d> {
+	pub fn get_cells(&self) -> &BTreeMap<u32, VoronoiCell2d> {
 		&self.cells
 	}
 	/// Get a mutable reference to the map of Voronoi Cells
-	pub fn get_cells_mut(&mut self) -> &mut HashMap<u32, VoronoiCell2d> {
+	pub fn get_cells_mut(&mut self) -> &mut BTreeMap<u32, VoronoiCell2d> {
 		&mut self.cells
 	}
 	/// Generate a set of [VoronoiCell2d] from a Delaunay Triangle without any boundary restrictions on the Cells
@@ -70,7 +70,7 @@ impl VoronoiData<VoronoiCell2d> {
 		let triangles = delaunay.get();
 
 		// uniquely identify each triangle
-		let mut triangle_store: HashMap<usize, &triangle_2d::Triangle2d> = HashMap::new();
+		let mut triangle_store: BTreeMap<usize, &triangle_2d::Triangle2d> = BTreeMap::new();
 		for (i, triangle) in triangles.iter().enumerate() {
 			triangle_store.insert(i, triangle);
 		}
@@ -81,7 +81,7 @@ impl VoronoiData<VoronoiCell2d> {
 		let id_sets = find_shared_sets(&triangle_store);
 
 		// from the set of IDs find each circumcircle as a vertex on a voronoi cell
-		let mut cells = HashMap::new();
+		let mut cells = BTreeMap::new();
 		for (i, (ids, common_vertex)) in id_sets.iter().enumerate() {
 			let mut cell_vertices = vec![];
 			for id in ids.iter() {
@@ -224,7 +224,6 @@ impl VoronoiData<VoronoiCell2d> {
 				// if any boundary vert lies within the cell then they
 				// will be new verts the cell gets clipped to
 				for bounding_edge in bounding_edges.iter() {
-					
 					if is_vertex_within_polygon(&bounding_edge.0, &cell.get_edges()) {
 						if !new_vertices.contains(&bounding_edge.0) {
 							new_vertices.push(bounding_edge.0);
@@ -267,9 +266,39 @@ impl VoronoiData<VoronoiCell2d> {
 
 						let intersection = if cell_edge_dx == 0.0 {
 							// handle vertical line
-							info!("cell vert");
-							//TODO
-							None
+							if bounding_edge_dx == 0.0 {
+								// boundary vertical too,
+								// if edge x's are different then they are
+								// parallel but don't overlap
+								if bounding_edge.0.x == cell_edge_start.x {
+									None
+								} else {
+									// they overlap but the cell edge vertices
+									// are already inside the polygon then
+									//TODO dont need to push then?
+									None
+								}
+							} else {
+								// cell edge is vert, boundary at an angle
+								let bounding_gradient = bounding_edge_dy / bounding_edge_dx;
+								let bounding_intercept =
+									bounding_edge.0.y - (bounding_gradient * bounding_edge.0.x);
+								// plug cell x to find y
+								let intersect_x = cell_edge_start.x;
+								let intersect_y =
+									bounding_gradient * intersect_x + bounding_intercept;
+								// ensure intersection is on the line and not beyond it
+								if is_point_within_edge_range_limt(
+									&Vec2::new(intersect_x, intersect_y),
+									&cell_edge_start,
+									&cell_edge_end,
+								) {
+									// store the intersection
+									Some(Vec2::new(intersect_x, intersect_y))
+								} else {
+									None
+								}
+							}
 						} else if bounding_edge_dx == 0.0 {
 							// handle vertical boundary
 							// bounding x const so find new y with cell edge
@@ -294,8 +323,8 @@ impl VoronoiData<VoronoiCell2d> {
 							== (bounding_edge_dy / bounding_edge_dx)
 						{
 							// handle case of both edges being parallel
-							info!("para");
-							//TODO
+							//TODO cell edge verts should already be treated
+							//TODO as being within the polygon then?
 							None
 						} else {
 							let bounding_gradient = bounding_edge_dy / bounding_edge_dx;
@@ -356,8 +385,8 @@ impl VoronoiData<VoronoiCell2d> {
 /// or more triangles share a vertex.
 ///
 /// The grouping forms the key and the value is the vertex they all have in common
-fn find_shared_sets(map: &HashMap<usize, &triangle_2d::Triangle2d>) -> HashMap<Vec<usize>, Vec2> {
-	let mut set = HashMap::new();
+fn find_shared_sets(map: &BTreeMap<usize, &triangle_2d::Triangle2d>) -> BTreeMap<Vec<usize>, Vec2> {
+	let mut set = BTreeMap::new();
 	for (id, triangle) in map {
 		// compare each vert with the verts of all the other triangles
 		let tri_verts = triangle.get_vertices();

@@ -4,7 +4,7 @@
 ![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/blondeburrito/voronoi_mosaic/ci.yml)
 ![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/blondeburrito/voronoi_mosaic/code-cov.yml?label=CodeCov>85%)
 
-<img src="https://raw.githubusercontent.com/BlondeBurrito/voronoi_mosaic/main/docs/png/emblem.png" alt="e" width="300"/>
+<img src="https://raw.githubusercontent.com/BlondeBurrito/voronoi_mosaic/refs/heads/main/docs/png/emblem.png" alt="e" width="300"/>
 
 # voronoi_mosaic
 
@@ -12,24 +12,170 @@ Bevy mesh generation from a series of points in space using [Delaunay Triangulat
 
 | bevy | voronoi_mosaic |
 |------|----------------|
-| 0.16 | 0.1 |
+| 0.16 | TBD |
 
-# Table of Contents
+## Table of Contents
 
 1. [Intro](#intro)
 1. [Delaunay Triangulation](#delaunay-triangulation)
 1. [Voronoi Tessellation](#voronoi-tessellation)
-1. [Design/Process](#designprocess)
 1. [Usage](#usage)
-1. [Features](#features)
 1. [Performance](#performance)
 1. [License](#license)
 
 ## Intro
 
-TODO
+This library is designed to generate Bevy meshes from a series of points in space.
 
 ## Delaunay Triangulation
+
+Delaunay Triangulation describes a set of data points in space that form a series of triangles whereby each circumcircle of a triangle does not contain any of the data points.
+
+A series of data points that have been triangulated:
+
+<img src="https://raw.githubusercontent.com/BlondeBurrito/voronoi_mosaic/refs/heads/main/docs/png/delaunay_tri.png" alt="e" width="300"/>
+
+<details>
+<summary>To read through the triangulation process click to exapnd</summary>
+
+### Process
+
+abc
+
+</details>
+
+## Voronoi Tessellation
+
+A Voronoi Tesselation (or Voronoi diagram) describes a number of regions (referred to here as Cells) for which all points in a plane belong to a particular Cell.
+
+Here is an example showing each Cell as a different colour (some cells extend beyond the viewport):
+
+<img src="https://raw.githubusercontent.com/BlondeBurrito/voronoi_mosaic/refs/heads/main/docs/png/2d_voronoi.png" alt="e" width="300"/>
+
+<details>
+<summary>For the details of converting Delanay into Voronoi click to expand</summary>
+
+### Process
+
+abc
+
+</details>
+
+## Usage
+
+### 2d
+
+#### Delaunay
+
+Generating the Delaunay simply requires a series of points in space:
+
+```rust
+use bevy::prelude::*;
+use voronoi_mosaic::prelude::*;
+
+let points: Vec<Vec2> = vec![...];
+if let Some(delaunay) = DelaunayData::compute_triangulation_2d(&points) {
+	// do something with the data
+}
+```
+
+For a full visualisation you can check out this example [2d_delaunay](https://github.com/BlondeBurrito/voronoi_mosaic/blob/main/examples/2d_delaunay.rs).
+
+#### Voronoi
+
+With some generated Delaunay data the Voronoi Cells can easily be generated:
+
+```rust
+use bevy::prelude::*;
+use voronoi_mosaic::prelude::*;
+
+let points = vec![...];
+if let Some(delaunay) = DelaunayData::compute_triangulation_2d(&points) {
+	if let Some(voronoi) = VoronoiData::from_delaunay_2d(&delaunay) {
+		// do something with the generated cells
+	}
+}
+```
+
+For a full visualisation you can check out this example [2d_voronoi](https://github.com/BlondeBurrito/voronoi_mosaic/blob/main/examples/2d_voronoi.rs).
+
+#### Meshes
+
+The Voronoi data can be converted into Bevy meshes like so:
+
+```rust
+use bevy::prelude::*;
+use voronoi_mosaic::prelude::*;
+
+let points = vec![...];
+if let Some(delaunay) = DelaunayData::compute_triangulation_2d(&points) {
+	if let Some(voronoi) = VoronoiData::from_delaunay_2d(&delaunay) {
+		// convert the cell data structures into bevy meshes
+		let meshes = voronoi.as_bevy_meshes_2d();
+	}
+}
+```
+
+For a full visualisation you can check out this example [2d_meshes](https://github.com/BlondeBurrito/voronoi_mosaic/blob/main/examples/2d_meshes.rs).
+
+#### Clipping
+
+Voronoi Cells can be clipped to a boundary - this means that any Cells outside of a given boundary are dropped and any that overlap the boundary have their vertices clipped to the boundary edge.
+
+It is important to note that clipping involves adding/removing vertices, this shatters the duality between Voronoi and Delaunay - once clipped you wouldn't be able to convert Voronoi to Delaunay and expect to get your original data set back.
+
+```rust
+use bevy::prelude::*;
+use voronoi_mosaic::prelude::*;
+
+let points = vec![...];
+if let Some(delaunay) = DelaunayData::compute_triangulation_2d(&points) {
+	if let Some(mut voronoi) = VoronoiData::from_delaunay_2d(&delaunay) {
+		// define a series of boundary vertices that form a polygon
+		// they must be in anti-clockwise order!
+		let boundary = vec![...];
+		voronoi.clip_cells_to_boundary(&boundary);
+		// do something with the clipped cells like turning them into meshes
+		let meshes = voronoi.as_bevy_meshes_2d();
+	}
+}
+```
+
+For a full visualisation you can check out this exmaple [2d_meshes_clipped](https://github.com/BlondeBurrito/voronoi_mosaic/blob/main/examples/2d_meshes_clipped.rs).
+
+### 3d
+
+#### Delaunay
+
+#### Voronoi
+
+#### Meshes
+
+#### Clipping
+
+## Performance
+
+A number of [benchmarks](https://github.com/BlondeBurrito/voronoi_mosaic/tree/main/benches) are included to measure the different phases of calculation.
+
+You can run all benchmarks with:
+
+```bash
+cargo bench -q --benches --workspace --all-features
+```
+
+Or target a benchmark specifically:
+
+```bash
+cargo bench -q --bench BENCH_NAME --workspace --all-features
+```
+
+Once executed a browser based report can be viewed at `[your_repo_root]/target/criterion/report/index.html`
+
+# LICENSE
+
+Dual license of MIT and Apache.
+
+# TODO/ notes
 
 todo
 TODO note about extremely actue angles in a triangle getting dropped
@@ -40,69 +186,9 @@ if some points are too close together then acute angles lead to being ignored
 
 3d - all regualr poluhedra (e.g cube, pyramid) have a circumsphere, most irregular polyhedra do not
 
-``` txt
-if super triangle is minimum size, i.e two of its sides touch the corners of the data plane then triangulation can leaves holes - suspect it's in relation to dimensions of data plane. exmaple: plane min (-51, -1) max (51, 51) is a flat wide rectangle
-
-Adding point to triangulation: Vec2(0.0, 50.0)
-Circumcircle from triangle [Vec2(0.0, -27.0), Vec2(-203.01923, 76.5), Vec2(203.01923, 76.5)] with centre [-0, 223.86499] and radius 250.86499
-Point Vec2(0.0, 50.0) is within circumcircle
-Bad triangles contains [Triangle2d { vertex_a: Vec2(0.0, -27.0), vertex_b: Vec2(-203.01923, 76.5), vertex_c: Vec2(203.01923, 76.5) }]
-Triangles after removing bads contains []
-Verts to use in new triangles [Vec2(0.0, -27.0), Vec2(203.01923, 76.5), Vec2(-203.01923, 76.5)]
-Adding new triangle [Vec2(0.0, 50.0), Vec2(0.0, -27.0), Vec2(203.01923, 76.5)]
-Adding new triangle [Vec2(0.0, 50.0), Vec2(203.01923, 76.5), Vec2(-203.01923, 76.5)]
-Adding new triangle [Vec2(0.0, 50.0), Vec2(-203.01923, 76.5), Vec2(0.0, -27.0)]
-Adding point to triangulation: Vec2(-50.0, 0.0)
-Circumcircle from triangle [Vec2(0.0, 50.0), Vec2(0.0, -27.0), Vec2(203.01923, 76.5)] with centre [108.26451, 11.5] and radius 114.90628
-Circumcircle from triangle [Vec2(0.0, 50.0), Vec2(203.01923, 76.5), Vec2(-203.01923, 76.5)] with centre [0, 840.9256] and radius 790.9256
-Circumcircle from triangle [Vec2(0.0, 50.0), Vec2(-203.01923, 76.5), Vec2(0.0, -27.0)] with centre [-108.26451, 11.5] and radius 114.90628
-Point Vec2(-50.0, 0.0) is within circumcircle
-Bad triangles contains [Triangle2d { vertex_a: Vec2(0.0, 50.0), vertex_b: Vec2(-203.01923, 76.5), vertex_c: Vec2(0.0, -27.0) }]
-Triangles after removing bads contains [Triangle2d { vertex_a: Vec2(0.0, 50.0), vertex_b: Vec2(0.0, -27.0), vertex_c: Vec2(203.01923, 76.5) }, Triangle2d { vertex_a: Vec2(0.0, 50.0), vertex_b: Vec2(203.01923, 76.5), vertex_c: Vec2(-203.01923, 76.5) }]
-Verts to use in new triangles [Vec2(0.0, 50.0), Vec2(-203.01923, 76.5), Vec2(0.0, -27.0)]
-Adding new triangle [Vec2(-50.0, 0.0), Vec2(0.0, 50.0), Vec2(-203.01923, 76.5)]
-Adding new triangle [Vec2(-50.0, 0.0), Vec2(-203.01923, 76.5), Vec2(0.0, -27.0)]
-Adding new triangle [Vec2(-50.0, 0.0), Vec2(0.0, -27.0), Vec2(0.0, 50.0)]
-Adding point to triangulation: Vec2(50.0, 0.0)
-Circumcircle from triangle [Vec2(0.0, 50.0), Vec2(0.0, -27.0), Vec2(203.01923, 76.5)] with centre [108.26451, 11.5] and radius 114.90628
-Point Vec2(50.0, 0.0) is within circumcircle
-Circumcircle from triangle [Vec2(0.0, 50.0), Vec2(203.01923, 76.5), Vec2(-203.01923, 76.5)] with centre [0, 840.9256] and radius 790.9256
-Circumcircle from triangle [Vec2(-50.0, 0.0), Vec2(0.0, 50.0), Vec2(-203.01923, 76.5)] with centre [-97.09221, 97.09221] and radius 107.91003
-Circumcircle from triangle [Vec2(-50.0, 0.0), Vec2(-203.01923, 76.5), Vec2(0.0, -27.0)] with centre [-1741.9521, -3193.041] and radius 3613.615
-Circumcircle from triangle [Vec2(-50.0, 0.0), Vec2(0.0, -27.0), Vec2(0.0, 50.0)] with centre [-11.5, 11.5] and radius 40.18084
-Bad triangles contains [Triangle2d { vertex_a: Vec2(0.0, 50.0), vertex_b: Vec2(0.0, -27.0), vertex_c: Vec2(203.01923, 76.5) }]
-Triangles after removing bads contains [Triangle2d { vertex_a: Vec2(0.0, 50.0), vertex_b: Vec2(203.01923, 76.5), vertex_c: Vec2(-203.01923, 76.5) }, Triangle2d { vertex_a: Vec2(-50.0, 0.0), vertex_b: Vec2(0.0, 50.0), vertex_c: Vec2(-203.01923, 76.5) }, Triangle2d { vertex_a: Vec2(-50.0, 0.0), vertex_b: Vec2(-203.01923, 76.5), vertex_c: Vec2(0.0, -27.0) }, Triangle2d { vertex_a: Vec2(-50.0, 0.0), vertex_b: Vec2(0.0, -27.0), vertex_c: Vec2(0.0, 50.0) }]
-Verts to use in new triangles [Vec2(0.0, -27.0), Vec2(203.01923, 76.5), Vec2(0.0, 50.0)]
-Adding new triangle [Vec2(50.0, 0.0), Vec2(0.0, -27.0), Vec2(203.01923, 76.5)]
-Adding new triangle [Vec2(50.0, 0.0), Vec2(203.01923, 76.5), Vec2(0.0, 50.0)]
-Adding new triangle [Vec2(50.0, 0.0), Vec2(0.0, 50.0), Vec2(0.0, -27.0)]
-Discarding triangle [Vec2(0.0, 50.0), Vec2(203.01923, 76.5), Vec2(-203.01923, 76.5)]
-Discarding triangle [Vec2(-50.0, 0.0), Vec2(0.0, 50.0), Vec2(-203.01923, 76.5)]
-Discarding triangle [Vec2(-50.0, 0.0), Vec2(-203.01923, 76.5), Vec2(0.0, -27.0)]
-Discarding triangle [Vec2(-50.0, 0.0), Vec2(0.0, -27.0), Vec2(0.0, 50.0)]
-Discarding triangle [Vec2(50.0, 0.0), Vec2(0.0, -27.0), Vec2(203.01923, 76.5)]
-Discarding triangle [Vec2(50.0, 0.0), Vec2(203.01923, 76.5), Vec2(0.0, 50.0)]
-Discarding triangle [Vec2(50.0, 0.0), Vec2(0.0, 50.0), Vec2(0.0, -27.0)]
-Computed final triangles []
-
-```
-
-## Voronoi Tessellation
-
-<details>
-<summary>Click to expand!</summary>
-</details>
-
-todo
-todo how many minimum points needed to generate
-
-## Useage
-
 raw delany
 voronoi from raw delauny stream
 voronoi from points (generates and discard delaunay)
 meshes directly from points (delaunay and voronoi discarded)
-
-# LICENSE
-
-Dual license of MIT and Apache.
+todo
+todo how many minimum points needed to generate

@@ -5,7 +5,7 @@
 //!
 
 use bevy::{color::palettes::css::WHITE, prelude::*};
-use voronoi_mosaic::{prelude::*, triangle_2d};
+use voronoi_mosaic::prelude::*;
 
 const MESH_Z: f32 = 1.0;
 
@@ -39,14 +39,14 @@ fn main() {
 /// Requirements
 fn setup(
 	mut cmds: Commands,
-	// mut meshes: ResMut<Assets<Mesh>>,
-	// mut materials: ResMut<Assets<ColorMaterial>>,
+	mut meshes: ResMut<Assets<Mesh>>,
+	mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
 	// camera
 	cmds.spawn((Camera2d,));
-	// // background plane
-	// let mesh = meshes.add(Rectangle::from_length(800.0));
-	// let material = materials.add(Color::srgb(0.75, 0.75, 0.75));
+	// background plane
+	let mesh = meshes.add(Rectangle::from_length(800.0));
+	let material = materials.add(Color::srgb(0.75, 0.75, 0.75));
 	// cmds.spawn((Transform::default(), Mesh2d(mesh), MeshMaterial2d(material)));
 }
 /// Compute triangluation and dispay it with simple shapes
