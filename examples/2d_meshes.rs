@@ -47,7 +47,7 @@ fn setup(
 	// background plane
 	let mesh = meshes.add(Rectangle::from_length(800.0));
 	let material = materials.add(Color::srgb(0.75, 0.75, 0.75));
-	// cmds.spawn((Transform::default(), Mesh2d(mesh), MeshMaterial2d(material)));
+	cmds.spawn((Transform::default(), Mesh2d(mesh), MeshMaterial2d(material)));
 }
 /// Compute triangluation and dispay it with simple shapes
 fn visuals(
