@@ -31,7 +31,7 @@ fn prepare_data() -> VoronoiData<VoronoiCell2d> {
 			points.push(point);
 		}
 	}
-	let data = DelaunayData::compute_triangulation_2d(&mut points).unwrap();
+	let data = DelaunayData::compute_triangulation_2d(&points).unwrap();
 	let voronoi = VoronoiData::from_delaunay_2d(&data);
 	voronoi.unwrap()
 }
@@ -44,7 +44,7 @@ fn init(voronoi: &mut VoronoiData<VoronoiCell2d>) {
 		Vec2::new(0.0, 0.0),
 		Vec2::new(10000.0, 0.0),
 	];
-	let _m = voronoi.clip_cells_to_boundary(&boundary);
+	voronoi.clip_cells_to_boundary(&boundary);
 }
 /// Benchmark
 pub fn criterion_benchmark(c: &mut Criterion) {

@@ -1,4 +1,6 @@
-//!
+//! From a series of 2d points in space compute a Delaunay Triangulation.
+//! 
+//! The Bowyer-Watson algorithm is used - use circumcircles to determine if a triangulation is valid
 //!
 
 use bevy::prelude::*;
@@ -22,7 +24,7 @@ impl DelaunayData<triangle_2d::Triangle2d> {
 		//TODO ensure no dupciates in points?
 		// find the dimensions of a plane that the points occupy
 		let (minimum_world_dimensions, maximum_world_dimensions) =
-			compute_dimension_bounds(&points);
+			compute_dimension_bounds(points);
 		// compute the vertices of a super triangle which encompassess all the points
 		let super_vertices =
 			compute_super_triangle(&minimum_world_dimensions, &maximum_world_dimensions);
@@ -50,7 +52,7 @@ impl DelaunayData<triangle_2d::Triangle2d> {
 			}
 			// remove any bad triangles from the triangle list
 			if !bad_triangles.is_empty() {
-				triangles.retain(|t| !bad_triangles.contains(&t));
+				triangles.retain(|t| !bad_triangles.contains(t));
 				// we have a polyhedral hole around the point,
 				// by using the known bad triangles we can join the point to
 				// the vertex of each edge near it, thereby creating new triangles
@@ -71,7 +73,7 @@ impl DelaunayData<triangle_2d::Triangle2d> {
 				}
 				// sort the vertices in anti-clockwise order by comparing the
 				// angle between the point and a vertex
-				sort_vertices_2d(&mut vertices, &point);
+				sort_vertices_2d(&mut vertices, point);
 				// walk through vertex pairs creating new triangles
 				for i in 0..vertices.len() {
 					if i < vertices.len() - 1 {
@@ -112,7 +114,7 @@ impl DelaunayData<triangle_2d::Triangle2d> {
 }
 
 /// Find the minimum `x-y` and maximum `x-y` of a plane that contains all points
-fn compute_dimension_bounds(points: &Vec<Vec2>) -> (Vec2, Vec2) {
+fn compute_dimension_bounds(points: &[Vec2]) -> (Vec2, Vec2) {
 	let mut minimum_world_dimensions = Vec2::ZERO;
 	let mut maximum_world_dimensions = Vec2::ZERO;
 	for point in points.iter() {
@@ -160,8 +162,8 @@ fn compute_super_triangle(
 	let bottom_right = Vec2::new(maximum_world_dimensions.x, minimum_world_dimensions.y);
 	let x = bottom_left.x + (bottom_right.x - bottom_left.x) / 2.0;
 	// we actually scale it away from the corners of the plane by a factor of 2 as if the plane is wide but thin then a very acute super triangle is produced which can cause holes in the triangualtion (all triangles formed with super verts that get removed at the end) when the data set is very small
-	let y = minimum_world_dimensions.y as f32
-		- 2.0 * (maximum_world_dimensions.y - minimum_world_dimensions.y) as f32;
+	let y = minimum_world_dimensions.y
+		- 2.0 * (maximum_world_dimensions.y - minimum_world_dimensions.y);
 	let sup_triangle_vert_a = Vec2::new(x, y);
 	// by treating the maximum y of the plane as a striahgt line parallel to x we can
 	// take line equations from the furthest point sup_triangle_vert_a with the
@@ -207,12 +209,12 @@ mod tests {
 
 	#[test]
 	fn dimension_bounds() {
-		let mut points = vec![
+		let points = vec![
 			Vec2::new(50.0, 45.0),
 			Vec2::new(-23.0, -11.0),
 			Vec2::new(32.0, -3.0),
 		];
-		let (min_bounds, max_bounds) = compute_dimension_bounds(&mut points);
+		let (min_bounds, max_bounds) = compute_dimension_bounds(&points);
 		assert_eq!(Vec2::new(-24.0, -12.0), min_bounds);
 		assert_eq!(Vec2::new(51.0, 46.0), max_bounds);
 	}

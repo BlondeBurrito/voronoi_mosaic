@@ -21,6 +21,7 @@ use super::VoronoiData;
 /// The vertices of a Voronoi Cell in 2-dimensions
 #[derive(PartialEq)]
 pub struct VoronoiCell2d {
+	/// List of vertices that make up the cell
 	vertices: Vec<Vec2>,
 	/// The vertex which is the nearest site to the boundary vertices of the
 	/// cell compared to any other cell source
@@ -224,15 +225,15 @@ impl VoronoiData<VoronoiCell2d> {
 				// if any boundary vert lies within the cell then they
 				// will be new verts the cell gets clipped to
 				for bounding_edge in bounding_edges.iter() {
-					if is_vertex_within_polygon(&bounding_edge.0, &cell.get_edges()) {
-						if !new_vertices.contains(&bounding_edge.0) {
-							new_vertices.push(bounding_edge.0);
-						}
+					if is_vertex_within_polygon(&bounding_edge.0, &cell.get_edges())
+						&& !new_vertices.contains(&bounding_edge.0)
+					{
+						new_vertices.push(bounding_edge.0);
 					}
-					if is_vertex_within_polygon(&bounding_edge.1, &cell.get_edges()) {
-						if !new_vertices.contains(&bounding_edge.1) {
-							new_vertices.push(bounding_edge.1);
-						}
+					if is_vertex_within_polygon(&bounding_edge.1, &cell.get_edges())
+						&& !new_vertices.contains(&bounding_edge.1)
+					{
+						new_vertices.push(bounding_edge.1);
 					}
 				}
 
@@ -358,10 +359,10 @@ impl VoronoiData<VoronoiCell2d> {
 				}
 				// add any original vertices that are inside the boundary to new_vertices
 				for vertex in cell.get_vertices().iter() {
-					if is_vertex_within_polygon(vertex, &bounding_edges) {
-						if !new_vertices.contains(vertex) {
-							new_vertices.push(*vertex);
-						}
+					if is_vertex_within_polygon(vertex, &bounding_edges)
+						&& !new_vertices.contains(vertex)
+					{
+						new_vertices.push(*vertex);
 					}
 				}
 				// replace the cell vertices with the new ones

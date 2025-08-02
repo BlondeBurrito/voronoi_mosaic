@@ -8,7 +8,9 @@ use bevy::{math::ops::sqrt, prelude::*};
 /// Describes a sphere whereby the vertices of a polyhedron sit upon its
 /// surface
 pub struct Circumsphere {
+	/// Centre of the sphere
 	circumcentre: Vec3,
+	/// Sphere radius
 	radius: f32,
 }
 
@@ -199,7 +201,7 @@ impl Circumsphere {
 		)
 		.determinant();
 
-		if a > 0.0 || a < 0.0 {
+		if a != 0.0 {
 			let a_len_sq = vertex_a.length_squared();
 			let b_len_sq = vertex_b.length_squared();
 			let c_len_sq = vertex_c.length_squared();
@@ -255,7 +257,7 @@ impl Circumsphere {
 		&self.circumcentre
 	}
 	/// Is the `point` position within the sphere
-	pub fn is_point_within_sphere(&self, point: Vec3) -> bool {
+	pub fn is_point_within_sphere(&self, point: &Vec3) -> bool {
 		//(x - x_c)^2 + (y - y_c)^2 + (z - z_c)^2 > r^2
 		(point.x - self.get_centre().x).powf(2.0)
 			+ (point.y - self.get_centre().y).powf(2.0)
@@ -290,7 +292,7 @@ mod tests {
 
 		let c = Circumsphere::new(vertex_a, vertex_b, vertex_c, vertex_d).unwrap();
 		let point = Vec3::new(3.0, 5.0, 1.0);
-		assert!(c.is_point_within_sphere(point));
+		assert!(c.is_point_within_sphere(&point));
 	}
 	#[test]
 	fn point_is_not_within_circumcircle() {
@@ -301,6 +303,6 @@ mod tests {
 
 		let c = Circumsphere::new(vertex_a, vertex_b, vertex_c, vertex_d).unwrap();
 		let point = Vec3::new(0.0, -15.0, 0.0);
-		assert!(!c.is_point_within_sphere(point));
+		assert!(!c.is_point_within_sphere(&point));
 	}
 }

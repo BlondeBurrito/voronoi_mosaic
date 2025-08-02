@@ -31,7 +31,7 @@ fn prepare_data() -> DelaunayData<triangle_2d::Triangle2d> {
 			points.push(point);
 		}
 	}
-	let data = DelaunayData::compute_triangulation_2d(&mut points);
+	let data = DelaunayData::compute_triangulation_2d(&points);
 	data.unwrap()
 }
 

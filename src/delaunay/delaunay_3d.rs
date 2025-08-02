@@ -1,4 +1,4 @@
-//!
+//! Use Tetrahedralization to find tetrahedrons that comply to Delaunay in 3d
 //!
 //!
 
@@ -8,10 +8,16 @@ use crate::{prelude::DelaunayData, tetrahedron};
 use bevy::prelude::*;
 
 impl DelaunayData<tetrahedron::Tetrahedron> {
-	/// From a series of 3d points in space calculate the Delaunay Triangulation
-	pub fn compute_triangulation_3d(points: &mut Vec<Vec3>) -> Option<Self> {
+	/// From a series of 3d points in space calculate the Delaunay Tetrahedralization
+	pub fn compute_triangulation_3d(points: &Vec<Vec3>) -> Option<Self> {
+		if points.len() < 4 {
+			warn!(
+				"Minimum of 4 points required for tetrahedralization, supplied {} points",
+				points.len()
+			);
+			return None;
+		}
 		//TODO ensure no dupciates in points
-		//TODO ensure sufficient points avaialble 4+, i think
 		// idenitfy spacial boundaries
 		let (minimum_world_dimensions, maximum_world_dimensions) = compute_dimension_bounds(points);
 
@@ -26,8 +32,7 @@ impl DelaunayData<tetrahedron::Tetrahedron> {
 			super_tetra[3],
 		)];
 		// add each point at a time to the triangulation
-		while !points.is_empty() {
-			let point = points.pop().unwrap();
+		for point in points {
 			// record tetrahedrons that don't qualify as Delaunay
 			let mut bad_tetras = vec![];
 			// check if the point lies within the circumsphere of the tetrahedron
@@ -42,7 +47,7 @@ impl DelaunayData<tetrahedron::Tetrahedron> {
 			}
 			// remove any bad tetrahedrons from the list
 			if !bad_tetras.is_empty() {
-				tetrahedrons.retain(|t| !bad_tetras.contains(&t));
+				tetrahedrons.retain(|t| !bad_tetras.contains(t));
 				// we have a polyhedral hole around the point,
 				// by using the known bad tetra we can join the point to
 				// the vertex of each edge near it, thereby creating new polygons
@@ -78,21 +83,28 @@ impl DelaunayData<tetrahedron::Tetrahedron> {
 						Ordering::Less
 					}
 				});
-				// walk through vertex pairs creating new tetrahedrons
+				// walk through vertices creating new tetrahedrons
 				for i in 0..vertices.len() {
 					if i < vertices.len() - 2 {
 						tetrahedrons.push(tetrahedron::Tetrahedron::new(
-							point,
+							*point,
 							vertices[i],
 							vertices[i + 1],
 							vertices[i + 2],
 						));
-					} else {
+					} else if i < vertices.len() - 1 {
 						tetrahedrons.push(tetrahedron::Tetrahedron::new(
-							point,
+							*point,
 							vertices[i],
 							vertices[0],
 							vertices[1],
+						));
+					} else {
+						tetrahedrons.push(tetrahedron::Tetrahedron::new(
+							*point,
+							vertices[i],
+							vertices[1],
+							vertices[2],
 						));
 					}
 				}
@@ -128,7 +140,7 @@ impl DelaunayData<tetrahedron::Tetrahedron> {
 	}
 }
 /// Find the minimum `x-y-z` and maximum `x-y-z` of space containing all points
-fn compute_dimension_bounds(points: &mut Vec<Vec3>) -> (Vec3, Vec3) {
+fn compute_dimension_bounds(points: &[Vec3]) -> (Vec3, Vec3) {
 	let mut minimum_world_dimensions = Vec3::ZERO;
 	let mut maximum_world_dimensions = Vec3::ZERO;
 
@@ -196,12 +208,12 @@ mod tests {
 
 	#[test]
 	fn dimension_bounds() {
-		let mut points = vec![
+		let points = vec![
 			Vec3::new(50.0, 45.0, 0.0),
 			Vec3::new(-23.0, -11.0, 64.0),
 			Vec3::new(32.0, -3.0, -12.0),
 		];
-		let (min_bounds, max_bounds) = compute_dimension_bounds(&mut points);
+		let (min_bounds, max_bounds) = compute_dimension_bounds(&points);
 		assert_eq!(Vec3::new(-24.0, -12.0, -13.0), min_bounds);
 		assert_eq!(Vec3::new(51.0, 46.0, 65.0), max_bounds);
 	}

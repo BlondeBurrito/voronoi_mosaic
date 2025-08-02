@@ -6,10 +6,13 @@
 use bevy::prelude::*;
 use voronoi_mosaic::prelude::*;
 
-const VERTEX_Z: f32 = 2.0;
-const EDGE_Z: f32 = 1.0;
-
+/// Z location of Delaunay edges
+const DELAUNAY_EDGE_Z: f32 = 1.0;
+/// Colour of Delaunay edges
 const DELAUNAY_EDGE_COLOUR: Color = Color::srgb(1.0, 0.0, 0.0);
+/// Z location of Delaunay vertices
+const DELAUNAY_VERTEX_Z: f32 = 2.0;
+/// Colour of Delaunay vertices
 const DELAUNAY_VERTEX_COLOUR: Color = Color::srgb(0.0, 0.0, 1.0);
 
 fn main() {
@@ -70,7 +73,7 @@ fn visuals(
 				cmds.spawn((
 					Mesh2d(mesh.clone()),
 					MeshMaterial2d(material.clone()),
-					Transform::from_translation(translation.extend(VERTEX_Z)),
+					Transform::from_translation(translation.extend(DELAUNAY_VERTEX_Z)),
 				));
 			}
 			// create markers for edges
@@ -81,7 +84,7 @@ fn visuals(
 				let translation = (edge.1 + edge.0) / 2.0;
 				let angle = Vec2::Y.angle_to(edge.0 - edge.1);
 				let tform = Transform {
-					translation: translation.extend(EDGE_Z),
+					translation: translation.extend(DELAUNAY_EDGE_Z),
 					rotation: Quat::from_rotation_z(angle),
 					..default()
 				};

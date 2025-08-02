@@ -9,9 +9,13 @@ use crate::circumsphere::Circumsphere;
 /// Describes a tetrahedron
 #[derive(Clone)]
 pub struct Tetrahedron {
+	/// A vertex
 	vertex_a: Vec3,
+	/// B vertex
 	vertex_b: Vec3,
+	/// C vertex
 	vertex_c: Vec3,
+	/// D vertex
 	vertex_d: Vec3,
 }
 

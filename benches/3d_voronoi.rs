@@ -36,7 +36,7 @@ fn prepare_data() -> DelaunayData<tetrahedron::Tetrahedron> {
 			points.push(point);
 		}
 	}
-	let data = DelaunayData::compute_triangulation_3d(&mut points);
+	let data = DelaunayData::compute_triangulation_3d(&points);
 	data.unwrap()
 }
 
@@ -46,11 +46,11 @@ fn init(delaunay: &DelaunayData<tetrahedron::Tetrahedron>) {
 }
 /// Benchmark
 pub fn criterion_benchmark(c: &mut Criterion) {
-	let mut data = prepare_data();
+	let data = prepare_data();
 	let mut group = c.benchmark_group("3d");
 	group.significance_level(0.1).sample_size(100);
 	group.throughput(Throughput::Bytes(data.get().len() as u64));
-	group.bench_function("3d_voronoi", |b| b.iter(|| init(black_box(&mut data))));
+	group.bench_function("3d_voronoi", |b| b.iter(|| init(black_box(&data))));
 	group.finish();
 }
 

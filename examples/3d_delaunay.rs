@@ -8,7 +8,9 @@ use std::f32::consts::PI;
 use bevy::prelude::*;
 use voronoi_mosaic::prelude::*;
 
+/// Colour of Delaunay edges
 const DELAUNAY_EDGE_COLOUR: Color = Color::srgb(1.0, 0.0, 0.0);
+/// Colour of Delaunay vertices
 const DELAUNAY_VERTEX_COLOUR: Color = Color::srgb(0.0, 0.0, 1.0);
 
 fn main() {
@@ -72,13 +74,14 @@ fn orbit_camera(
 	}
 }
 
+/// Create simple shapes to visualise the Delaunay data
 fn visuals(
 	mut cmds: Commands,
 	mut meshes: ResMut<Assets<Mesh>>,
 	mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
 	// points to be used
-	let mut points = vec![
+	let points = vec![
 		Vec3::new(1.0, 3.0, 4.0),
 		Vec3::new(-5.0, 6.0, -4.0),
 		Vec3::new(6.0, 0.0, 5.0),
@@ -89,7 +92,7 @@ fn visuals(
 		Vec3::new(0.0, 12.0, 3.0),
 	];
 	// compute data
-	if let Some(data) = DelaunayData::compute_triangulation_3d(&mut points) {
+	if let Some(data) = DelaunayData::compute_triangulation_3d(&points) {
 		for tetra in data.get().iter() {
 			// create markers for vertices
 			let mesh = meshes.add(Sphere::new(0.5));

@@ -1,7 +1,6 @@
 //! Construct a series of triangles between points such that no point sits within a
-//! triangle, they all become vertices
+//! the circumcircle of any triangle
 //!
-//! Bowyer-Watson algorithm - use circumcircles to determine if a triangulation is valid
 
 use bevy::prelude::*;
 
@@ -10,5 +9,6 @@ pub mod delaunay_3d;
 
 /// Describes the triangles in Delaunay Triangulation
 pub struct DelaunayData<T> {
+	/// List of triangulations/tetrahedralizations
 	shapes: Vec<T>,
 }

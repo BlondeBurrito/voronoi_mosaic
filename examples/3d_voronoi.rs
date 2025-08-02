@@ -8,7 +8,9 @@ use std::f32::consts::PI;
 use bevy::prelude::*;
 use voronoi_mosaic::prelude::*;
 
+/// Colour of Voronoi edges
 const VORONOI_EDGE_COLOUR: Color = Color::srgb(1.0, 0.5, 0.0);
+/// Colour of the Voronoi vertices
 const VORONOI_VERTEX_COLOUR: Color = Color::srgb(0.5, 1.0, 0.0);
 
 fn main() {
@@ -71,14 +73,14 @@ fn orbit_camera(
 		tform.look_at(Vec3::ZERO, Vec3::Y);
 	}
 }
-
+/// Create simple shapes to visualise the Voronoi data
 fn visuals(
 	mut cmds: Commands,
 	mut meshes: ResMut<Assets<Mesh>>,
 	mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
 	// points to be used
-	let mut points = vec![
+	let points = vec![
 		Vec3::new(1.0, 3.0, 4.0),
 		Vec3::new(-5.0, 6.0, -4.0),
 		Vec3::new(6.0, 0.0, 5.0),
@@ -89,7 +91,7 @@ fn visuals(
 		Vec3::new(0.0, 12.0, 3.0),
 	];
 	// compute data
-	if let Some(data) = DelaunayData::compute_triangulation_3d(&mut points) {
+	if let Some(data) = DelaunayData::compute_triangulation_3d(&points) {
 		if let Some(voronoi) = VoronoiData::cells_from_delaunay_3d(&data) {
 			// add simple shapes to showcase what the data looks like
 			for cell in voronoi.get_cells().values() {

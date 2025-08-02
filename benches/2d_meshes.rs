@@ -31,7 +31,7 @@ fn prepare_data() -> VoronoiData<VoronoiCell2d> {
 			points.push(point);
 		}
 	}
-	let data = DelaunayData::compute_triangulation_2d(&mut points).unwrap();
+	let data = DelaunayData::compute_triangulation_2d(&points).unwrap();
 	let voronoi = VoronoiData::from_delaunay_2d(&data);
 	voronoi.unwrap()
 }

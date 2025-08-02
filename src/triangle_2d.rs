@@ -8,8 +8,11 @@ use crate::circumcircle::Circumcircle;
 /// Describes the vertices and edges of a triangle
 #[derive(Clone, Debug)]
 pub struct Triangle2d {
+	/// A vertex
 	vertex_a: Vec2,
+	/// B vertex
 	vertex_b: Vec2,
+	/// C vertex
 	vertex_c: Vec2,
 }
 impl PartialEq for Triangle2d {

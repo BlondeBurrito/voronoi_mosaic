@@ -6,10 +6,13 @@
 use bevy::prelude::*;
 use voronoi_mosaic::prelude::*;
 
-const VERTEX_Z: f32 = 2.0;
-const EDGE_Z: f32 = 1.0;
-
+/// Z location of Voronoi cell edes
+const VORONOI_CELL_EDGE_Z: f32 = 1.0;
+/// Colour of Voronoi edges
 const VORONOI_EDGE_COLOUR: Color = Color::srgb(1.0, 0.5, 0.0);
+/// Z location of the Voronoi vertices
+const VORONOI_CELL_VERTEX_Z: f32 = 2.0;
+/// Colour of the Voronoi vertices
 const VORONOI_VERTEX_COLOUR: Color = Color::srgb(0.5, 1.0, 0.0);
 
 fn main() {
@@ -31,7 +34,7 @@ fn setup(
 	let material = materials.add(Color::srgb(0.75, 0.75, 0.75));
 	cmds.spawn((Transform::default(), Mesh2d(mesh), MeshMaterial2d(material)));
 }
-/// Compute triangluation and dispay it with simple shapes
+/// Compute voronoi and dispay it with simple shapes
 fn visuals(
 	mut cmds: Commands,
 	mut meshes: ResMut<Assets<Mesh>>,
@@ -61,7 +64,7 @@ fn visuals(
 					cmds.spawn((
 						Mesh2d(mesh.clone()),
 						MeshMaterial2d(material.clone()),
-						Transform::from_translation(point.extend(VERTEX_Z)),
+						Transform::from_translation(point.extend(VORONOI_CELL_VERTEX_Z)),
 					));
 					// mark the edges
 					let (v1, v0) = if i < cell.get_vertices().len() - 1 {
@@ -75,7 +78,7 @@ fn visuals(
 					let translation = (v1 + v0) / 2.0;
 					let angle = Vec2::Y.angle_to(v0 - v1);
 					let tform = Transform {
-						translation: translation.extend(EDGE_Z),
+						translation: translation.extend(VORONOI_CELL_EDGE_Z),
 						rotation: Quat::from_rotation_z(angle),
 						..default()
 					};

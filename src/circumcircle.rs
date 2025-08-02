@@ -6,7 +6,9 @@ use bevy::prelude::*;
 
 /// Describes a circle which has three vertices of a triangle sat along its circumference
 pub struct Circumcircle {
+	/// Centre of the circle
 	circumcentre: Vec2,
+	/// Circle radius
 	radius: f32,
 }
 impl Circumcircle {

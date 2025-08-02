@@ -7,16 +7,23 @@
 use bevy::{color::palettes::css::WHITE, prelude::*};
 use voronoi_mosaic::prelude::*;
 
+/// Z location of the generated meshes
 const MESH_Z: f32 = 1.0;
-
+/// Z location of Voronoi cell edes
 const VORONOI_CELL_EDGE_Z: f32 = 2.0;
+/// Colour of Voronoi edges
 const VORONOI_EDGE_COLOUR: Color = Color::srgb(1.0, 0.5, 0.0);
+/// Z location of the Voronoi vertices
 const VORONOI_CELL_VERTEX_Z: f32 = 3.0;
+/// Colour of the Voronoi vertices
 const VORONOI_VERTEX_COLOUR: Color = Color::srgb(0.5, 1.0, 0.0);
-
+/// Z location of Delaunay edges
 const DELAUNAY_EDGE_Z: f32 = 4.0;
+/// Colour of Delaunay edges
 const DELAUNAY_EDGE_COLOUR: Color = Color::srgb(1.0, 0.0, 0.0);
+/// Z location of Delaunay vertices
 const DELAUNAY_VERTEX_Z: f32 = 5.0;
+/// Colour of Delaunay vertices
 const DELAUNAY_VERTEX_COLOUR: Color = Color::srgb(0.0, 0.0, 1.0);
 
 fn main() {
@@ -49,7 +56,7 @@ fn setup(
 	let material = materials.add(Color::srgb(0.75, 0.75, 0.75));
 	cmds.spawn((Transform::default(), Mesh2d(mesh), MeshMaterial2d(material)));
 }
-/// Compute triangluation and dispay it with simple shapes
+/// Compute and display data
 fn visuals(
 	mut cmds: Commands,
 	mut meshes: ResMut<Assets<Mesh>>,
@@ -124,6 +131,7 @@ fn visuals(
 #[derive(Component)]
 struct DelaunayLabel;
 
+/// Create simple shapes to illustrate the raw delaunay data
 fn create_delaunay_visuals(
 	cmds: &mut Commands,
 	meshes: &mut ResMut<Assets<Mesh>>,
@@ -176,6 +184,7 @@ fn create_delaunay_visuals(
 #[derive(Component)]
 struct VoronoiLabel;
 
+/// Create simple shapes to illustrate the raw voronoi data
 fn create_voronoi_cell_visuals(
 	cmds: &mut Commands,
 	meshes: &mut ResMut<Assets<Mesh>>,
@@ -225,6 +234,7 @@ fn create_voronoi_cell_visuals(
 #[derive(Component)]
 struct MeshLabel;
 
+/// Create the meshes
 fn create_mesh_visuals(
 	cmds: &mut Commands,
 	meshe_assets: &mut ResMut<Assets<Mesh>>,
@@ -249,8 +259,11 @@ fn create_mesh_visuals(
 /// Labels the toggle buttons for easy querying
 #[derive(Component, Copy, Clone)]
 enum ButtonLabel {
+	/// Button label to toggle Delaunay visibility
 	Delaunay,
+	/// Button label to toggle Voronoi visibility
 	Voronoi,
+	/// Button label to toggle mesh visibility
 	Mesh,
 }
 
@@ -264,6 +277,7 @@ impl std::fmt::Display for ButtonLabel {
 	}
 }
 
+/// Create the UI
 fn create_ui_buttons(mut cmds: Commands) {
 	let btns = [
 		ButtonLabel::Delaunay,
@@ -287,7 +301,7 @@ fn create_ui_buttons(mut cmds: Commands) {
 					align_items: AlignItems::Center,
 					..Default::default()
 				},
-				BackgroundColor(Color::srgb(0.15, 0.15, 0.15).into()),
+				BackgroundColor(Color::srgb(0.15, 0.15, 0.15)),
 			))
 			.with_children(|p| {
 				p.spawn((
@@ -303,6 +317,8 @@ fn create_ui_buttons(mut cmds: Commands) {
 	});
 }
 
+/// Handle pressing buttons to change visibility
+#[allow(clippy::type_complexity)]
 fn handle_toggle_buttons(
 	mut btn_q: Query<(&Interaction, &ButtonLabel, &mut BackgroundColor), Changed<Interaction>>,
 	mut delaunay_q: Query<
