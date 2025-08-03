@@ -33,14 +33,22 @@ bench-one BENCH:
 bench-save-main: build
   cargo bench -q --bench 2d_delaunay --workspace --all-features -- --save-baseline main_2d_delaunay
   cargo bench -q --bench 2d_voronoi --workspace --all-features -- --save-baseline main_2d_voronoi
+  cargo bench -q --bench 2d_voronoi_clipped --workspace --all-features -- --save-baseline main_2d_voronoi_clipped
+  cargo bench -q --bench 2d_meshes --workspace --all-features -- --save-baseline main_2d_meshes
   cargo bench -q --bench 3d_delaunay --workspace --all-features -- --save-baseline main_3d_delaunay
   cargo bench -q --bench 3d_voronoi --workspace --all-features -- --save-baseline main_3d_voronoi
+  cargo bench -q --bench 3d_voronoi_clipped --workspace --all-features -- --save-baseline main_3d_voronoi_clipped
+  cargo bench -q --bench 3d_meshes --workspace --all-features -- --save-baseline main_3d_meshes
 # compare each benchmark against a saved bench taken from main
 bench-compare: build
   cargo bench -q --bench 2d_delaunay --workspace --all-features -- --baseline main_2d_delaunay
   cargo bench -q --bench 2d_voronoi --workspace --all-features -- --baseline main_2d_voronoi
+  cargo bench -q --bench 2d_voronoi_clipped --workspace --all-features -- --baseline main_2d_voronoi_clipped
+  cargo bench -q --bench 2d_meshes --workspace --all-features -- --baseline main_2d_meshes
   cargo bench -q --bench 3d_delaunay --workspace --all-features -- --baseline main_3d_delaunay
   cargo bench -q --bench 3d_voronoi --workspace --all-features -- --baseline main_3d_voronoi
+  cargo bench -q --bench 3d_voronoi_clipped --workspace --all-features -- --baseline main_3d_voronoi_clipped
+  cargo bench -q --bench 3d_meshes --workspace --all-features -- --baseline main_3d_meshes
 # run a debug build so the compiler can call out overflow errors etc, rather than making assumptions
 debug:
   cargo build --workspace --all-features
