@@ -99,6 +99,12 @@ harness = false
 [[bench]]
 name = "3d_voronoi"
 harness = false
+[[bench]]
+name = "3d_voronoi_clipped"
+harness = false
+[[bench]]
+name = "3d_meshes"
+harness = false
 ###################
 
 [[example]]
@@ -124,3 +130,11 @@ path = "examples/3d_delaunay.rs"
 [[example]]
 name = "3d_voronoi"
 path = "examples/3d_voronoi.rs"
+
+[[example]]
+name = "3d_meshes"
+path = "examples/3d_meshes.rs"
+
+[[example]]
+name = "3d_meshes_clipped"
+path = "examples/3d_meshes_clipped.rs"

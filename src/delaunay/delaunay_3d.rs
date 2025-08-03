@@ -2,9 +2,8 @@
 //!
 //!
 
-use std::cmp::Ordering;
 
-use crate::{prelude::DelaunayData, tetrahedron};
+use crate::{prelude::{sort_vertices_3d, DelaunayData}, tetrahedron};
 use bevy::prelude::*;
 
 impl DelaunayData<tetrahedron::Tetrahedron> {
@@ -73,16 +72,7 @@ impl DelaunayData<tetrahedron::Tetrahedron> {
 				// angle between the point and a vertex
 				//TODO both vertices len squared cannot be zero
 				//TODO test explcitly it works?
-				vertices.sort_by(|a, b| {
-					if let Some(ordering) = point
-						.angle_between(*a)
-						.partial_cmp(&point.angle_between(*b))
-					{
-						ordering
-					} else {
-						Ordering::Less
-					}
-				});
+				sort_vertices_3d(&mut vertices, point);
 				// walk through vertices creating new tetrahedrons
 				for i in 0..vertices.len() {
 					if i < vertices.len() - 2 {

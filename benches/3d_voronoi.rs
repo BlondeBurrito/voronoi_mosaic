@@ -42,7 +42,7 @@ fn prepare_data() -> DelaunayData<tetrahedron::Tetrahedron> {
 
 /// Call the code to benchmark
 fn init(delaunay: &DelaunayData<tetrahedron::Tetrahedron>) {
-	let _v = VoronoiData::cells_from_delaunay_3d(delaunay);
+	let _v = VoronoiData::from_delaunay_3d(delaunay);
 }
 /// Benchmark
 pub fn criterion_benchmark(c: &mut Criterion) {

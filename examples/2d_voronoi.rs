@@ -56,40 +56,59 @@ fn visuals(
 	if let Some(data) = DelaunayData::compute_triangulation_2d(&points) {
 		if let Some(voronoi) = VoronoiData::from_delaunay_2d(&data) {
 			// add simple shapes to showcase what the data looks like
-			for cell in voronoi.get_cells().values() {
-				for (i, point) in cell.get_vertices().iter().enumerate() {
-					// mark each vertex of every cell
-					let mesh = meshes.add(Circle::new(10.0));
-					let material = materials.add(VORONOI_VERTEX_COLOUR);
-					cmds.spawn((
-						Mesh2d(mesh.clone()),
-						MeshMaterial2d(material.clone()),
-						Transform::from_translation(point.extend(VORONOI_CELL_VERTEX_Z)),
-					));
-					// mark the edges
-					let (v1, v0) = if i < cell.get_vertices().len() - 1 {
-						(cell.get_vertices()[i + 1], *point)
-					} else {
-						(cell.get_vertices()[0], *point)
-					};
-					let y_len = (v1 - v0).length();
-					let mesh = meshes.add(Rectangle::from_size(Vec2::new(5.0, y_len)));
-					let mat = materials.add(VORONOI_EDGE_COLOUR);
-					let translation = (v1 + v0) / 2.0;
-					let angle = Vec2::Y.angle_to(v0 - v1);
-					let tform = Transform {
-						translation: translation.extend(VORONOI_CELL_EDGE_Z),
-						rotation: Quat::from_rotation_z(angle),
-						..default()
-					};
-					// info!("edge {:?}", edge);
-					// info!("midpoint {}", translation);
-					// info!("angle {}", angle.to_degrees());
-					cmds.spawn((Mesh2d(mesh), MeshMaterial2d(mat.clone()), tform));
-				}
-			}
+			create_voronoi_cell_visuals(&mut cmds, &mut meshes, &mut materials, &voronoi);
 		}
 	} else {
 		warn!("Data computation failed");
+	}
+}
+
+/// Labels an entity in the Voronoi view for querying
+#[derive(Component)]
+struct VoronoiLabel;
+
+/// Create simple shapes to illustrate the raw voronoi data
+fn create_voronoi_cell_visuals(
+	cmds: &mut Commands,
+	meshes: &mut ResMut<Assets<Mesh>>,
+	materials: &mut ResMut<Assets<ColorMaterial>>,
+	voronoi: &VoronoiData<VoronoiCell2d>,
+) {
+	for cell in voronoi.get_cells().values() {
+		for (i, point) in cell.get_vertices().iter().enumerate() {
+			// mark each vertex of every cell
+			let mesh = meshes.add(Circle::new(10.0));
+			let material = materials.add(VORONOI_VERTEX_COLOUR);
+			cmds.spawn((
+				Mesh2d(mesh.clone()),
+				MeshMaterial2d(material.clone()),
+				Transform::from_translation(point.extend(VORONOI_CELL_VERTEX_Z)),
+				VoronoiLabel,
+				Visibility::Visible,
+			));
+			// mark the edges
+			let (v1, v0) = if i < cell.get_vertices().len() - 1 {
+				(cell.get_vertices()[i + 1], *point)
+			} else {
+				(cell.get_vertices()[0], *point)
+			};
+			let y_len = (v1 - v0).length();
+			let mesh = meshes.add(Rectangle::from_size(Vec2::new(5.0, y_len)));
+			let mat = materials.add(VORONOI_EDGE_COLOUR);
+			let translation = (v1 + v0) / 2.0;
+			let angle = Vec2::Y.angle_to(v0 - v1);
+			let tform = Transform {
+				translation: translation.extend(VORONOI_CELL_EDGE_Z),
+				rotation: Quat::from_rotation_z(angle),
+				..default()
+			};
+			cmds.spawn((
+				Mesh2d(mesh),
+				MeshMaterial2d(mat.clone()),
+				tform,
+				VoronoiLabel,
+				Visibility::Visible,
+			));
+		}
 	}
 }

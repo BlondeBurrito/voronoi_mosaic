@@ -1,5 +1,5 @@
-//! Generates Delaunay Triangles, uses them to construct Voronoi Cells, clips them to a polygon and then
-//! produces Bevy meshes from the cells
+//! Generates Delaunay Triangles, uses them to construct Voronoi Cells, clips
+//! them to a polygon and then produces Bevy meshes from the cells
 //!
 //! The visibility of each layer can be toggled with the buttons
 //!

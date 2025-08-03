@@ -59,42 +59,61 @@ fn visuals(
 	// 	];
 	// compute data
 	if let Some(data) = DelaunayData::compute_triangulation_2d(&points) {
-		for triangle in data.get().iter() {
-			// create markers for vertices
-			let mesh = meshes.add(Circle::new(10.0));
-			let material = materials.add(DELAUNAY_VERTEX_COLOUR);
-			// vertices
-			let translations = [
-				triangle.get_vertex_a(),
-				triangle.get_vertex_b(),
-				triangle.get_vertex_c(),
-			];
-			for translation in translations.iter() {
-				cmds.spawn((
-					Mesh2d(mesh.clone()),
-					MeshMaterial2d(material.clone()),
-					Transform::from_translation(translation.extend(DELAUNAY_VERTEX_Z)),
-				));
-			}
-			// create markers for edges
-			let mat = materials.add(DELAUNAY_EDGE_COLOUR);
-			for edge in triangle.get_edges().iter() {
-				let y_len = (edge.1 - edge.0).length();
-				let mesh = meshes.add(Rectangle::from_size(Vec2::new(5.0, y_len)));
-				let translation = (edge.1 + edge.0) / 2.0;
-				let angle = Vec2::Y.angle_to(edge.0 - edge.1);
-				let tform = Transform {
-					translation: translation.extend(DELAUNAY_EDGE_Z),
-					rotation: Quat::from_rotation_z(angle),
-					..default()
-				};
-				// info!("edge {:?}", edge);
-				// info!("midpoint {}", translation);
-				// info!("angle {}", angle.to_degrees());
-				cmds.spawn((Mesh2d(mesh), MeshMaterial2d(mat.clone()), tform));
-			}
-		}
+		create_delaunay_visuals(&mut cmds, &mut meshes, &mut materials, &data);
 	} else {
 		warn!("Data computation failed");
+	}
+}
+
+/// Labels an entity in the Delaunay view for querying
+#[derive(Component)]
+struct DelaunayLabel;
+
+/// Create simple shapes to illustrate the raw delaunay data
+fn create_delaunay_visuals(
+	cmds: &mut Commands,
+	meshes: &mut ResMut<Assets<Mesh>>,
+	materials: &mut ResMut<Assets<ColorMaterial>>,
+	data: &DelaunayData<triangle_2d::Triangle2d>,
+) {
+	for triangle in data.get().iter() {
+		// create markers for vertices
+		let mesh = meshes.add(Circle::new(10.0));
+		let material = materials.add(DELAUNAY_VERTEX_COLOUR);
+		// vertices
+		let translations = [
+			triangle.get_vertex_a(),
+			triangle.get_vertex_b(),
+			triangle.get_vertex_c(),
+		];
+		for translation in translations.iter() {
+			cmds.spawn((
+				Mesh2d(mesh.clone()),
+				MeshMaterial2d(material.clone()),
+				Transform::from_translation(translation.extend(DELAUNAY_VERTEX_Z)),
+				DelaunayLabel,
+				Visibility::Visible,
+			));
+		}
+		// create markers for edges
+		let mat = materials.add(DELAUNAY_EDGE_COLOUR);
+		for edge in triangle.get_edges().iter() {
+			let y_len = (edge.1 - edge.0).length();
+			let mesh = meshes.add(Rectangle::from_size(Vec2::new(5.0, y_len)));
+			let translation = (edge.1 + edge.0) / 2.0;
+			let angle = Vec2::Y.angle_to(edge.0 - edge.1);
+			let tform = Transform {
+				translation: translation.extend(DELAUNAY_EDGE_Z),
+				rotation: Quat::from_rotation_z(angle),
+				..default()
+			};
+			cmds.spawn((
+				Mesh2d(mesh),
+				MeshMaterial2d(mat.clone()),
+				tform,
+				DelaunayLabel,
+				Visibility::Visible,
+			));
+		}
 	}
 }

@@ -1,4 +1,4 @@
-//! TODO
+//! 
 //!
 //!
 
@@ -12,12 +12,40 @@ use bevy::prelude::*;
 use crate::{prelude::DelaunayData, tetrahedron, voronoi::VoronoiData};
 
 /// The vertices of a Voronoi Cell in 3-dimensions
-pub struct VoronoiCell3d(Vec<Vec3>);
+pub struct VoronoiCell3d {
+	/// List of vertices that make up the cell
+	vertices: Vec<Vec3>,
+	/// The vertex which is the nearest site to the boundary vertices of the
+	/// cell compared to any other cell source
+	source_vertex: Vec3,
+}
 
 impl VoronoiCell3d {
 	/// Get a reference to the list of vertices of this cell
 	pub fn get_vertices(&self) -> &Vec<Vec3> {
-		&self.0
+		&self.vertices
+	}
+	/// Get the vertex which is the nearest site to the vertices of the cell
+	/// compared to any other cell source
+	pub fn get_source_vertex(&self) -> &Vec3 {
+		&self.source_vertex
+	}
+	/// Get the midpoint between all vertices of the cell
+	pub fn get_centre_position(&self) -> Vec3 {
+		self.get_vertices().iter().sum::<Vec3>() / self.get_vertices().len() as f32
+	}
+	/// Get a list of edges of the cell. Arranged in an anti-clockwise fashion
+	pub fn get_edges(&self) -> Vec<(Vec3, Vec3)> {
+		// let mut edges = vec![];
+		// for i in 0..self.get_vertices().len() {
+		// 	if i < self.get_vertices().len() - 1 {
+		// 		edges.push((self.get_vertices()[i], self.get_vertices()[i + 1]));
+		// 	} else {
+		// 		edges.push((self.get_vertices()[i], self.get_vertices()[0]));
+		// 	}
+		// }
+		// edges
+		todo!()
 	}
 }
 
@@ -26,16 +54,12 @@ impl VoronoiData<VoronoiCell3d> {
 	pub fn get_cells(&self) -> &BTreeMap<u32, VoronoiCell3d> {
 		&self.cells
 	}
-	/// Froma  series of 2d points in space compute the Voronoi Cells
-	pub fn cells_from_points_2d(points: &mut Vec<Vec3>) -> Option<Self> {
-		if let Some(delaunay) = DelaunayData::compute_triangulation_3d(points) {
-			VoronoiData::cells_from_delaunay_3d(&delaunay)
-		} else {
-			None
-		}
+	/// Get a mutable reference to the map of Voronoi Cells
+	pub fn get_cells_mut(&mut self) -> &mut BTreeMap<u32, VoronoiCell3d> {
+		&mut self.cells
 	}
-	/// From a Delaunay Triangulation compute its dual - the Voronoi Cells
-	pub fn cells_from_delaunay_3d(
+	/// From a Delaunay Tetrahedralization compute its dual - the Voronoi Cells
+	pub fn from_delaunay_3d(
 		delaunay: &DelaunayData<tetrahedron::Tetrahedron>,
 	) -> Option<Self> {
 		// each circumcentre of a Delaunay triangle is a vertex of a Voronoi cell
@@ -83,11 +107,27 @@ impl VoronoiData<VoronoiCell3d> {
 					Ordering::Less
 				}
 			});
-			cells.insert(i as u32, VoronoiCell3d(cell_vertices));
+			cells.insert(i as u32, VoronoiCell3d{
+				vertices: cell_vertices,
+				source_vertex: todo!()
+			});
 		}
 
 		Some(VoronoiData { cells })
 	}
+	/// Convert each Voronoi Cell into a Bevy Mesh
+	pub fn as_bevy_meshes_3d(&self) -> Vec<(Mesh, Vec3)> {
+		//TODO
+		vec![]
+	}
+	/// Clip all the [VoronoiCell3d] so they cannot extend or exist outside of
+	/// a boundary polyhedron
+	///
+	/// The boundary polyhedron must contain at least 4 vertices and the vertices
+	/// should be expressed in an anti-clockwise order around their centre
+	///
+	/// *NB: Delaunay and Voronoi are duals - they can precisely be converted from one fomrat to the other back and forth. By applying clipping to the Voronoi, cell vertices may be added/removed which will destroy the duality - i.e if you apply clipping you cannot convert Voronoi into Delaunay and expect to get your oringal dataset back*
+	pub fn clip_cells_to_boundary(&mut self, boundary: &[Vec3]) {}
 }
 
 /// Compare the vertices of tetrahedrons and identify groupings of IDs whereby 4

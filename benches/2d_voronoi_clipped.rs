@@ -39,7 +39,7 @@ fn prepare_data() -> VoronoiData<VoronoiCell2d> {
 /// Call the code to benchmark
 fn init(voronoi: &mut VoronoiData<VoronoiCell2d>) {
 	let boundary = vec![
-		Vec2::new(1000.0, 10000.0),
+		Vec2::new(10000.0, 10000.0),
 		Vec2::new(0.0, 10000.0),
 		Vec2::new(0.0, 0.0),
 		Vec2::new(10000.0, 0.0),
@@ -52,7 +52,7 @@ pub fn criterion_benchmark(c: &mut Criterion) {
 	let mut group = c.benchmark_group("2d");
 	group.significance_level(0.1).sample_size(100);
 	group.throughput(Throughput::Bytes(data.get_cells().len() as u64));
-	group.bench_function("2d_clipped", |b| b.iter(|| init(black_box(&mut data))));
+	group.bench_function("2d_voronoi_clipped", |b| b.iter(|| init(black_box(&mut data))));
 	group.finish();
 }
 

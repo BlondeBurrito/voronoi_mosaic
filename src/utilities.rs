@@ -7,7 +7,7 @@ use bevy::prelude::*;
 
 /// Reorder a series of 2d vertices in-place based on their angular position around a point.
 ///
-/// The ording is negative-angle to positive-angle
+/// The ordering is negative-angle to positive-angle
 pub fn sort_vertices_2d(vertices: &mut [Vec2], point: &Vec2) {
 	//TODO both vertices len squared cannot be zero
 	vertices.sort_by(|a, b| {
@@ -20,6 +20,22 @@ pub fn sort_vertices_2d(vertices: &mut [Vec2], point: &Vec2) {
 			warn!("Unable to find Ordering between {} and {}", a, b);
 			Ordering::Less
 		}
+	});
+}
+/// Reorder a series of 3d vertices in-place based on their angular position around a point.
+///
+/// The ordering angle is between `0-pi`
+pub fn sort_vertices_3d(vertices: &mut [Vec3], point: &Vec3) {
+	//TODO both vertices len squared cannot be zero
+	vertices.sort_by(|a, b| {
+		if let Some(ordering) = point
+						.angle_between(*a)
+						.partial_cmp(&point.angle_between(*b))
+					{
+						ordering
+					} else {
+						Ordering::Less
+					}
 	});
 }
 /// Tests if a vertex sits inside of a polygon
@@ -187,6 +203,22 @@ mod tests {
 			vertices
 		);
 	}
+	//TODO
+	// #[test]
+	// fn vertex_angular_order_3d() {
+	// 	let mut vertices = vec![
+	// 		Vec3::new(),
+	// 		Vec3::new(),
+	// 		Vec3::new(),
+	// 		Vec3::new(),
+	// 	];
+	// 	let point = Vec3::new(5.0, 3.0, 9.0);
+	// 	sort_vertices_3d(&mut vertices, &point);
+	// 	assert_eq!(
+	// 		vec![],
+	// 		vertices
+	// 	);
+	// }
 
 	#[test]
 	fn is_vertex_left_of_edge1() {

@@ -40,7 +40,37 @@ A series of data points that have been triangulated:
 
 ### Process
 
-abc
+Triangulation involes generating a series of triangles and recording good and bad triangles. A bad triangle fails to meet the properties of a Delaunay triangle, i.e its circumcircle contains a data point. A valid Delaunay triangle should not contain any data points.
+
+We begin with a set of data points (blue) and we enclose them in a super triangle (black):
+
+<img src="https://raw.githubusercontent.com/BlondeBurrito/voronoi_mosaic/refs/heads/main/docs/png/delaunay_2d_process1.png" alt="e" width="300"/>
+
+Beginning with just one of the data points we calculate the circumcircle (orange) of the known triangle:
+
+<img src="https://raw.githubusercontent.com/BlondeBurrito/voronoi_mosaic/refs/heads/main/docs/png/delaunay_2d_process2.png" alt="e" width="300"/>
+
+As you can see the data point lies within the circumcircle so we know this triangle isn't Delaunay, we remove this bad triangle and use its vertices to contruct new triangles with the data point:
+
+<img src="https://raw.githubusercontent.com/BlondeBurrito/voronoi_mosaic/refs/heads/main/docs/png/delaunay_2d_process3.png" alt="e" width="300"/>
+
+At this point in time we have three Delaunay triangles but we haven't processed all the data, now we add another data point:
+
+<img src="https://raw.githubusercontent.com/BlondeBurrito/voronoi_mosaic/refs/heads/main/docs/png/delaunay_2d_process4.png" alt="e" width="300"/>
+
+And construct new circumcircles with the known triangles to see if any are Delaunay or not:
+
+<img src="https://raw.githubusercontent.com/BlondeBurrito/voronoi_mosaic/refs/heads/main/docs/png/delaunay_2d_process5.png" alt="e" width="300"/>
+
+As can be seen, the new data point does lie within the circumcircle of one of the triangles, so again we have a bad trinagle (pink hash), we remove this triangle and using its vertices construct new triangles with the data point:
+
+<img src="https://raw.githubusercontent.com/BlondeBurrito/voronoi_mosaic/refs/heads/main/docs/png/delaunay_2d_process6.png" alt="e" width="300"/>
+
+We then start the whole process over again of adding a new data point, computing circumcircles, removing bad triangles and so on.
+
+Once all data points have been added we must then remove any triangles using the vertices of the initial super triangle as they are not part of the data set, merely a starting point of triangulation. The end result generates a collection of Delaunay triangles:
+
+<img src="https://raw.githubusercontent.com/BlondeBurrito/voronoi_mosaic/refs/heads/main/docs/png/delaunay_2d_process7.png" alt="e" width="300"/>
 
 </details>
 
@@ -57,7 +87,23 @@ Here is an example showing each Cell as a different colour (some cells extend be
 
 ### Process
 
-abc
+Starting with a set of Delaunay traingles (red and blue) we can calculate the circumcentres of each (orange):
+
+<img src="https://raw.githubusercontent.com/BlondeBurrito/voronoi_mosaic/refs/heads/main/docs/png/voronoi_2d_process1.png" alt="e" width="300"/>
+
+These circumcentres are the vertices of Voronoi Cells -we just need to figure out the edges joining these vertices together.
+
+A property we can observe is Delaunay triangle vertex sharing - as in adjacent triangles share a pair of vertices which means that the circumcentres of those two triangles are an edge (pink) of a Cell:
+
+<img src="https://raw.githubusercontent.com/BlondeBurrito/voronoi_mosaic/refs/heads/main/docs/png/voronoi_2d_process2.png" alt="e" width="300"/>
+
+Additionally we can observe cases where a triangle vertex is shared more than two times with other triangles (in the code we call this `source_vertex`, it's the link bewteen Vornoi and Delaunay). For these points we know that the surrounding circumcentres are the vertices of this Cell:
+
+<img src="https://raw.githubusercontent.com/BlondeBurrito/voronoi_mosaic/refs/heads/main/docs/png/voronoi_2d_process3.png" alt="e" width="300"/>
+
+From these properties we can construct the Voronoi Cells, on the left is a illustrative outline, on the right a colour coded representation of the Cells:
+
+<img src="https://raw.githubusercontent.com/BlondeBurrito/voronoi_mosaic/refs/heads/main/docs/png/voronoi_2d_process4.png" alt="e" width="300"/>
 
 </details>
 
@@ -147,11 +193,81 @@ For a full visualisation you can check out this exmaple [2d_meshes_clipped](http
 
 #### Delaunay
 
+Generating the Delaunay simply requires a series of points in space:
+
+```rust
+use bevy::prelude::*;
+use voronoi_mosaic::prelude::*;
+
+let points: Vec<Vec3> = vec![...];
+if let Some(delaunay) = DelaunayData::compute_triangulation_3d(&points) {
+	// do something with the data
+}
+```
+
+For a full visualisation you can check out this example [3d_delaunay](https://github.com/BlondeBurrito/voronoi_mosaic/blob/main/examples/3d_delaunay.rs).
+
 #### Voronoi
+
+With some generated Delaunay data the Voronoi Cells can easily be generated:
+
+```rust
+use bevy::prelude::*;
+use voronoi_mosaic::prelude::*;
+
+let points = vec![...];
+if let Some(delaunay) = DelaunayData::compute_triangulation_3d(&points) {
+	if let Some(voronoi) = VoronoiData::from_delaunay_3d(&delaunay) {
+		// do something with the generated cells
+	}
+}
+```
+
+For a full visualisation you can check out this example [3d_voronoi](https://github.com/BlondeBurrito/voronoi_mosaic/blob/main/examples/3d_voronoi.rs).
 
 #### Meshes
 
+The Voronoi data can be converted into Bevy meshes like so:
+
+```rust
+use bevy::prelude::*;
+use voronoi_mosaic::prelude::*;
+
+let points = vec![...];
+if let Some(delaunay) = DelaunayData::compute_triangulation_3d(&points) {
+	if let Some(voronoi) = VoronoiData::from_delaunay_3d(&delaunay) {
+		// convert the cell data structures into bevy meshes
+		let meshes = voronoi.as_bevy_meshes_3d();
+	}
+}
+```
+
+For a full visualisation you can check out this example [3d_meshes](https://github.com/BlondeBurrito/voronoi_mosaic/blob/main/examples/3d_meshes.rs).
+
 #### Clipping
+
+Voronoi Cells can be clipped to a boundary - this means that any Cells outside of a given boundary are dropped and any that overlap the boundary have their vertices clipped to the boundary edge.
+
+It is important to note that clipping involves adding/removing vertices, this shatters the duality between Voronoi and Delaunay - once clipped you wouldn't be able to convert Voronoi to Delaunay and expect to get your original data set back.
+
+```rust
+use bevy::prelude::*;
+use voronoi_mosaic::prelude::*;
+
+let points = vec![...];
+if let Some(delaunay) = DelaunayData::compute_triangulation_3d(&points) {
+	if let Some(mut voronoi) = VoronoiData::from_delaunay_3d(&delaunay) {
+		// define a series of boundary vertices that form a polygon
+		// they must be in anti-clockwise order!
+		let boundary = vec![...];
+		voronoi.clip_cells_to_boundary(&boundary);
+		// do something with the clipped cells like turning them into meshes
+		let meshes = voronoi.as_bevy_meshes_3d();
+	}
+}
+```
+
+For a full visualisation you can check out this exmaple [3d_meshes_clipped](https://github.com/BlondeBurrito/voronoi_mosaic/blob/main/examples/3d_meshes_clipped.rs).
 
 ## Performance
 
