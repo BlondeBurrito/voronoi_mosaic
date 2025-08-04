@@ -138,3 +138,6 @@ path = "examples/3d_meshes.rs"
 [[example]]
 name = "3d_meshes_clipped"
 path = "examples/3d_meshes_clipped.rs"
+[[example]]
+name = "temp"
+path = "examples/temp.rs"

@@ -45,7 +45,7 @@ fn setup(
 	// lighting
 	cmds.spawn((
 		DirectionalLight {
-			illuminance: light_consts::lux::OVERCAST_DAY,
+			illuminance: light_consts::lux::FULL_DAYLIGHT,
 			shadows_enabled: true,
 			..default()
 		},

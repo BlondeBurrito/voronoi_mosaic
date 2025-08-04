@@ -8,6 +8,7 @@ pub use crate::{
 	delaunay::*,
 	tetrahedron::*,
 	triangle_2d::*,
+	triangle_3d::*,
 	utilities::*,
 	voronoi::{voronoi_2d::*, voronoi_3d::*, *},
 	*,

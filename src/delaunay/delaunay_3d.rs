@@ -1,9 +1,11 @@
 //! Use Tetrahedralization to find tetrahedrons that comply to Delaunay in 3d
 //!
+//! Generla process is to find circumspheres of tetrahedrons and ensure that
+//! the sphere contains no data points
 //!
 
 
-use crate::{prelude::{sort_vertices_3d, DelaunayData}, tetrahedron};
+use crate::{prelude::DelaunayData, tetrahedron};
 use bevy::prelude::*;
 
 impl DelaunayData<tetrahedron::Tetrahedron> {
@@ -16,20 +18,18 @@ impl DelaunayData<tetrahedron::Tetrahedron> {
 			);
 			return None;
 		}
-		//TODO ensure no dupciates in points
+		//TODO ensure no duplicates in points
 		// idenitfy spacial boundaries
 		let (minimum_world_dimensions, maximum_world_dimensions) = compute_dimension_bounds(points);
 
 		// compute the positions of a super tetrahedron that encompasses all points in space
 		let super_tetra =
-			compute_super_tetrahedron(&minimum_world_dimensions, &maximum_world_dimensions);
+			compute_super_tetrahedra(&minimum_world_dimensions, &maximum_world_dimensions);
 		// store tetrahedrons starting with the super one
-		let mut tetrahedrons = vec![tetrahedron::Tetrahedron::new(
-			super_tetra[0],
-			super_tetra[1],
-			super_tetra[2],
-			super_tetra[3],
-		)];
+		let mut tetrahedrons = vec![];
+		for s_tetra in super_tetra.iter() {
+			tetrahedrons.push(tetrahedron::Tetrahedron::new(s_tetra[0], s_tetra[1], s_tetra[2], s_tetra[3]));
+		}
 		// add each point at a time to the triangulation
 		for point in points {
 			// record tetrahedrons that don't qualify as Delaunay
@@ -47,81 +47,65 @@ impl DelaunayData<tetrahedron::Tetrahedron> {
 			// remove any bad tetrahedrons from the list
 			if !bad_tetras.is_empty() {
 				tetrahedrons.retain(|t| !bad_tetras.contains(t));
-				// we have a polyhedral hole around the point,
-				// by using the known bad tetra we can join the point to
-				// the vertex of each edge near it, thereby creating new polygons
-				// that can undergo triangulation
-				//
-				// store the vertices of the bad tetra
-				let mut vertices = Vec::new();
+				// removing bad tetras creates a hole around the point, we want
+				// to build new tetrahedrons with the point to
+				// progress the tetrahedralization
+
+				// store each triangle face
+				let mut face_triangles = vec![];
+				// store each duplicate triangle face
+				let mut duplicate_face_triangles = vec![];
 				for bad_tetra in bad_tetras.iter() {
-					if !vertices.contains(bad_tetra.get_vertex_a()) {
-						vertices.push(*bad_tetra.get_vertex_a());
-					}
-					if !vertices.contains(bad_tetra.get_vertex_b()) {
-						vertices.push(*bad_tetra.get_vertex_b());
-					}
-					if !vertices.contains(bad_tetra.get_vertex_c()) {
-						vertices.push(*bad_tetra.get_vertex_c());
-					}
-					if !vertices.contains(bad_tetra.get_vertex_d()) {
-						vertices.push(*bad_tetra.get_vertex_d());
+					let faces = bad_tetra.get_triangle_3d_faces();
+					for face in faces.iter() {
+						if !face_triangles.contains(face) {
+							face_triangles.push(face.clone());
+						} else {
+							duplicate_face_triangles.push(face.clone());
+						}
 					}
 				}
-				// sort the vertices in anti-clockwise order by comparing the
-				// angle between the point and a vertex
-				//TODO both vertices len squared cannot be zero
-				//TODO test explcitly it works?
-				sort_vertices_3d(&mut vertices, point);
-				// walk through vertices creating new tetrahedrons
-				for i in 0..vertices.len() {
-					if i < vertices.len() - 2 {
-						tetrahedrons.push(tetrahedron::Tetrahedron::new(
+				// remove duplicate faces as that face crosses the polyhedral hole
+				face_triangles.retain(|f| !duplicate_face_triangles.contains(&f));
+				// construct new tetrahedrons from the point and each triangle face
+				for tri in face_triangles {
+					tetrahedrons.push(tetrahedron::Tetrahedron::new(
 							*point,
-							vertices[i],
-							vertices[i + 1],
-							vertices[i + 2],
+							*tri.get_vertex_a(),
+							*tri.get_vertex_b(),
+							*tri.get_vertex_c(),
 						));
-					} else if i < vertices.len() - 1 {
-						tetrahedrons.push(tetrahedron::Tetrahedron::new(
-							*point,
-							vertices[i],
-							vertices[0],
-							vertices[1],
-						));
-					} else {
-						tetrahedrons.push(tetrahedron::Tetrahedron::new(
-							*point,
-							vertices[i],
-							vertices[1],
-							vertices[2],
-						));
-					}
 				}
 			}
 		}
 		// remove any tetra containing super tetra verts as that isn't a
 		// real point supplied
-		let mut final_tetragedrons = vec![];
+		let mut final_tetrahedra = vec![];
 		for tetra in tetrahedrons.iter_mut() {
 			let a = *tetra.get_vertex_a();
 			let b = *tetra.get_vertex_b();
 			let c = *tetra.get_vertex_c();
 			let d = *tetra.get_vertex_d();
-			let s_a = super_tetra[0];
-			let s_b = super_tetra[1];
-			let s_c = super_tetra[2];
-			let s_d = super_tetra[3];
-			if (a != s_a && a != s_b && a != s_c && a != s_d)
-				&& (b != s_a && b != s_b && b != s_c && b != s_d)
-				&& (c != s_a && c != s_b && c != s_c && c != s_d)
-				&& (d != s_a && d != s_b && d != s_c && d != s_d)
+			let mut is_valid = true;
+			for s_tetra in super_tetra.iter() {
+				let s_a = s_tetra[0];
+				let s_b = s_tetra[1];
+				let s_c = s_tetra[2];
+				let s_d = s_tetra[3];
+				if (a == s_a || a == s_b || a == s_c || a == s_d)
+				|| (b == s_a || b == s_b || b == s_c || b == s_d)
+				|| (c == s_a || c == s_b || c == s_c || c == s_d)
+				|| (d == s_a || d == s_b || d == s_c || d == s_d)
 			{
-				final_tetragedrons.push(tetra.clone());
+				is_valid = false;
+			}
+			}
+			if is_valid {
+				final_tetrahedra.push(tetra.clone());
 			}
 		}
 		Some(DelaunayData {
-			shapes: final_tetragedrons,
+			shapes: final_tetrahedra,
 		})
 	}
 	/// Get a refernce to the tetrahedron list
@@ -130,7 +114,7 @@ impl DelaunayData<tetrahedron::Tetrahedron> {
 	}
 }
 /// Find the minimum `x-y-z` and maximum `x-y-z` of space containing all points
-fn compute_dimension_bounds(points: &[Vec3]) -> (Vec3, Vec3) {
+pub fn compute_dimension_bounds(points: &[Vec3]) -> (Vec3, Vec3) {
 	let mut minimum_world_dimensions = Vec3::ZERO;
 	let mut maximum_world_dimensions = Vec3::ZERO;
 
@@ -162,34 +146,35 @@ fn compute_dimension_bounds(points: &[Vec3]) -> (Vec3, Vec3) {
 }
 
 //TODO test this
-/// Compute the vertices of a tetrahedron which encompassess all points
-fn compute_super_tetrahedron(
+/// Compute the vertices of 4 tetrahedra aligned in a diamond formation to ensure that all data points sit within the tetrahedra
+pub fn compute_super_tetrahedra(
 	minimum_world_dimensions: &Vec3,
 	maximum_world_dimensions: &Vec3,
-) -> [Vec3; 4] {
+) -> [[Vec3; 4]; 4] {
 	let delta_x = maximum_world_dimensions.x - minimum_world_dimensions.x;
 	let delta_y = maximum_world_dimensions.y - minimum_world_dimensions.y;
 	let delta_z = maximum_world_dimensions.z - minimum_world_dimensions.z;
 	let midpoint = (maximum_world_dimensions + minimum_world_dimensions) / 2.0;
 
-	let a = Vec3::new(midpoint.x, midpoint.y + (2.0 * delta_y), midpoint.z);
-	let b = Vec3::new(
-		midpoint.x + (2.0 * delta_x),
-		midpoint.y - (2.0 * delta_y),
-		midpoint.z + (2.0 * delta_z),
-	);
-	let c = Vec3::new(
-		midpoint.x - (2.0 * delta_x),
-		midpoint.y - (2.0 * delta_y),
-		midpoint.z + (2.0 * delta_z),
-	);
-	let d = Vec3::new(
-		midpoint.x - (2.0 * delta_x),
-		midpoint.y - (2.0 * delta_y),
-		midpoint.z - (2.0 * delta_z),
-	);
+	let safety_factor = 1.0;
 
-	[a, b, c, d]
+	let mid_up = midpoint + Vec3::new(0.0, delta_y * safety_factor, 0.0);
+	let mid_down = midpoint + Vec3::new(0.0, -delta_y * safety_factor, 0.0);
+	// in the -x, z plane
+	let top_left = midpoint + Vec3::new(-delta_x * safety_factor, 0.0, delta_z * safety_factor);
+	// in the x, z plane
+	let top_right = midpoint + Vec3::new(delta_x * safety_factor, 0.0, delta_z * safety_factor);
+	// in the x, -z plane
+	let bottom_right = midpoint + Vec3::new(delta_x * safety_factor, 0.0, -delta_z * safety_factor);
+	// in the -x, -z plane
+	let bottom_left = midpoint + Vec3::new(-delta_x * safety_factor, 0.0, -delta_z * safety_factor);
+
+	[
+		[top_left, bottom_right, top_right, mid_up],
+		[top_left, bottom_right, bottom_left, mid_up],
+		[top_left, bottom_right, top_right, mid_down],
+		[top_left, bottom_right, bottom_left, mid_down]
+	]
 }
 
 #[cfg(test)]

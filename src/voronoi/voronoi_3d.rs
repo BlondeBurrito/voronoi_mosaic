@@ -4,7 +4,7 @@
 
 use std::{
 	cmp::Ordering,
-	collections::{BTreeMap, HashSet},
+	collections::BTreeMap,
 };
 
 use bevy::prelude::*;
@@ -74,11 +74,11 @@ impl VoronoiData<VoronoiCell3d> {
 		// store each set of tetrahedron IDs that together form a voronoi cell
 		// if a vertex is shared 4+ times then all the circumcentres of tetras that use it
 		// are voronoi vertices
-		let id_sets = find_shared_sets(&tetra_store);
+		let id_sets = find_shared_sets_tetrahedra(&tetra_store);
 
 		// from the set of IDs find each circumsphere as a vertex on a voronoi cell
 		let mut cells = BTreeMap::new();
-		for (i, ids) in id_sets.iter().enumerate() {
+		for (i, (ids, common_vertex)) in id_sets.iter().enumerate() {
 			let mut cell_vertices = vec![];
 			for id in ids.iter() {
 				if let Some(tetra) = tetra_store.get(id) {
@@ -109,7 +109,7 @@ impl VoronoiData<VoronoiCell3d> {
 			});
 			cells.insert(i as u32, VoronoiCell3d{
 				vertices: cell_vertices,
-				source_vertex: todo!()
+				source_vertex: *common_vertex
 			});
 		}
 
@@ -130,12 +130,14 @@ impl VoronoiData<VoronoiCell3d> {
 	pub fn clip_cells_to_boundary(&mut self, boundary: &[Vec3]) {}
 }
 
-/// Compare the vertices of tetrahedrons and identify groupings of IDs whereby 4
-/// or more tetrahedrons share a vertex
-fn find_shared_sets(map: &BTreeMap<usize, &tetrahedron::Tetrahedron>) -> HashSet<Vec<usize>> {
-	let mut set = HashSet::new();
+/// Compare the vertices of tetrahedra and identify groupings of IDs whereby 4
+/// or more tetrahedra share a vertex.
+///
+/// The grouping forms the key and the value is the vertex they all have in common
+fn find_shared_sets_tetrahedra(map: &BTreeMap<usize, &tetrahedron::Tetrahedron>) -> BTreeMap<Vec<usize>, Vec3> {
+	let mut set = BTreeMap::new();
 	for (id, tetra) in map {
-		// compare each vert with the verts of all the other triangles
+		// compare each vert with the verts of all the other tetrahedra
 		let tetra_verts = tetra.get_vertices();
 		for vert in tetra_verts {
 			// store the ID of each other_tetra that shares this vertex
@@ -149,11 +151,11 @@ fn find_shared_sets(map: &BTreeMap<usize, &tetrahedron::Tetrahedron>) -> HashSet
 				}
 			}
 			// including original id there must be 4+ ids sharing a vertex to constitute a cell
-			if shared.len() >= 2 {
+			if shared.len() >= 3 {
 				let mut ids = shared;
 				ids.push(*id);
 				ids.sort();
-				set.insert(ids);
+				set.insert(ids, *vert);
 			}
 		}
 	}

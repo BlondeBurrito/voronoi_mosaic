@@ -4,7 +4,7 @@
 
 use bevy::prelude::*;
 
-use crate::circumsphere::Circumsphere;
+use crate::{circumsphere::Circumsphere, triangle_3d};
 
 /// Describes a tetrahedron
 #[derive(Clone)]
@@ -78,12 +78,27 @@ impl Tetrahedron {
 	pub fn get_edges(&self) -> [(Vec3, Vec3); 6] {
 		[
 			(self.vertex_a, self.vertex_b),
-			(self.vertex_b, self.vertex_c),
-			(self.vertex_c, self.vertex_a),
+			(self.vertex_a, self.vertex_c),
 			(self.vertex_a, self.vertex_d),
+			(self.vertex_b, self.vertex_c),
+			(self.vertex_c, self.vertex_d),
 			(self.vertex_d, self.vertex_b),
-			(self.vertex_d, self.vertex_c),
 		]
+	}
+	/// Get the vertices in sets of 3 for each face of the tetrahedron
+	pub fn get_face_vertices(&self) ->[[Vec3; 3]; 4] {
+		[[self.vertex_a, self.vertex_b, self.vertex_c],
+		[self.vertex_a, self.vertex_c, self.vertex_d],
+		[self.vertex_a, self.vertex_d, self.vertex_b],
+		[self.vertex_b, self.vertex_c, self.vertex_d]]
+	}
+	/// Get [triangle_3d::Triangle3d] representations of each face of the
+	/// tetrahedron
+	pub fn get_triangle_3d_faces(&self) -> [triangle_3d::Triangle3d; 4] {
+		[triangle_3d::Triangle3d::new(self.vertex_a, self.vertex_b, self.vertex_c),
+		triangle_3d::Triangle3d::new(self.vertex_a, self.vertex_c, self.vertex_d),
+		triangle_3d::Triangle3d::new(self.vertex_a, self.vertex_d, self.vertex_b),
+		triangle_3d::Triangle3d::new(self.vertex_b, self.vertex_c, self.vertex_d),]
 	}
 	/// Compute the circumsphere of this tetrehedron
 	pub fn compute_circumsphere(&self) -> Option<Circumsphere> {

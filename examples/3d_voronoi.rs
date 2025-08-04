@@ -23,28 +23,28 @@ fn main() {
 /// Requirements
 fn setup(
 	mut cmds: Commands,
-	mut meshes: ResMut<Assets<Mesh>>,
-	mut materials: ResMut<Assets<StandardMaterial>>,
+	// mut meshes: ResMut<Assets<Mesh>>,
+	// mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
 	// camera
 	let mut cam_tform = Transform::from_translation(Vec3::new(40.0, 25.0, 40.0));
 	cam_tform.look_at(Vec3::ZERO, Vec3::Y);
 	cmds.spawn((Camera3d::default(), cam_tform));
-	// background plane
-	let mesh = meshes.add(Cuboid::new(20.0, 1.0, 20.0));
-	let material = materials.add(StandardMaterial {
-		base_color: Color::srgb(0.75, 0.75, 0.75),
-		..default()
-	});
-	cmds.spawn((
-		Transform::from_translation(Vec3::NEG_Y),
-		Mesh3d(mesh),
-		MeshMaterial3d(material),
-	));
+	// // background plane
+	// let mesh = meshes.add(Cuboid::new(20.0, 1.0, 20.0));
+	// let material = materials.add(StandardMaterial {
+	// 	base_color: Color::srgb(0.75, 0.75, 0.75),
+	// 	..default()
+	// });
+	// cmds.spawn((
+	// 	Transform::from_translation(Vec3::NEG_Y),
+	// 	Mesh3d(mesh),
+	// 	MeshMaterial3d(material),
+	// ));
 	// lighting
 	cmds.spawn((
 		DirectionalLight {
-			illuminance: light_consts::lux::OVERCAST_DAY,
+			illuminance: light_consts::lux::FULL_DAYLIGHT,
 			shadows_enabled: true,
 			..default()
 		},

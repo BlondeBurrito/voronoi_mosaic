@@ -28,14 +28,26 @@ pub fn sort_vertices_2d(vertices: &mut [Vec2], point: &Vec2) {
 pub fn sort_vertices_3d(vertices: &mut [Vec3], point: &Vec3) {
 	//TODO both vertices len squared cannot be zero
 	vertices.sort_by(|a, b| {
-		if let Some(ordering) = point
-						.angle_between(*a)
-						.partial_cmp(&point.angle_between(*b))
-					{
-						ordering
-					} else {
-						Ordering::Less
-					}
+		let a_on_plane = a.truncate();
+		let b_on_plane = b.truncate();
+		let point_on_plane = point.truncate();
+		if let Some(ordering) = Vec2::Y
+			.angle_to(a_on_plane - point_on_plane)
+			.partial_cmp(&Vec2::Y.angle_to(b_on_plane - point_on_plane))
+		{
+			ordering
+		} else {
+			warn!("Unable to find Ordering between {} and {}", a, b);
+			Ordering::Less
+		}
+		// if let Some(ordering) = point
+		// 				.angle_between(*a)
+		// 				.partial_cmp(&point.angle_between(*b))
+		// 			{
+		// 				ordering
+		// 			} else {
+		// 				Ordering::Less
+		// 			}
 	});
 }
 /// Tests if a vertex sits inside of a polygon

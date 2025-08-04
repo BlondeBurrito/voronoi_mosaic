@@ -3,15 +3,15 @@
 //!
 //! In this case we restrict computations to those of tetrahedrons
 
-use bevy::{math::ops::sqrt, prelude::*};
+use bevy::prelude::*;
 
 /// Describes a sphere whereby the vertices of a polyhedron sit upon its
 /// surface
 pub struct Circumsphere {
 	/// Centre of the sphere
 	circumcentre: Vec3,
-	/// Sphere radius
-	radius: f32,
+	/// Sphere radius squared
+	radius_squared: f32,
 }
 
 impl Circumsphere {
@@ -241,12 +241,12 @@ impl Circumsphere {
 			let y = det_y / (2.0 * a);
 			let z = det_z / (2.0 * a);
 
-			let radius = sqrt(det_x.powf(2.0) + det_y.powf(2.0) + det_z.powf(2.0) - (4.0 * a * c))
-				/ (2.0 * a.abs());
+			let radius_squared = (det_x.powf(2.0) + det_y.powf(2.0) + det_z.powf(2.0) - (4.0 * a * c))
+				/ (4.0 * a.powf(2.0));
 
 			Some(Circumsphere {
 				circumcentre: Vec3::new(x, y, z),
-				radius,
+				radius_squared,
 			})
 		} else {
 			None
@@ -262,7 +262,7 @@ impl Circumsphere {
 		(point.x - self.get_centre().x).powf(2.0)
 			+ (point.y - self.get_centre().y).powf(2.0)
 			+ (point.z - self.get_centre().z).powf(2.0)
-			< self.radius.powf(2.0)
+			< self.radius_squared
 	}
 }
 
@@ -281,7 +281,7 @@ mod tests {
 		assert!(c_wrap.is_some());
 		let c = c_wrap.unwrap();
 		assert_eq!(Vec3::new(0.0, 0.0, 7.5), *c.get_centre());
-		assert_eq!(12.5, c.radius);
+		assert_eq!(156.25, c.radius_squared);
 	}
 	#[test]
 	fn point_is_within_circumcircle() {

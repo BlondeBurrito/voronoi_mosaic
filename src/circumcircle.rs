@@ -8,8 +8,8 @@ use bevy::prelude::*;
 pub struct Circumcircle {
 	/// Centre of the circle
 	circumcentre: Vec2,
-	/// Circle radius
-	radius: f32,
+	/// Circle radius sqaured
+	radius_sqaured: f32,
 }
 impl Circumcircle {
 	/// From triangle vertices describe the properties of a circumcircle
@@ -66,10 +66,10 @@ impl Circumcircle {
 				/ denom;
 
 			let circumcentre = Vec2::new(centre_x, centre_y);
-			let radius = (circumcentre - vertex_a).length();
+			let radius_sqaured = (circumcentre - vertex_a).length_squared();
 			Some(Circumcircle {
 				circumcentre,
-				radius,
+				radius_sqaured,
 			})
 		} else {
 			None
@@ -80,14 +80,14 @@ impl Circumcircle {
 		&self.circumcentre
 	}
 	/// Get the radius of the circumcircle
-	pub fn get_radius(&self) -> f32 {
-		self.radius
+	pub fn get_radius_sqaured(&self) -> f32 {
+		self.radius_sqaured
 	}
 	/// Check if a point is within the circumcircle
 	pub fn is_point_within_circle(&self, point: &Vec2) -> bool {
 		// (y - center_y)^2 + (x - center_x)^2 < radius^2
 		(point.y - self.circumcentre.y).powf(2.0) + (point.x - self.circumcentre.x).powf(2.0)
-			< self.radius.powf(2.0)
+			< self.radius_sqaured
 	}
 }
 
@@ -116,10 +116,10 @@ mod tests {
 		//
 		let circumcircle = Circumcircle::new(v_a, v_b, v_c).unwrap();
 		let actual_center = Vec2::new(4.0263157, 2.8157895);
-		let actual_radius = 2.9793844;
+		let actual_radius = 8.876732;
 		assert!(!circumcircle.get_centre().is_nan());
 		assert_eq!(actual_center, *circumcircle.get_centre());
-		assert_eq!(actual_radius, circumcircle.radius);
+		assert_eq!(actual_radius, circumcircle.radius_sqaured);
 	}
 	#[test]
 	fn point_is_within_circumcircle() {

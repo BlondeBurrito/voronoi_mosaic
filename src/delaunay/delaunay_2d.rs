@@ -71,6 +71,7 @@ impl DelaunayData<triangle_2d::Triangle2d> {
 						vertices.push(*bad_tri.get_vertex_c());
 					}
 				}
+				//TODO instead of sorting having to do arccos calcs could it be replaced with simply taking each edge of the bad triangles, ensuring they are all unique (remove shared edges as they cross the polyhedral hole) and joining each valid edge to the data point to create the new triangles??
 				// sort the vertices in anti-clockwise order by comparing the
 				// angle between the point and a vertex
 				sort_vertices_2d(&mut vertices, point);

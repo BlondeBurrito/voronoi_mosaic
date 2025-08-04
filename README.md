@@ -35,10 +35,14 @@ A series of data points that have been triangulated:
 
 <img src="https://raw.githubusercontent.com/BlondeBurrito/voronoi_mosaic/refs/heads/main/docs/png/delaunay_tri.png" alt="e" width="300"/>
 
-<details>
-<summary>To read through the triangulation process click to exapnd</summary>
+When dealing with 3d we migrate to Delaunay Tetrahedralization and the set of data points form tetrahedra with the condition that no data point sits inside a circumsphere of a tetrahedron.
 
 ### Process
+
+#### 2d
+
+<details>
+<summary>To read through the triangulation process click to exapnd</summary>
 
 Triangulation involes generating a series of triangles and recording good and bad triangles. A bad triangle fails to meet the properties of a Delaunay triangle, i.e its circumcircle contains a data point. A valid Delaunay triangle should not contain any data points.
 
@@ -74,6 +78,31 @@ Once all data points have been added we must then remove any triangles using the
 
 </details>
 
+#### 3d
+
+<details>
+<summary>To read through the tetrahedralization process click to exapnd</summary>
+
+Triangulation in 3d is also known as tetrahedralization.
+
+In a simialr fashtion to the 2d case we want to enclose all data points within a structure, rather than using a single tetrahedron we in fact use 4 tetrahedra (yellow) arranged in a diamond like configuration to ensure that all data points (blue) are enclosed:
+
+<img src="https://raw.githubusercontent.com/BlondeBurrito/voronoi_mosaic/refs/heads/main/docs/png/delaunay_3d_process1.png" alt="e" width="300"/>
+
+We then begin with just a single data point:
+
+<img src="https://raw.githubusercontent.com/BlondeBurrito/voronoi_mosaic/refs/heads/main/docs/png/delaunay_3d_process2.png" alt="e" width="300"/>
+
+And we compute the circumsphere of each tetrahedron (we'll only show one here for visual clarity as a wireframe):
+
+<img src="https://raw.githubusercontent.com/BlondeBurrito/voronoi_mosaic/refs/heads/main/docs/png/delaunay_3d_process3.png" alt="e" width="300"/>
+
+The point is evidently within the circumsphere so we note that its tetrahedron is *bad* and not Delaunay, so we remove it from the set of final tetrahedra leaving behind a polyhedral hole. We collect all the faces of the bad tetrahedra, identify unique faces (i.e a face that crosses the polyhedral hole is shared by two tetrahedra so we ignore it) and join them to the data point - this creates new tetrahedra that fill the hole. These can then be used to progress tetrahedralization.
+
+We continue adding data points one at a time and using circumcspheres to identify any invalid tetraheda. Once all data points have been computed we tidy up by removing any tetrahedra that make use of any of the vertices of the original 4 bounding tetrahedra. This gives us the final tetrahedralization where each one is Delaunay:
+
+</details>
+
 ## Voronoi Tessellation
 
 A Voronoi Tesselation (or Voronoi diagram) describes a number of regions (referred to here as Cells) for which all points in a plane belong to a particular Cell.
@@ -82,10 +111,12 @@ Here is an example showing each Cell as a different colour (some cells extend be
 
 <img src="https://raw.githubusercontent.com/BlondeBurrito/voronoi_mosaic/refs/heads/main/docs/png/2d_voronoi.png" alt="e" width="300"/>
 
-<details>
-<summary>For the details of converting Delanay into Voronoi click to expand</summary>
-
 ### Process
+
+#### 2d
+
+<details>
+<summary>For the details of converting Delanay Triangulation into Voronoi click to expand</summary>
 
 Starting with a set of Delaunay traingles (red and blue) we can calculate the circumcentres of each (orange):
 
@@ -104,6 +135,13 @@ Additionally we can observe cases where a triangle vertex is shared more than tw
 From these properties we can construct the Voronoi Cells, on the left is a illustrative outline, on the right a colour coded representation of the Cells:
 
 <img src="https://raw.githubusercontent.com/BlondeBurrito/voronoi_mosaic/refs/heads/main/docs/png/voronoi_2d_process4.png" alt="e" width="300"/>
+
+</details>
+
+#### 3d
+
+<details>
+<summary>For the details of converting Delanay Tetrahedralization into Voronoi click to expand</summary>
 
 </details>
 
@@ -291,20 +329,10 @@ Once executed a browser based report can be viewed at `[your_repo_root]/target/c
 
 Dual license of MIT and Apache.
 
-# TODO/ notes
+## Possible future work
 
-todo
-TODO note about extremely actue angles in a triangle getting dropped
-TODO add acute angle detection into delaunay and vornoi, and warn if data points are close to each other?
-TODO use seed for random points in examples?
-TODO showcase of subdiving voronoi cells by running them back into delaunay then voronoi
-if some points are too close together then acute angles lead to being ignored
-
-3d - all regualr poluhedra (e.g cube, pyramid) have a circumsphere, most irregular polyhedra do not
-
-raw delany
-voronoi from raw delauny stream
-voronoi from points (generates and discard delaunay)
-meshes directly from points (delaunay and voronoi discarded)
-todo
-todo how many minimum points needed to generate
+- Given floating-point arithmetic is used consider introducing some kind of tolerance measure, e.g for testing vertex presence within a polygon, handling a point very close to the surface of a circumspehre or edge of a circle
+- Consider special handling of extremely acute triangles, disposing of sliver triangles in certian cases?
+- Degenerate triangle detection?
+- Add a means of testing DT for determinism
+- how to measure tetrahedron quality? Sterdian angles? Volume?

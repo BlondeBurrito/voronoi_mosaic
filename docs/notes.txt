@@ -44,3 +44,12 @@ Discarding triangle [Vec2(50.0, 0.0), Vec2(0.0, 50.0), Vec2(0.0, -27.0)]
 Computed final triangles []
 
 ```
+
+todo
+TODO note about extremely actue angles in a triangle getting dropped
+TODO add acute angle detection into delaunay and vornoi, and warn if data points are close to each other?
+TODO use seed for random points in examples?
+TODO showcase of subdiving voronoi cells by running them back into delaunay then voronoi
+if some points are too close together then acute angles lead to being ignored
+
+3d - all regualr poluhedra (e.g cube, pyramid) have a circumsphere, most irregular polyhedra do not
