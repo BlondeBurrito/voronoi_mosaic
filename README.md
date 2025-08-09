@@ -4,7 +4,7 @@
 ![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/blondeburrito/voronoi_mosaic/ci.yml)
 ![GitHub Workflow Status (with event)](https://img.shields.io/github/actions/workflow/status/blondeburrito/voronoi_mosaic/code-cov.yml?label=CodeCov>85%)
 
-<img src="https://raw.githubusercontent.com/BlondeBurrito/voronoi_mosaic/refs/heads/main/docs/png/emblem.png" alt="e" width="300"/>
+<img src="https://raw.githubusercontent.com/BlondeBurrito/voronoi_mosaic/main/docs/png/emblem.png" alt="e" width="300"/>
 
 # voronoi_mosaic
 
@@ -33,7 +33,7 @@ Delaunay Triangulation describes a set of data points in space that form a serie
 
 A series of data points that have been triangulated:
 
-<img src="https://raw.githubusercontent.com/BlondeBurrito/voronoi_mosaic/refs/heads/main/docs/png/delaunay_tri.png" alt="e" width="300"/>
+<img src="https://raw.githubusercontent.com/BlondeBurrito/voronoi_mosaic/main/docs/png/delaunay_tri.png" alt="e" width="300"/>
 
 When dealing with 3d we migrate to Delaunay Tetrahedralization and the set of data points form tetrahedra with the condition that no data point sits inside a circumsphere of a tetrahedron.
 
