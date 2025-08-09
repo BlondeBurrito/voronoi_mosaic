@@ -241,6 +241,9 @@ For a full visualisation you can check out this exmaple [2d_meshes_clipped](http
 
 *NB: a concept of tolerance is built into some of the 3d calculations to handle cases where points within a data set are close together, however, if points within the data set are extremely close together then due to floating point arithmetic the conditions for a tetrahedron to be Delaunay can break down and cause undesirable face intersections across sliver (narrow) tetrahedra*
 
+<details>
+<summary>3d usage minimised until API work complete, the enclosed functions are subject to change and some may ont fucntion as expected yet</summary>
+
 #### Delaunay
 
 Generating the Delaunay simply requires a series of points in space:
@@ -318,6 +321,8 @@ if let Some(delaunay) = DelaunayData::compute_triangulation_3d(&points) {
 ```
 
 For a full visualisation you can check out this exmaple [3d_meshes_clipped](https://github.com/BlondeBurrito/voronoi_mosaic/blob/main/examples/3d_meshes_clipped.rs).
+
+</details>
 
 ## Performance
 
