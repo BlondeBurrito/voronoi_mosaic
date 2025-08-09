@@ -1,0 +1,379 @@
+//! Generates Delaunay Triangles, uses them to construct unbounded Voronoi Cells and then
+//! produces Bevy meshes from the cells
+//!
+//! The visibility of each layer can be toggled with the buttons
+//!
+
+use bevy::{color::palettes::css::WHITE, prelude::*};
+use voronoi_mosaic::prelude::*;
+
+/// Z location of the generated meshes
+const MESH_Z: f32 = 1.0;
+/// Z location of Voronoi cell edes
+const VORONOI_CELL_EDGE_Z: f32 = 2.0;
+/// Colour of Voronoi edges
+const VORONOI_EDGE_COLOUR: Color = Color::srgb(1.0, 0.5, 0.0);
+/// Z location of the Voronoi vertices
+const VORONOI_CELL_VERTEX_Z: f32 = 3.0;
+/// Colour of the Voronoi vertices
+const VORONOI_VERTEX_COLOUR: Color = Color::srgb(0.5, 1.0, 0.0);
+/// Z location of Delaunay edges
+const DELAUNAY_EDGE_Z: f32 = 4.0;
+/// Colour of Delaunay edges
+const DELAUNAY_EDGE_COLOUR: Color = Color::srgb(1.0, 0.0, 0.0);
+/// Z location of Delaunay vertices
+const DELAUNAY_VERTEX_Z: f32 = 5.0;
+/// Colour of Delaunay vertices
+const DELAUNAY_VERTEX_COLOUR: Color = Color::srgb(0.0, 0.0, 1.0);
+
+fn main() {
+	App::new()
+		.add_plugins(DefaultPlugins)
+		.add_systems(Startup, (setup, visuals, create_ui_buttons))
+		.add_systems(Update, handle_toggle_buttons)
+		// .add_plugins(bevy::sprite::Wireframe2dPlugin::default())
+		// 	.insert_resource(bevy::sprite::Wireframe2dConfig {
+		// 		// The global wireframe config enables drawing of wireframes on every mesh,
+		// 		// except those with `NoWireframe`. Meshes with `Wireframe` will always have a wireframe,
+		// 		// regardless of the global configuration.
+		// 		global: true,
+		// 		// Controls the default color of all wireframes. Used as the default color for global wireframes.
+		// 		// Can be changed per mesh using the `WireframeColor` component.
+		// 		default_color: WHITE.into(),
+		// 	})
+		.run();
+}
+/// Requirements
+fn setup(
+	mut cmds: Commands,
+	mut meshes: ResMut<Assets<Mesh>>,
+	mut materials: ResMut<Assets<ColorMaterial>>,
+) {
+	// camera
+	cmds.spawn((Camera2d,));
+	// background plane
+	let mesh = meshes.add(Rectangle::from_length(800.0));
+	let material = materials.add(Color::srgb(0.75, 0.75, 0.75));
+	cmds.spawn((Transform::default(), Mesh2d(mesh), MeshMaterial2d(material)));
+}
+/// Compute and display data
+fn visuals(
+	mut cmds: Commands,
+	mut meshes: ResMut<Assets<Mesh>>,
+	mut materials: ResMut<Assets<ColorMaterial>>,
+) {
+	// points to be used
+	let points = vec![
+		Vec2::new(-380.0, -380.0),
+		Vec2::new(-355.0, -375.0),
+		Vec2::new(-350.0, -233.0),
+		Vec2::new(-241.0, -296.0),
+		Vec2::new(-169.0, -201.0),
+		Vec2::new(-124.0, -86.0),
+		Vec2::new(-53.0, -124.0),
+		Vec2::new(-94.0, -75.0),
+		Vec2::new(-22.0, -35.0),
+		//
+		Vec2::new(366.0, -24.0),
+		Vec2::new(340.0, -284.0),
+		Vec2::new(285.0, -165.0),
+		Vec2::new(236.0, -94.0),
+		Vec2::new(156.0, -156.0),
+		Vec2::new(120.0, -85.0),
+		Vec2::new(99.0, -33.0),
+		Vec2::new(72.0, -199.0),
+		Vec2::new(16.0, -350.0),
+		//
+		Vec2::new(352.0, 42.0),
+		Vec2::new(326.0, 107.0),
+		Vec2::new(256.0, 251.0),
+		Vec2::new(175.0, 365.0),
+		Vec2::new(142.0, 168.0),
+		Vec2::new(102.0, 72.0),
+		Vec2::new(84.0, 192.0),
+		Vec2::new(58.0, 247.0),
+		Vec2::new(19.0, 27.0),
+		//
+		Vec2::new(-385.0, 36.0),
+		Vec2::new(-321.0, 354.0),
+		Vec2::new(-276.0, 68.0),
+		Vec2::new(-244.0, 302.0),
+		Vec2::new(-153.0, 168.0),
+		Vec2::new(-122.0, 272.0),
+		Vec2::new(-84.0, 196.0),
+		Vec2::new(-63.0, 241.0),
+		Vec2::new(-24.0, 202.0),
+		//
+		Vec2::new(399.0, 399.0),
+		Vec2::new(-399.0, 399.0),
+		Vec2::new(-399.0, -399.0),
+		Vec2::new(399.0, -399.0),
+		//
+		Vec2::new(0.0, 399.0),
+		Vec2::new(-399.0, 0.0),
+		Vec2::new(0.0, -399.0),
+		Vec2::new(399.0, 0.0),
+	];
+	// compute data
+	if let Some(data) = DelaunayData::compute_triangulation_2d(&points) {
+		create_delaunay_visuals(&mut cmds, &mut meshes, &mut materials, &data);
+		if let Some(voronoi) = VoronoiData::from_delaunay_2d(&data) {
+			// add simple shapes to showcase what the data looks like
+			create_voronoi_cell_visuals(&mut cmds, &mut meshes, &mut materials, &voronoi);
+			create_mesh_visuals(&mut cmds, &mut meshes, &mut materials, &voronoi);
+		}
+	} else {
+		warn!("Data computation failed");
+	}
+}
+
+/// Labels an entity in the Delaunay view for querying
+#[derive(Component)]
+struct DelaunayLabel;
+
+/// Create simple shapes to illustrate the raw delaunay data
+fn create_delaunay_visuals(
+	cmds: &mut Commands,
+	meshes: &mut ResMut<Assets<Mesh>>,
+	materials: &mut ResMut<Assets<ColorMaterial>>,
+	data: &DelaunayData<triangle_2d::Triangle2d>,
+) {
+	for triangle in data.get().iter() {
+		// create markers for vertices
+		let mesh = meshes.add(Circle::new(10.0));
+		let material = materials.add(DELAUNAY_VERTEX_COLOUR);
+		// vertices
+		let translations = [
+			triangle.get_vertex_a(),
+			triangle.get_vertex_b(),
+			triangle.get_vertex_c(),
+		];
+		for translation in translations.iter() {
+			cmds.spawn((
+				Mesh2d(mesh.clone()),
+				MeshMaterial2d(material.clone()),
+				Transform::from_translation(translation.extend(DELAUNAY_VERTEX_Z)),
+				DelaunayLabel,
+				Visibility::Hidden,
+			));
+		}
+		// create markers for edges
+		let mat = materials.add(DELAUNAY_EDGE_COLOUR);
+		for edge in triangle.get_edges().iter() {
+			let y_len = (edge.1 - edge.0).length();
+			let mesh = meshes.add(Rectangle::from_size(Vec2::new(5.0, y_len)));
+			let translation = (edge.1 + edge.0) / 2.0;
+			let angle = Vec2::Y.angle_to(edge.0 - edge.1);
+			let tform = Transform {
+				translation: translation.extend(DELAUNAY_EDGE_Z),
+				rotation: Quat::from_rotation_z(angle),
+				..default()
+			};
+			cmds.spawn((
+				Mesh2d(mesh),
+				MeshMaterial2d(mat.clone()),
+				tform,
+				DelaunayLabel,
+				Visibility::Hidden,
+			));
+		}
+	}
+}
+
+/// Labels an entity in the Voronoi view for querying
+#[derive(Component)]
+struct VoronoiLabel;
+
+/// Create simple shapes to illustrate the raw voronoi data
+fn create_voronoi_cell_visuals(
+	cmds: &mut Commands,
+	meshes: &mut ResMut<Assets<Mesh>>,
+	materials: &mut ResMut<Assets<ColorMaterial>>,
+	voronoi: &VoronoiData<VoronoiCell2d>,
+) {
+	for cell in voronoi.get_cells().values() {
+		for (i, point) in cell.get_vertices().iter().enumerate() {
+			// mark each vertex of every cell
+			let mesh = meshes.add(Circle::new(10.0));
+			let material = materials.add(VORONOI_VERTEX_COLOUR);
+			cmds.spawn((
+				Mesh2d(mesh.clone()),
+				MeshMaterial2d(material.clone()),
+				Transform::from_translation(point.extend(VORONOI_CELL_VERTEX_Z)),
+				VoronoiLabel,
+				Visibility::Hidden,
+			));
+			// mark the edges
+			let (v1, v0) = if i < cell.get_vertices().len() - 1 {
+				(cell.get_vertices()[i + 1], *point)
+			} else {
+				(cell.get_vertices()[0], *point)
+			};
+			let y_len = (v1 - v0).length();
+			let mesh = meshes.add(Rectangle::from_size(Vec2::new(5.0, y_len)));
+			let mat = materials.add(VORONOI_EDGE_COLOUR);
+			let translation = (v1 + v0) / 2.0;
+			let angle = Vec2::Y.angle_to(v0 - v1);
+			let tform = Transform {
+				translation: translation.extend(VORONOI_CELL_EDGE_Z),
+				rotation: Quat::from_rotation_z(angle),
+				..default()
+			};
+			cmds.spawn((
+				Mesh2d(mesh),
+				MeshMaterial2d(mat.clone()),
+				tform,
+				VoronoiLabel,
+				Visibility::Hidden,
+			));
+		}
+	}
+}
+
+/// Labels an entity in the bevy mesh view for querying
+#[derive(Component)]
+struct MeshLabel;
+
+/// Create the meshes
+fn create_mesh_visuals(
+	cmds: &mut Commands,
+	meshe_assets: &mut ResMut<Assets<Mesh>>,
+	materials: &mut ResMut<Assets<ColorMaterial>>,
+	voronoi: &VoronoiData<VoronoiCell2d>,
+) {
+	let meshes = voronoi.as_bevy_meshes_2d();
+	for (i, (mesh, position)) in meshes.iter().enumerate() {
+		// randomise mesh colour
+		let colour = Color::hsl(360. * i as f32 / meshes.len() as f32, 0.95, 0.7);
+		let tform = Transform::from_translation(position.extend(MESH_Z));
+		cmds.spawn((
+			Mesh2d(meshe_assets.add(mesh.clone())),
+			MeshMaterial2d(materials.add(colour)),
+			tform,
+			MeshLabel,
+			Visibility::Visible,
+		));
+	}
+}
+
+/// Labels the toggle buttons for easy querying
+#[derive(Component, Copy, Clone)]
+enum ButtonLabel {
+	/// Button label to toggle Delaunay visibility
+	Delaunay,
+	/// Button label to toggle Voronoi visibility
+	Voronoi,
+	/// Button label to toggle mesh visibility
+	Mesh,
+}
+
+impl std::fmt::Display for ButtonLabel {
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		match self {
+			ButtonLabel::Delaunay => write!(f, "Toggle Delaunay"),
+			ButtonLabel::Voronoi => write!(f, "Toggle Voronoi"),
+			ButtonLabel::Mesh => write!(f, "Toggle Meshes"),
+		}
+	}
+}
+
+/// Create the UI
+fn create_ui_buttons(mut cmds: Commands) {
+	let btns = [
+		ButtonLabel::Delaunay,
+		ButtonLabel::Voronoi,
+		ButtonLabel::Mesh,
+	];
+	cmds.spawn(Node {
+		flex_direction: FlexDirection::Column,
+		..default()
+	})
+	.with_children(|p| {
+		for btn in btns.iter() {
+			p.spawn((
+				*btn,
+				Button,
+				Node {
+					width: Val::Px(100.0),
+					height: Val::Px(50.0),
+					margin: UiRect::all(Val::Px(5.0)),
+					justify_content: JustifyContent::Center,
+					align_items: AlignItems::Center,
+					..Default::default()
+				},
+				BackgroundColor(Color::srgb(0.15, 0.15, 0.15)),
+			))
+			.with_children(|p| {
+				p.spawn((
+					Text::new(btn.to_string()),
+					TextFont {
+						font_size: 22.0,
+						..default()
+					},
+					TextColor(WHITE.into()),
+				));
+			});
+		}
+	});
+}
+
+/// Handle pressing buttons to change visibility
+#[allow(clippy::type_complexity)]
+fn handle_toggle_buttons(
+	mut btn_q: Query<(&Interaction, &ButtonLabel, &mut BackgroundColor), Changed<Interaction>>,
+	mut delaunay_q: Query<
+		&mut Visibility,
+		(
+			With<DelaunayLabel>,
+			Without<VoronoiLabel>,
+			Without<MeshLabel>,
+		),
+	>,
+	mut voronoi_q: Query<
+		&mut Visibility,
+		(
+			Without<DelaunayLabel>,
+			With<VoronoiLabel>,
+			Without<MeshLabel>,
+		),
+	>,
+	mut mesh_q: Query<
+		&mut Visibility,
+		(
+			Without<DelaunayLabel>,
+			Without<VoronoiLabel>,
+			With<MeshLabel>,
+		),
+	>,
+) {
+	for (interaction, label, mut colour) in &mut btn_q {
+		match interaction {
+			Interaction::Pressed => {
+				*colour = Color::srgb(0.35, 0.75, 0.35).into();
+				match label {
+					ButtonLabel::Delaunay => {
+						for mut vis in &mut delaunay_q {
+							vis.toggle_visible_hidden();
+						}
+					}
+					ButtonLabel::Voronoi => {
+						for mut vis in &mut voronoi_q {
+							vis.toggle_visible_hidden();
+						}
+					}
+					ButtonLabel::Mesh => {
+						for mut vis in &mut mesh_q {
+							vis.toggle_visible_hidden();
+						}
+					}
+				}
+			}
+			Interaction::Hovered => {
+				*colour = Color::srgb(0.25, 0.25, 0.25).into();
+			}
+			Interaction::None => {
+				*colour = Color::srgb(0.15, 0.15, 0.15).into();
+			}
+		}
+	}
+}

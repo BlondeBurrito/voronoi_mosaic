@@ -1,0 +1,59 @@
+``` txt
+if super triangle is minimum size, i.e two of its sides touch the corners of the data plane then triangulation can leaves holes - suspect it's in relation to dimensions of data plane. exmaple: plane min (-51, -1) max (51, 51) is a flat wide rectangle
+
+Adding point to triangulation: Vec2(0.0, 50.0)
+Circumcircle from triangle [Vec2(0.0, -27.0), Vec2(-203.01923, 76.5), Vec2(203.01923, 76.5)] with centre [-0, 223.86499] and radius 250.86499
+Point Vec2(0.0, 50.0) is within circumcircle
+Bad triangles contains [Triangle2d { vertex_a: Vec2(0.0, -27.0), vertex_b: Vec2(-203.01923, 76.5), vertex_c: Vec2(203.01923, 76.5) }]
+Triangles after removing bads contains []
+Verts to use in new triangles [Vec2(0.0, -27.0), Vec2(203.01923, 76.5), Vec2(-203.01923, 76.5)]
+Adding new triangle [Vec2(0.0, 50.0), Vec2(0.0, -27.0), Vec2(203.01923, 76.5)]
+Adding new triangle [Vec2(0.0, 50.0), Vec2(203.01923, 76.5), Vec2(-203.01923, 76.5)]
+Adding new triangle [Vec2(0.0, 50.0), Vec2(-203.01923, 76.5), Vec2(0.0, -27.0)]
+Adding point to triangulation: Vec2(-50.0, 0.0)
+Circumcircle from triangle [Vec2(0.0, 50.0), Vec2(0.0, -27.0), Vec2(203.01923, 76.5)] with centre [108.26451, 11.5] and radius 114.90628
+Circumcircle from triangle [Vec2(0.0, 50.0), Vec2(203.01923, 76.5), Vec2(-203.01923, 76.5)] with centre [0, 840.9256] and radius 790.9256
+Circumcircle from triangle [Vec2(0.0, 50.0), Vec2(-203.01923, 76.5), Vec2(0.0, -27.0)] with centre [-108.26451, 11.5] and radius 114.90628
+Point Vec2(-50.0, 0.0) is within circumcircle
+Bad triangles contains [Triangle2d { vertex_a: Vec2(0.0, 50.0), vertex_b: Vec2(-203.01923, 76.5), vertex_c: Vec2(0.0, -27.0) }]
+Triangles after removing bads contains [Triangle2d { vertex_a: Vec2(0.0, 50.0), vertex_b: Vec2(0.0, -27.0), vertex_c: Vec2(203.01923, 76.5) }, Triangle2d { vertex_a: Vec2(0.0, 50.0), vertex_b: Vec2(203.01923, 76.5), vertex_c: Vec2(-203.01923, 76.5) }]
+Verts to use in new triangles [Vec2(0.0, 50.0), Vec2(-203.01923, 76.5), Vec2(0.0, -27.0)]
+Adding new triangle [Vec2(-50.0, 0.0), Vec2(0.0, 50.0), Vec2(-203.01923, 76.5)]
+Adding new triangle [Vec2(-50.0, 0.0), Vec2(-203.01923, 76.5), Vec2(0.0, -27.0)]
+Adding new triangle [Vec2(-50.0, 0.0), Vec2(0.0, -27.0), Vec2(0.0, 50.0)]
+Adding point to triangulation: Vec2(50.0, 0.0)
+Circumcircle from triangle [Vec2(0.0, 50.0), Vec2(0.0, -27.0), Vec2(203.01923, 76.5)] with centre [108.26451, 11.5] and radius 114.90628
+Point Vec2(50.0, 0.0) is within circumcircle
+Circumcircle from triangle [Vec2(0.0, 50.0), Vec2(203.01923, 76.5), Vec2(-203.01923, 76.5)] with centre [0, 840.9256] and radius 790.9256
+Circumcircle from triangle [Vec2(-50.0, 0.0), Vec2(0.0, 50.0), Vec2(-203.01923, 76.5)] with centre [-97.09221, 97.09221] and radius 107.91003
+Circumcircle from triangle [Vec2(-50.0, 0.0), Vec2(-203.01923, 76.5), Vec2(0.0, -27.0)] with centre [-1741.9521, -3193.041] and radius 3613.615
+Circumcircle from triangle [Vec2(-50.0, 0.0), Vec2(0.0, -27.0), Vec2(0.0, 50.0)] with centre [-11.5, 11.5] and radius 40.18084
+Bad triangles contains [Triangle2d { vertex_a: Vec2(0.0, 50.0), vertex_b: Vec2(0.0, -27.0), vertex_c: Vec2(203.01923, 76.5) }]
+Triangles after removing bads contains [Triangle2d { vertex_a: Vec2(0.0, 50.0), vertex_b: Vec2(203.01923, 76.5), vertex_c: Vec2(-203.01923, 76.5) }, Triangle2d { vertex_a: Vec2(-50.0, 0.0), vertex_b: Vec2(0.0, 50.0), vertex_c: Vec2(-203.01923, 76.5) }, Triangle2d { vertex_a: Vec2(-50.0, 0.0), vertex_b: Vec2(-203.01923, 76.5), vertex_c: Vec2(0.0, -27.0) }, Triangle2d { vertex_a: Vec2(-50.0, 0.0), vertex_b: Vec2(0.0, -27.0), vertex_c: Vec2(0.0, 50.0) }]
+Verts to use in new triangles [Vec2(0.0, -27.0), Vec2(203.01923, 76.5), Vec2(0.0, 50.0)]
+Adding new triangle [Vec2(50.0, 0.0), Vec2(0.0, -27.0), Vec2(203.01923, 76.5)]
+Adding new triangle [Vec2(50.0, 0.0), Vec2(203.01923, 76.5), Vec2(0.0, 50.0)]
+Adding new triangle [Vec2(50.0, 0.0), Vec2(0.0, 50.0), Vec2(0.0, -27.0)]
+Discarding triangle [Vec2(0.0, 50.0), Vec2(203.01923, 76.5), Vec2(-203.01923, 76.5)]
+Discarding triangle [Vec2(-50.0, 0.0), Vec2(0.0, 50.0), Vec2(-203.01923, 76.5)]
+Discarding triangle [Vec2(-50.0, 0.0), Vec2(-203.01923, 76.5), Vec2(0.0, -27.0)]
+Discarding triangle [Vec2(-50.0, 0.0), Vec2(0.0, -27.0), Vec2(0.0, 50.0)]
+Discarding triangle [Vec2(50.0, 0.0), Vec2(0.0, -27.0), Vec2(203.01923, 76.5)]
+Discarding triangle [Vec2(50.0, 0.0), Vec2(203.01923, 76.5), Vec2(0.0, 50.0)]
+Discarding triangle [Vec2(50.0, 0.0), Vec2(0.0, 50.0), Vec2(0.0, -27.0)]
+Computed final triangles []
+
+```
+
+todo
+TODO note about extremely actue angles in a triangle getting dropped
+TODO add acute angle detection into delaunay and vornoi, and warn if data points are close to each other?
+TODO use seed for random points in examples?
+TODO showcase of subdiving voronoi cells by running them back into delaunay then voronoi
+if some points are too close together then acute angles lead to being ignored
+
+3d - all regualr poluhedra (e.g cube, pyramid) have a circumsphere, most irregular polyhedra do not
+3d - if points not well distributed sliver tetras in delauny can occur
+3d - detect coplanar
+
+tidy examples, mesh ones have functions to create visuals, copy them to lower tier examples

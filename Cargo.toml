@@ -2,17 +2,21 @@
 version = "0.1.0"
 authors = ["BlondeBurrito"]
 edition = "2024"
-rust-version = "1.88"
+rust-version = "1.89"
 readme = "README.md"
-homepage = "https://github.com/BlondeBurrito/bevy_repo_template"
-repository = "https://github.com/BlondeBurrito/bevy_repo_template"
-keywords = ["utility"]
+license = "MIT OR Apache-2.0"
+homepage = "https://github.com/BlondeBurrito/voronoi_mosaic"
+repository = "https://github.com/BlondeBurrito/voronoi_mosaic"
+keywords = ["tessellation", "triangulation", "bevy"]
+categories = ["game-development", "algorithms"]
+exclude = [".github/", "crates/", "assets/", "docs/png/", "justfile"]
 
 [workspace]
 members = ["crates/*"]
 
 [workspace.lints.rust]
 missing_docs = "deny"
+unexpected_cfgs = { level = "allow", check-cfg = ['cfg(tarpaulin_include)'] }
 
 [workspace.lints.clippy]
 cargo_common_metadata = "deny"
@@ -22,58 +26,43 @@ unimplemented = "warn"
 
 # Centralised way of managing versions across all crates and packages
 [workspace.dependencies]
-settings = { path = "crates/settings" }
-state = { path = "crates/state" }
-data = { path = "crates/data" }
-menu_data = { path = "crates/menu_data" }
-utility = { path = "crates/utility" }
-register = { path = "crates/register" }
-bevy = { version = "0.16", features = ["ktx2"] }
-# bevy_avian = "0.22"
-# bevy_flowfield_tiles_plugin = "0.4"
-# bevy_replicon = "0.34"
-dirs = "6"
-rand = "0.9"
-rand_chacha = { version = "0.9", features = ["serde"] }
-ron = "0.10"
-serde = "1"
-# photon-rs = "0.3"
-dotenvy = "0.15"
-strum = { version = "0.27", features = ["derive"] }
-# diesel = { version = "2", features = [ "postgres" ] }
+bevy = { version = "0.16", default-features = false, features = ["bevy_log"]}
 
 [package]
-name = "bevy_repo_template"
+name = "voronoi_mosaic"
 version.workspace = true
 authors.workspace = true
 edition.workspace = true
 rust-version.workspace = true
-description = "A skeleton repo"
+description = "Bevy mesh generation from Delaunay Triangulation and Voronoi Tessellation"
 readme.workspace = true
+license.workspace = true
 homepage.workspace = true
 repository.workspace = true
 keywords.workspace = true
-publish = false
+categories.workspace = true
+exclude.workspace = true
+publish = true
 
 [lints]
 workspace = true
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dev-dependencies]
-criterion = "0.6"
+criterion = "0.7"
+bevy = { workspace = true, default-features = true }
+rand = "0.9"
+rand_chacha = { version = "0.9" }
+# examples_utils = { path = "crates/examples_utils" }
 
 [dependencies]
-bevy = { workspace = true }
-# bevy_flowfield_tiles_plugin = { workspace = true, features = [ "2d", "ron"]}
-# photon-rs = { workspace = true }
-settings = { workspace = true }
-state = { workspace = true }
-utility = { workspace = true }
-rand = { workspace = true }
-data = { workspace = true }
-menu_data = { workspace = true }
-register = { workspace = true }
+bevy = { workspace = true, default-features = false, features = ["bevy_render", "bevy_asset"] }
+
+[features]
+default = []
+3d_unstable =[]
+
+[package.metadata.docs.rs]
+# features = ["3d_unstable"] # ignore documenting the 3d stuff until it's complete
 
 [profile.dev]
 opt-level = 1
@@ -83,14 +72,73 @@ inherits = "release"
 debug = true
 strip = false
 
+[profile.codecov]
+inherits = "release"
+strip = false
+
 [profile.release]
 codegen-units = 1
 strip = true # strip symbols to reduce binary size on linux and mac
 
+###################
 [[bench]]
-name = "fib"
+name = "2d_delaunay"
 harness = false
+[[bench]]
+name = "2d_voronoi"
+harness = false
+[[bench]]
+name = "2d_voronoi_clipped"
+harness = false
+[[bench]]
+name = "2d_meshes"
+harness = false
+[[bench]]
+name = "3d_delaunay"
+harness = false
+[[bench]]
+name = "3d_voronoi"
+harness = false
+[[bench]]
+name = "3d_voronoi_clipped"
+harness = false
+[[bench]]
+name = "3d_meshes"
+harness = false
+###################
 
 [[example]]
-name = "hello"
-path = "examples/hello.rs"
+name = "2d_delaunay"
+path = "examples/2d_delaunay.rs"
+
+[[example]]
+name = "2d_voronoi"
+path = "examples/2d_voronoi.rs"
+
+[[example]]
+name = "2d_meshes"
+path = "examples/2d_meshes.rs"
+
+[[example]]
+name = "2d_meshes_clipped"
+path = "examples/2d_meshes_clipped.rs"
+
+[[example]]
+name = "3d_delaunay"
+path = "examples/3d_delaunay.rs"
+required-features = ["3d_unstable"]
+
+[[example]]
+name = "3d_voronoi"
+path = "examples/3d_voronoi.rs"
+required-features = ["3d_unstable"]
+
+[[example]]
+name = "3d_meshes"
+path = "examples/3d_meshes.rs"
+required-features = ["3d_unstable"]
+
+[[example]]
+name = "3d_meshes_clipped"
+path = "examples/3d_meshes_clipped.rs"
+required-features = ["3d_unstable"]
