@@ -1,2 +1,2 @@
-//! Helpers for iuse in examples
+//! Helpers for use in examples
 //!

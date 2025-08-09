@@ -1,4 +1,7 @@
-//! TODO
+//! Voronoi Tessellation is a series of regions (also called cells) which are
+//! defined by a point in space (known as a site , seed or generating point)
+//! for which the cell consists of all points in space that are closer to the
+//! cell-site than any other cell-site
 //!
 //!
 

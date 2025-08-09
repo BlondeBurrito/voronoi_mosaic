@@ -1,6 +1,20 @@
 //! From a series of 2d points in space compute a Delaunay Triangulation.
 //!
-//! The Bowyer-Watson algorithm is used - use circumcircles to determine if a triangulation is valid
+//! The Bowyer-Watson algorithm is used - we describe a triangle that is large
+//! enough to enclose all the points of a data set within it. This starting
+//! triangle is stored in a mutable list which grows as more Delaunay Triangles
+//! are calculated.
+//! 
+//! The first data point is added to the triangulation and we use the
+//! cirumcircles of any triangles in the list to determine if they are still
+//! Delaunay. If a triangles circumcircle contains a data point then the
+//! triangle is not Delaunay, the triangle is removed from the list and its
+//! edges are used to construct new triangles with the inserted data point -
+//! this makes new Delaunay Triangles. Step by step we add all points to the
+//! triangulation, computing new triangles as we go until all points have been
+//! processed and we arrive with a list of true Delaunay Triangles. Note that
+//! the original "super triangle" to kick-start the triangulation gets removed
+//! at the end as they were imaginary data points.
 //!
 
 use bevy::prelude::*;

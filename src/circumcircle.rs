@@ -16,36 +16,6 @@ impl Circumcircle {
 	///
 	/// If an edge length between vertices is zero then a circumcircle cannot be found
 	pub fn new(vertex_a: Vec2, vertex_b: Vec2, vertex_c: Vec2) -> Option<Self> {
-		// // find the center of the circumcircle,
-		// // bisecting two sides of the triangle and
-		// // taking perpendicular lines their intersection is the centre
-		// let ab_midpoint = (vertex_a + vertex_b) / 2.0;
-		// let ab_gradient = (vertex_a.y - vertex_b.y) / (vertex_a.x - vertex_b.x);
-		// let ab_perp_gradient = -1.0 / ab_gradient;
-		// let ab_perp_line_intercept = ab_midpoint.y - (ab_perp_gradient * ab_midpoint.x);
-		// //
-		// let bc_midpoint = (vertex_b + vertex_c) / 2.0;
-		// let bc_gradient = (vertex_b.y - vertex_c.y) / (vertex_b.x - vertex_c.x);
-		// let bc_perp_gradient = -1.0 / bc_gradient;
-		// let bc_perp_line_intercept = bc_midpoint.y - (bc_perp_gradient * bc_midpoint.x);
-		// // find where the two perp lines intercept to find the centre
-		// // y_a = mx_a + c_a, y_b = mx_b + c_b
-		// // mx_a + c_a = mx_b + c_b
-		// // to be same x_a == x_b
-		// // m_ax - m_bx = c_b - c_a
-		// let centre_x = (bc_perp_line_intercept - ab_perp_line_intercept)
-		// 	/ (ab_perp_gradient - bc_perp_gradient);
-		// // x_a = (y_a - c_a)/m_a,   x_b = (y_b - c_b)/m_b
-		// // y_a - c_a = m_a * (y_b - c_b)/m_b
-		// // y_a == y_b
-		// // y = (y - c_b) * m_a/m_b + c_a
-		// // y - y* m_a/m_b = c_a - c_b*m_a/m_b
-		// // y = (c_a - c_b * (m_a/m_b)) / ( 1 - (m_a/m_b))
-		// let centre_y = (ab_perp_line_intercept
-		// 	- (bc_perp_line_intercept * (ab_perp_gradient / bc_perp_gradient)))
-		// 	/ (1.0 - (ab_perp_gradient / bc_perp_gradient));
-		// //
-
 		// https://en.wikipedia.org/wiki/Circumcircle
 		let denom = 2.0
 			* ((vertex_a.x * (vertex_b.y - vertex_c.y))

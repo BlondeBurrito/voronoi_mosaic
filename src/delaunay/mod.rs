@@ -1,5 +1,6 @@
-//! Construct a series of triangles between points such that no point sits within a
-//! the circumcircle of any triangle
+//! Delaunay describes the partitioning of a plane based on a series of data
+//! points into a set of triangles whereby no circumcircle contains any of the
+//! data points
 //!
 
 use bevy::prelude::*;

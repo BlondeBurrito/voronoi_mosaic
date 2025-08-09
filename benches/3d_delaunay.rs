@@ -40,7 +40,7 @@ fn prepare_data() -> Vec<Vec3> {
 }
 
 /// Call the code to benchmark
-fn init(points: &mut Vec<Vec3>) {
+fn init(points: &mut [Vec3]) {
 	let _data = DelaunayData::compute_triangulation_3d(points);
 }
 /// Benchmark

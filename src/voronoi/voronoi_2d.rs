@@ -1,4 +1,6 @@
-//!
+//! 2d Voronoi is built by identifying the circumcentres of a Delaunay
+//! Triangulation and grouping those centres into a cell based on their shared
+//! cell-site/generating point
 //!
 //!
 

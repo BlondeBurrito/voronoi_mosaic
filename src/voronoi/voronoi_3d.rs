@@ -1,4 +1,6 @@
-//!
+//! 3d Voronoi is built from a Delaunay Tetrahedralization by locating the
+//! circumcentres of circumspheres and grouping those centres based on
+//! tetrahedra boundary sharing
 //!
 //!
 

@@ -1,4 +1,4 @@
-//! Defines an edge/segment
+//! Defines an edge/segment in 3d space
 //!
 
 use bevy::prelude::*;

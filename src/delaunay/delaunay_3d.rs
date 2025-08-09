@@ -1,7 +1,8 @@
 //! Use Tetrahedralization to find tetrahedrons that comply to Delaunay in 3d
 //!
-//! Generla process is to find circumspheres of tetrahedrons and ensure that
-//! the sphere contains no data points
+//! General process is to generate tetrahedra from data points, find the
+//! circumspheres of these tetrahedra and ensure that the spheres do not
+//! contain any data points
 //!
 
 use crate::{
@@ -12,7 +13,7 @@ use bevy::prelude::*;
 
 impl DelaunayData<tetrahedron::Tetrahedron> {
 	/// From a series of 3d points in space calculate the Delaunay Tetrahedralization
-	pub fn compute_triangulation_3d(points: &Vec<Vec3>) -> Option<Self> {
+	pub fn compute_triangulation_3d(points: &[Vec3]) -> Option<Self> {
 		if points.len() < 4 {
 			error!(
 				"Minimum of 4 points required for tetrahedralization, supplied {} points",
@@ -73,7 +74,7 @@ impl DelaunayData<tetrahedron::Tetrahedron> {
 					}
 				}
 				// remove duplicate faces as that face crosses the polyhedral hole
-				face_triangles.retain(|f| !duplicate_face_triangles.contains(&f));
+				face_triangles.retain(|f| !duplicate_face_triangles.contains(f));
 				// construct new tetrahedrons from the point and each triangle face
 				let mut new_tetras = vec![];
 				for tri in face_triangles {

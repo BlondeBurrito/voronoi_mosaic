@@ -149,6 +149,8 @@ From these properties we can construct the Voronoi Cells, on the left is a illus
 <details>
 <summary>For the details of converting Delanay Tetrahedralization into Voronoi click to expand</summary>
 
+WIP
+
 </details>
 
 ## Usage
@@ -231,7 +233,7 @@ if let Some(delaunay) = DelaunayData::compute_triangulation_2d(&points) {
 }
 ```
 
-For a full visualisation you can check out this exmaple [2d_meshes_clipped](https://github.com/BlondeBurrito/voronoi_mosaic/blob/main/examples/2d_meshes_clipped.rs).
+For a full visualisation you can check out this exmaple [2d_meshes_clipped](https://github.com/BlondeBurrito/voronoi_mosaic/blob/main/examples/2d_meshes_clipped.rs). It has a button toggle to show the original Voronoi cells so you can see how they are clipped to the boundary.
 
 ### 3d
 
@@ -335,7 +337,7 @@ cargo bench -q --bench BENCH_NAME --workspace --all-features
 
 Once executed a browser based report can be viewed at `[your_repo_root]/target/criterion/report/index.html`
 
-# LICENSE
+## LICENSE
 
 Dual license of MIT and Apache.
 
@@ -346,3 +348,4 @@ Dual license of MIT and Apache.
 - Degenerate triangle detection?
 - Add a means of testing DT for determinism
 - how to measure tetrahedron quality? Sterdian angles? Volume?
+- make edge and triangle modules generic across Vec2 and Vec3?
