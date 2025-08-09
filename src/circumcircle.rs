@@ -90,7 +90,7 @@ mod tests {
 		let actual_radius = 8.876732;
 		assert!(!circumcircle.get_centre().is_nan());
 		assert_eq!(actual_center, *circumcircle.get_centre());
-		assert_eq!(actual_radius, circumcircle.radius_sqaured);
+		assert_eq!(actual_radius, circumcircle.get_radius_sqaured());
 	}
 	#[test]
 	fn point_is_within_circumcircle() {

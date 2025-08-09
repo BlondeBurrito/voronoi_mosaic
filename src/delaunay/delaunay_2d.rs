@@ -53,14 +53,12 @@ impl DelaunayData<triangle_2d::Triangle2d> {
 			let mut bad_triangles = vec![];
 			// check if the point lies within the circumcircle of a triangle
 			for tri in triangles.iter() {
-				if let Some(circumcircle) = tri.compute_circumcircle() {
-					if circumcircle.is_point_within_circle(point) {
-						// if a point is within then it is not a delaunay triangle,
-						// record this triangle for removal
-						bad_triangles.push(tri.clone());
-					}
-				} else {
-					warn!("Unable to compute circumcircle of triangle {:?}", tri);
+				if let Some(circumcircle) = tri.compute_circumcircle()
+					&& circumcircle.is_point_within_circle(point)
+				{
+					// if a point is within then it is not a delaunay triangle,
+					// record this triangle for removal
+					bad_triangles.push(tri.clone());
 				}
 			}
 			// remove any bad triangles from the triangle list
@@ -253,5 +251,11 @@ mod tests {
 		// should only be 1 triangle
 		assert_eq!(1, data.get().len());
 		assert_eq!(3, data.get().first().unwrap().get_edges().len());
+	}
+	#[test]
+	fn delaunay_too_few_points() {
+		let points = vec![Vec2::new(50.0, 0.0), Vec2::new(-50.0, 0.0)];
+		let result = DelaunayData::compute_triangulation_2d(&points);
+		assert!(result.is_none());
 	}
 }

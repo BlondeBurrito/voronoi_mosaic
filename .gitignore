@@ -15,6 +15,6 @@ Cargo.lock
 /target
 
 # Krita - used for diagrams/pictures
-# *.kra~
-# *.kra-autosave.kra
-# *.png~
+*.kra~
+*.kra-autosave.kra
+*.png~

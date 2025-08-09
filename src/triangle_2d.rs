@@ -70,3 +70,21 @@ impl Triangle2d {
 		Circumcircle::new(self.vertex_a, self.vertex_b, self.vertex_c)
 	}
 }
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+
+	#[test]
+	fn equality() {
+		let a = Vec2::new(0.0, 0.0);
+		let b = Vec2::new(1.0, 0.0);
+		let c = Vec2::new(0.0, 1.0);
+
+		let tri_i = Triangle2d::new(a, b, c);
+		let tri_j = Triangle2d::new(b, c, a);
+		let tri_k = Triangle2d::new(c, a, b);
+
+		assert!(tri_i == tri_j && tri_j == tri_k && tri_k == tri_i)
+	}
+}

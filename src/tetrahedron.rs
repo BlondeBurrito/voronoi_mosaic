@@ -109,3 +109,45 @@ impl Tetrahedron {
 		Circumsphere::new(self.vertex_a, self.vertex_b, self.vertex_c, self.vertex_d)
 	}
 }
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+
+	#[test]
+	fn tetra_equality() {
+		let a = Vec3::new(0.0, 0.0, 0.0);
+		let b = Vec3::new(1.0, 0.0, 0.0);
+		let c = Vec3::new(0.0, 0.0, 1.0);
+		let d = Vec3::new(0.0, 1.0, 0.0);
+
+		let tet_i = Tetrahedron::new(a, b, c, d);
+		let tet_j = Tetrahedron::new(b, c, d, a);
+		let tet_k = Tetrahedron::new(c, d, a, b);
+		let tet_h = Tetrahedron::new(d, a, b, c);
+		assert!(tet_i == tet_j && tet_j == tet_k && tet_k == tet_h && tet_h == tet_i)
+	}
+
+	#[test]
+	fn sphere_is_some() {
+		let tet = Tetrahedron::new(
+			Vec3::new(0.0, 1.0, 0.5),
+			Vec3::new(0.0, 0.0, 0.0),
+			Vec3::new(1.0, 0.0, 1.0),
+			Vec3::new(-1.0, 0.0, 1.0),
+		);
+		assert!(tet.compute_circumsphere().is_some());
+	}
+
+	#[test]
+	fn sphere_is_none() {
+		// coplanar
+		let tet = Tetrahedron::new(
+			Vec3::new(0.0, 3.0, 0.0),
+			Vec3::new(1.0, 0.0, 0.0),
+			Vec3::new(-1.0, 0.0, 0.0),
+			Vec3::new(0.0, 0.0, 0.0),
+		);
+		assert!(tet.compute_circumsphere().is_none());
+	}
+}

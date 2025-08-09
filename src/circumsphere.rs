@@ -273,7 +273,7 @@ impl Circumsphere {
 		(point.x - self.get_centre().x).powf(2.0)
 			+ (point.y - self.get_centre().y).powf(2.0)
 			+ (point.z - self.get_centre().z).powf(2.0)
-			< (self.radius_squared * (1.0 - tolerance))
+			< (self.get_radius_squared() * (1.0 - tolerance))
 	}
 }
 
@@ -292,7 +292,7 @@ mod tests {
 		assert!(c_wrap.is_some());
 		let c = c_wrap.unwrap();
 		assert_eq!(Vec3::new(0.0, 0.0, 7.5), *c.get_centre());
-		assert_eq!(156.25, c.radius_squared);
+		assert_eq!(156.25, c.get_radius_squared());
 	}
 	#[test]
 	fn point_is_within_circumsphere() {

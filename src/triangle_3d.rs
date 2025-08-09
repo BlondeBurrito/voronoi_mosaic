@@ -125,9 +125,6 @@ impl Triangle3d {
 		} else {
 			false
 		}
-
-		// // find point where edge intersects plane
-		// let intersection =
 	}
 }
 
@@ -136,6 +133,19 @@ mod tests {
 	use crate::{edge_3d, triangle_3d};
 
 	use super::*;
+
+	#[test]
+	fn equality() {
+		let a = Vec3::new(0.0, 0.0, 0.0);
+		let b = Vec3::new(1.0, 0.0, 1.0);
+		let c = Vec3::new(0.0, 1.0, 0.0);
+
+		let tri_i = Triangle3d::new(a, b, c);
+		let tri_j = Triangle3d::new(b, c, a);
+		let tri_k = Triangle3d::new(c, a, b);
+
+		assert!(tri_i == tri_j && tri_j == tri_k && tri_k == tri_i)
+	}
 
 	#[test]
 	fn does_intersect_face() {

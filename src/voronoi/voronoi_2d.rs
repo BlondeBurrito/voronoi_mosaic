@@ -415,3 +415,28 @@ fn find_shared_sets(map: &BTreeMap<usize, &triangle_2d::Triangle2d>) -> BTreeMap
 	}
 	set
 }
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+
+	#[test]
+	fn cell_edges() {
+		let cell = VoronoiCell2d {
+			vertices: vec![
+				Vec2::new(1.0, 0.0),
+				Vec2::new(0.0, 1.0),
+				Vec2::new(-1.0, 0.5),
+				Vec2::new(-1.0, 0.0),
+			],
+			generating_point: Vec2::new(0.0, 0.5),
+		};
+		let actual: Vec<(Vec2, Vec2)> = vec![
+			(Vec2::new(1.0, 0.0), Vec2::new(0.0, 1.0)),
+			(Vec2::new(0.0, 1.0), Vec2::new(-1.0, 0.5)),
+			(Vec2::new(-1.0, 0.5), Vec2::new(-1.0, 0.0)),
+			(Vec2::new(-1.0, 0.0), Vec2::new(1.0, 0.0)),
+		];
+		assert_eq!(actual, cell.get_edges());
+	}
+}

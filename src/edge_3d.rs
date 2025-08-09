@@ -31,3 +31,18 @@ impl Edge3d {
 		[&self.0, &self.1]
 	}
 }
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+
+	#[test]
+	fn equality() {
+		let a = Vec3::new(0.0, 0.0, 0.0);
+		let b = Vec3::new(1.0, 0.0, 0.0);
+
+		let edge_i = Edge3d::new(a, b);
+		let edge_j = Edge3d::new(b, a);
+		assert!(edge_i == edge_j)
+	}
+}

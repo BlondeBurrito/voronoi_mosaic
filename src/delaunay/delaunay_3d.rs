@@ -256,4 +256,14 @@ mod tests {
 		assert_eq!(Vec3::new(-24.0, -12.0, -13.0), min_bounds);
 		assert_eq!(Vec3::new(51.0, 46.0, 65.0), max_bounds);
 	}
+	#[test]
+	fn delaunay_too_few_points() {
+		let points = vec![
+			Vec3::new(50.0, 45.0, 0.0),
+			Vec3::new(-23.0, -11.0, 64.0),
+			Vec3::new(32.0, -3.0, -12.0),
+		];
+		let result = DelaunayData::compute_triangulation_3d(&points);
+		assert!(result.is_none());
+	}
 }
