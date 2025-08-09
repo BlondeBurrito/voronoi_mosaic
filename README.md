@@ -12,7 +12,7 @@ Bevy mesh generation from a series of points in space using [Delaunay Triangulat
 
 | bevy | voronoi_mosaic |
 |------|----------------|
-| 0.16 | TBD |
+| 0.16 | 0.1 |
 
 ## Table of Contents
 
@@ -48,33 +48,33 @@ Triangulation involes generating a series of triangles and recording good and ba
 
 We begin with a set of data points (blue) and we enclose them in a super triangle (black):
 
-<img src="https://raw.githubusercontent.com/BlondeBurrito/voronoi_mosaic/refs/heads/main/docs/png/delaunay_2d_process1.png" alt="e" width="300"/>
+<img src="https://raw.githubusercontent.com/BlondeBurrito/voronoi_mosaic/main/docs/png/delaunay_2d_process1.png" alt="e" width="300"/>
 
 Beginning with just one of the data points we calculate the circumcircle (orange) of the known triangle:
 
-<img src="https://raw.githubusercontent.com/BlondeBurrito/voronoi_mosaic/refs/heads/main/docs/png/delaunay_2d_process2.png" alt="e" width="300"/>
+<img src="https://raw.githubusercontent.com/BlondeBurrito/voronoi_mosaic/main/docs/png/delaunay_2d_process2.png" alt="e" width="300"/>
 
 As you can see the data point lies within the circumcircle so we know this triangle isn't Delaunay, we remove this bad triangle and use its vertices to contruct new triangles with the data point:
 
-<img src="https://raw.githubusercontent.com/BlondeBurrito/voronoi_mosaic/refs/heads/main/docs/png/delaunay_2d_process3.png" alt="e" width="300"/>
+<img src="https://raw.githubusercontent.com/BlondeBurrito/voronoi_mosaic/main/docs/png/delaunay_2d_process3.png" alt="e" width="300"/>
 
 At this point in time we have three Delaunay triangles but we haven't processed all the data, now we add another data point:
 
-<img src="https://raw.githubusercontent.com/BlondeBurrito/voronoi_mosaic/refs/heads/main/docs/png/delaunay_2d_process4.png" alt="e" width="300"/>
+<img src="https://raw.githubusercontent.com/BlondeBurrito/voronoi_mosaic/main/docs/png/delaunay_2d_process4.png" alt="e" width="300"/>
 
 And construct new circumcircles with the known triangles to see if any are Delaunay or not:
 
-<img src="https://raw.githubusercontent.com/BlondeBurrito/voronoi_mosaic/refs/heads/main/docs/png/delaunay_2d_process5.png" alt="e" width="300"/>
+<img src="https://raw.githubusercontent.com/BlondeBurrito/voronoi_mosaic/main/docs/png/delaunay_2d_process5.png" alt="e" width="300"/>
 
 As can be seen, the new data point does lie within the circumcircle of one of the triangles, so again we have a bad trinagle (pink hash), we remove this triangle and using its vertices construct new triangles with the data point:
 
-<img src="https://raw.githubusercontent.com/BlondeBurrito/voronoi_mosaic/refs/heads/main/docs/png/delaunay_2d_process6.png" alt="e" width="300"/>
+<img src="https://raw.githubusercontent.com/BlondeBurrito/voronoi_mosaic/main/docs/png/delaunay_2d_process6.png" alt="e" width="300"/>
 
 We then start the whole process over again of adding a new data point, computing circumcircles, removing bad triangles and so on.
 
 Once all data points have been added we must then remove any triangles using the vertices of the initial super triangle as they are not part of the data set, merely a starting point of triangulation. The end result generates a collection of Delaunay triangles:
 
-<img src="https://raw.githubusercontent.com/BlondeBurrito/voronoi_mosaic/refs/heads/main/docs/png/delaunay_2d_process7.png" alt="e" width="300"/>
+<img src="https://raw.githubusercontent.com/BlondeBurrito/voronoi_mosaic/main/docs/png/delaunay_2d_process7.png" alt="e" width="300"/>
 
 </details>
 
@@ -89,21 +89,21 @@ Triangulation in 3d is also known as tetrahedralization.
 
 In a simialr fashtion to the 2d case we want to enclose all data points within a structure, rather than using a single tetrahedron we in fact use 4 tetrahedra (yellow) arranged in a diamond like configuration to ensure that all data points (blue) are enclosed:
 
-<img src="https://raw.githubusercontent.com/BlondeBurrito/voronoi_mosaic/refs/heads/main/docs/png/delaunay_3d_process1.png" alt="e" width="300"/>
+<img src="https://raw.githubusercontent.com/BlondeBurrito/voronoi_mosaic/main/docs/png/delaunay_3d_process1.png" alt="e" width="300"/>
 
 We then begin with just a single data point:
 
-<img src="https://raw.githubusercontent.com/BlondeBurrito/voronoi_mosaic/refs/heads/main/docs/png/delaunay_3d_process2.png" alt="e" width="300"/>
+<img src="https://raw.githubusercontent.com/BlondeBurrito/voronoi_mosaic/main/docs/png/delaunay_3d_process2.png" alt="e" width="300"/>
 
 And we compute the circumsphere of each tetrahedron (we'll only show one here for visual clarity as a wireframe):
 
-<img src="https://raw.githubusercontent.com/BlondeBurrito/voronoi_mosaic/refs/heads/main/docs/png/delaunay_3d_process3.png" alt="e" width="300"/>
+<img src="https://raw.githubusercontent.com/BlondeBurrito/voronoi_mosaic/main/docs/png/delaunay_3d_process3.png" alt="e" width="300"/>
 
 The point is evidently within the circumsphere so we note that its tetrahedron is *bad* and not Delaunay, so we remove it from the set of final tetrahedra leaving behind a polyhedral hole. We collect all the faces of the bad tetrahedra, identify unique faces (i.e a face that crosses the polyhedral hole is shared by two tetrahedra so we ignore it) and join them to the data point - this creates new tetrahedra that fill the hole. These can then be used to progress tetrahedralization.
 
 We continue adding data points one at a time and using circumcspheres to identify any invalid tetraheda. Once all data points have been computed we tidy up by removing any tetrahedra that make use of any of the vertices of the original 4 bounding tetrahedra. This gives us the final tetrahedralization where each one is Delaunay:
 
-<img src="https://raw.githubusercontent.com/BlondeBurrito/voronoi_mosaic/refs/heads/main/docs/png/delaunay_3d_process5.png" alt="e" width="300"/>
+<img src="https://raw.githubusercontent.com/BlondeBurrito/voronoi_mosaic/main/docs/png/delaunay_3d_process5.png" alt="e" width="300"/>
 
 </details>
 
@@ -113,7 +113,7 @@ A Voronoi Tesselation (or Voronoi diagram) describes a number of regions (referr
 
 Here is an example showing each Cell as a different colour (some cells extend beyond the viewport):
 
-<img src="https://raw.githubusercontent.com/BlondeBurrito/voronoi_mosaic/refs/heads/main/docs/png/2d_voronoi.png" alt="e" width="300"/>
+<img src="https://raw.githubusercontent.com/BlondeBurrito/voronoi_mosaic/main/docs/png/2d_voronoi.png" alt="e" width="300"/>
 
 ### Process
 
@@ -124,21 +124,21 @@ Here is an example showing each Cell as a different colour (some cells extend be
 
 Starting with a set of Delaunay traingles (red and blue) we can calculate the circumcentres of each (orange):
 
-<img src="https://raw.githubusercontent.com/BlondeBurrito/voronoi_mosaic/refs/heads/main/docs/png/voronoi_2d_process1.png" alt="e" width="300"/>
+<img src="https://raw.githubusercontent.com/BlondeBurrito/voronoi_mosaic/main/docs/png/voronoi_2d_process1.png" alt="e" width="300"/>
 
 These circumcentres are the vertices of Voronoi Cells -we just need to figure out the edges joining these vertices together.
 
 A property we can observe is Delaunay triangle vertex sharing - as in adjacent triangles share a pair of vertices which means that the circumcentres of those two triangles are an edge (pink) of a Cell:
 
-<img src="https://raw.githubusercontent.com/BlondeBurrito/voronoi_mosaic/refs/heads/main/docs/png/voronoi_2d_process2.png" alt="e" width="300"/>
+<img src="https://raw.githubusercontent.com/BlondeBurrito/voronoi_mosaic/main/docs/png/voronoi_2d_process2.png" alt="e" width="300"/>
 
 Additionally we can observe cases where a triangle vertex is shared more than two times with other triangles (in the code we call this `source_vertex`, it's the link bewteen Vornoi and Delaunay). For these points we know that the surrounding circumcentres are the vertices of this Cell:
 
-<img src="https://raw.githubusercontent.com/BlondeBurrito/voronoi_mosaic/refs/heads/main/docs/png/voronoi_2d_process3.png" alt="e" width="300"/>
+<img src="https://raw.githubusercontent.com/BlondeBurrito/voronoi_mosaic/main/docs/png/voronoi_2d_process3.png" alt="e" width="300"/>
 
 From these properties we can construct the Voronoi Cells, on the left is a illustrative outline, on the right a colour coded representation of the Cells:
 
-<img src="https://raw.githubusercontent.com/BlondeBurrito/voronoi_mosaic/refs/heads/main/docs/png/voronoi_2d_process4.png" alt="e" width="300"/>
+<img src="https://raw.githubusercontent.com/BlondeBurrito/voronoi_mosaic/main/docs/png/voronoi_2d_process4.png" alt="e" width="300"/>
 
 </details>
 
@@ -242,7 +242,7 @@ For a full visualisation you can check out this exmaple [2d_meshes_clipped](http
 *NB: a concept of tolerance is built into some of the 3d calculations to handle cases where points within a data set are close together, however, if points within the data set are extremely close together then due to floating point arithmetic the conditions for a tetrahedron to be Delaunay can break down and cause undesirable face intersections across sliver (narrow) tetrahedra*
 
 <details>
-<summary>3d usage minimised until API work complete, the enclosed functions are subject to change and some may ont fucntion as expected yet</summary>
+<summary>3d usage minimised until API work complete, the enclosed functions are subject to change and some may not fucntion as expected yet</summary>
 
 #### Delaunay
 
