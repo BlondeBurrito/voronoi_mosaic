@@ -15,7 +15,7 @@ impl DelaunayData<triangle_2d::Triangle2d> {
 	/// Triangulation with the Bowyer-Watson algorithm.
 	pub fn compute_triangulation_2d(points: &Vec<Vec2>) -> Option<Self> {
 		if points.len() < 3 {
-			warn!(
+			error!(
 				"Minimum of 3 points required for triangulation, supplied {} points",
 				points.len()
 			);

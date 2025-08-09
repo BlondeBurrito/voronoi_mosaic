@@ -12,4 +12,5 @@ pub use crate::{
 	utilities::*,
 	voronoi::{voronoi_2d::*, voronoi_3d::*, *},
 	*,
+	edge_3d::*,
 };

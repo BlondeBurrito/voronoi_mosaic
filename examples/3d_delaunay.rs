@@ -27,7 +27,7 @@ fn setup(
 	// mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
 	// camera
-	let mut cam_tform = Transform::from_translation(Vec3::new(40.0, 25.0, 40.0));
+	let mut cam_tform = Transform::from_translation(Vec3::new(300.0, 75.0, 300.0));
 	cam_tform.look_at(Vec3::ZERO, Vec3::Y);
 	cmds.spawn((Camera3d::default(), cam_tform));
 	// // background plane
@@ -66,8 +66,8 @@ fn orbit_camera(
 		let dt = time.delta_secs();
 		let speed = 0.5;
 		*angle += speed * dt;
-		let x = 40.0 * angle.cos();
-		let z = 40.0 * angle.sin();
+		let x = 300.0 * angle.cos();
+		let z = 300.0 * angle.sin();
 		tform.translation.x = x;
 		tform.translation.z = z;
 		tform.look_at(Vec3::ZERO, Vec3::Y);
@@ -81,15 +81,99 @@ fn visuals(
 	mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
 	// points to be used
+	// let points = vec![
+	// 	Vec3::new(1.0, 3.0, 4.0),
+	// 	Vec3::new(-5.0, 6.0, -4.0),
+	// 	Vec3::new(6.0, 0.0, 5.0),
+	// 	Vec3::new(12.0, 10.0, -12.0),
+	// 	Vec3::new(-15.0, 2.0, 8.0),
+	// 	Vec3::new(4.0, 2.0, 12.0),
+	// 	Vec3::new(-8.0, 15.0, -8.0),
+	// 	Vec3::new(0.0, 12.0, 3.0),
+	// ];
 	let points = vec![
-		Vec3::new(1.0, 3.0, 4.0),
-		Vec3::new(-5.0, 6.0, -4.0),
-		Vec3::new(6.0, 0.0, 5.0),
-		Vec3::new(12.0, 10.0, -12.0),
-		Vec3::new(-15.0, 2.0, 8.0),
-		Vec3::new(4.0, 2.0, 12.0),
-		Vec3::new(-8.0, 15.0, -8.0),
-		Vec3::new(0.0, 12.0, 3.0),
+		Vec3::new(-50.0, -50.0, -50.0),
+		Vec3::new(-25.0, -50.0, -50.0),
+		Vec3::new(0.0, -50.0, -50.0),
+		Vec3::new(25.0, -50.0, -50.0),
+		Vec3::new(50.0, -50.0, -50.0),
+		Vec3::new(50.0, -50.0, -25.0),
+		Vec3::new(50.0, -50.0, 0.0),
+		Vec3::new(50.0, -50.0, 25.0),
+		Vec3::new(50.0, -50.0, 50.0),
+		Vec3::new(25.0, -50.0, 50.0),
+		Vec3::new(0.0, -50.0, 50.0),
+		Vec3::new(-25.0, -50.0, 50.0),
+		Vec3::new(-50.0, -50.0, 50.0),
+		Vec3::new(-50.0, 50.0, -50.0),
+		Vec3::new(-25.0, 50.0, -50.0),
+		Vec3::new(0.0, 50.0, -50.0),
+		Vec3::new(25.0, 50.0, -50.0),
+		Vec3::new(50.0, 50.0, -50.0),
+		Vec3::new(50.0, 50.0, -25.0),
+		Vec3::new(50.0, 50.0, 0.0),
+		Vec3::new(50.0, 50.0, 25.0),
+		Vec3::new(50.0, 50.0, 50.0),
+		Vec3::new(25.0, 50.0, 50.0),
+		Vec3::new(0.0, 50.0, 50.0),
+		Vec3::new(-25.0, 50.0, 50.0),
+		Vec3::new(-50.0, 50.0,50.0),
+		//
+		Vec3::new(-50.0, -25.0, 50.0),
+		Vec3::new(-50.0, 0.0, 50.0),
+		Vec3::new(-50.0, 25.0, 50.0),
+		//
+		Vec3::new(-50.0, -25.0, -50.0),
+		Vec3::new(-50.0, 0.0, -50.0),
+		Vec3::new(-50.0, 25.0, -50.0),
+		//
+		Vec3::new(50.0, -25.0, 50.0),
+		Vec3::new(50.0, 0.0, 50.0),
+		Vec3::new(50.0, 5.0, 50.0),
+		//
+		Vec3::new(50.0, -25.0, -50.0),
+		Vec3::new(50.0, 0.0, -50.0),
+		Vec3::new(50.0, 25.0, -50.0),
+		//
+		Vec3::new(10.0, 19.0, 3.0),
+		Vec3::new(32.0, 43.0, 17.0),
+		Vec3::new(15.0, 9.0, 36.0),
+		Vec3::new(43.0, 21.0, 41.0),
+		//
+		Vec3::new(-2.0, 43.0, 7.0),
+		Vec3::new(-24.0, 9.0, 22.0),
+		Vec3::new(-17.0, 27.0, 45.0),
+		Vec3::new(-41.0, 36.0, 35.0),
+		//
+		Vec3::new(-38.0, 11.0, -12.0),
+		Vec3::new(-48.0, 39.0, -26.0),
+		Vec3::new(-12.0, 24.0, -31.0),
+		Vec3::new(-24.0, 35.0, -44.0),
+		//
+		Vec3::new(10.0, 6.0, -43.0),
+		Vec3::new(23.0, 15.0, -34.0),
+		Vec3::new(36.0, 38.0, -26.0),
+		Vec3::new(41.0, 45.0, -5.0),
+		//
+		Vec3::new(13.0, -43.0, 25.0),
+		Vec3::new(29.0, -36.0, 19.0),
+		Vec3::new(35.0, -24.0, 37.0),
+		Vec3::new(46.0, -5.0, 14.0),
+		//
+		Vec3::new(-11.0, -15.0, 6.0),
+		Vec3::new(-26.0, -23.0, 13.0),
+		Vec3::new(-41.0, -29.0, 27.0),
+		Vec3::new(-46.0, -35.0, 39.0),
+		//
+		Vec3::new(-45.0, -6.0, -15.0),
+		Vec3::new(-36.0, -18.0, -24.0),
+		Vec3::new(-28.0, -36.0, -30.0),
+		Vec3::new(-10.0, -44.0, -40.0),
+		//
+		Vec3::new(19.0, -15.0, -25.0),
+		Vec3::new(27.0, -30.0, -42.0),
+		Vec3::new(39.0, -38.0, -12.0),
+		Vec3::new(48.0, -45.0, -30.0),
 	];
 	// compute data
 	if let Some(data) = DelaunayData::compute_triangulation_3d(&points) {
@@ -115,8 +199,10 @@ fn visuals(
 				));
 			}
 			// create markers for edges
+			// let c = Color::hsv(360. * i as f32 / data.get().len() as f32, 0.95, 0.7);
 			let mat = materials.add(StandardMaterial {
 				base_color: DELAUNAY_EDGE_COLOUR,
+				// base_color: c,
 				..default()
 			});
 			for edge in tetra.get_edges().iter() {

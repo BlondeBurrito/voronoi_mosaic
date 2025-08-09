@@ -85,6 +85,7 @@ impl Circumcircle {
 	}
 	/// Check if a point is within the circumcircle
 	pub fn is_point_within_circle(&self, point: &Vec2) -> bool {
+		//TODO does this need a tolarance factor like spheres to handle values extremely close to one another???
 		// (y - center_y)^2 + (x - center_x)^2 < radius^2
 		(point.y - self.circumcentre.y).powf(2.0) + (point.x - self.circumcentre.x).powf(2.0)
 			< self.radius_sqaured

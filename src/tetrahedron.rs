@@ -7,7 +7,7 @@ use bevy::prelude::*;
 use crate::{circumsphere::Circumsphere, triangle_3d};
 
 /// Describes a tetrahedron
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Tetrahedron {
 	/// A vertex
 	vertex_a: Vec3,

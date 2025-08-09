@@ -25,7 +25,7 @@ pub struct VoronoiCell2d {
 	vertices: Vec<Vec2>,
 	/// The vertex which is the nearest site to the boundary vertices of the
 	/// cell compared to any other cell source
-	source_vertex: Vec2,
+	generating_point: Vec2,
 }
 
 impl VoronoiCell2d {
@@ -35,8 +35,8 @@ impl VoronoiCell2d {
 	}
 	/// Get the vertex which is the nearest site to the vertices of the cell
 	/// compared to any other cell source
-	pub fn get_source_vertex(&self) -> &Vec2 {
-		&self.source_vertex
+	pub fn get_generating_point(&self) -> &Vec2 {
+		&self.generating_point
 	}
 	/// Get the midpoint between all vertices of the cell
 	pub fn get_centre_position(&self) -> Vec2 {
@@ -105,7 +105,7 @@ impl VoronoiData<VoronoiCell2d> {
 				i as u32,
 				VoronoiCell2d {
 					vertices: cell_vertices,
-					source_vertex: *common_vertex,
+					generating_point: *common_vertex,
 				},
 			);
 		}
@@ -372,7 +372,7 @@ impl VoronoiData<VoronoiCell2d> {
 				sort_vertices_2d(&mut cell.vertices, &midpoint);
 				// replace the cell source so it cannot possibly be outside the boundary
 				//TODO don't think this is actually needed?
-				cell.source_vertex = midpoint;
+				cell.generating_point = midpoint;
 			}
 		}
 		// remove cells that exists completely outside of the boundary

@@ -53,3 +53,7 @@ TODO showcase of subdiving voronoi cells by running them back into delaunay then
 if some points are too close together then acute angles lead to being ignored
 
 3d - all regualr poluhedra (e.g cube, pyramid) have a circumsphere, most irregular polyhedra do not
+3d - if points not well distributed sliver tetras in delauny can occur
+3d - detect coplanar
+
+tidy examples, mesh ones have functions to create visuals, copy them to lower tier examples

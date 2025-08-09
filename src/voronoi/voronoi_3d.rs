@@ -9,15 +9,17 @@ use std::{
 
 use bevy::prelude::*;
 
-use crate::{prelude::DelaunayData, tetrahedron, voronoi::VoronoiData};
+use crate::{prelude::{DelaunayData, Edge3d}, tetrahedron, voronoi::VoronoiData};
 
 /// The vertices of a Voronoi Cell in 3-dimensions
 pub struct VoronoiCell3d {
 	/// List of vertices that make up the cell
 	vertices: Vec<Vec3>,
+	/// List of edges
+	edges: Vec<Edge3d>,
 	/// The vertex which is the nearest site to the boundary vertices of the
 	/// cell compared to any other cell source
-	source_vertex: Vec3,
+	generating_point: Vec3,
 }
 
 impl VoronoiCell3d {
@@ -27,25 +29,16 @@ impl VoronoiCell3d {
 	}
 	/// Get the vertex which is the nearest site to the vertices of the cell
 	/// compared to any other cell source
-	pub fn get_source_vertex(&self) -> &Vec3 {
-		&self.source_vertex
+	pub fn get_generating_point(&self) -> &Vec3 {
+		&self.generating_point
 	}
 	/// Get the midpoint between all vertices of the cell
 	pub fn get_centre_position(&self) -> Vec3 {
 		self.get_vertices().iter().sum::<Vec3>() / self.get_vertices().len() as f32
 	}
-	/// Get a list of edges of the cell. Arranged in an anti-clockwise fashion
-	pub fn get_edges(&self) -> Vec<(Vec3, Vec3)> {
-		// let mut edges = vec![];
-		// for i in 0..self.get_vertices().len() {
-		// 	if i < self.get_vertices().len() - 1 {
-		// 		edges.push((self.get_vertices()[i], self.get_vertices()[i + 1]));
-		// 	} else {
-		// 		edges.push((self.get_vertices()[i], self.get_vertices()[0]));
-		// 	}
-		// }
-		// edges
-		todo!()
+	/// Get a list of edges of the cell
+	pub fn get_edges(&self) -> &Vec<Edge3d> {
+		&self.edges
 	}
 }
 
@@ -62,10 +55,10 @@ impl VoronoiData<VoronoiCell3d> {
 	pub fn from_delaunay_3d(
 		delaunay: &DelaunayData<tetrahedron::Tetrahedron>,
 	) -> Option<Self> {
-		// each circumcentre of a Delaunay triangle is a vertex of a Voronoi cell
+		// each circumcentre of a Delaunay tetrahedron is a vertex of a Voronoi cell
 		let tetras = delaunay.get();
 
-		// uniquely identify each triangle
+		// uniquely identify each tetrahedron
 		let mut tetra_store: BTreeMap<usize, &tetrahedron::Tetrahedron> = BTreeMap::new();
 		for (i, tetra) in tetras.iter().enumerate() {
 			tetra_store.insert(i, tetra);
@@ -88,28 +81,64 @@ impl VoronoiData<VoronoiCell3d> {
 					}
 				}
 			}
-			// find the midpoint of the cell vertices
-			let mut total = Vec3::ZERO;
-			for c in cell_vertices.iter() {
-				total += c;
-			}
-			let midpoint = total / (cell_vertices.len() as f32);
-			// sort the vertices in anti-clockwise order
-			//TODO both vertices len squared cannot be zero
-			//TODO test explcitly it works?
-			cell_vertices.sort_by(|a, b| {
-				if let Some(ordering) = (a - midpoint)
-					.angle_between(*a)
-					.partial_cmp(&(b - midpoint).angle_between(*b))
-				{
-					ordering
-				} else {
-					Ordering::Less
+
+			// compare faces across tetras, if two of them
+			// share a face then the circumcentres of those
+			// two create an edge
+			let mut edges = vec![];
+			for this_id in ids.iter() {
+				for other_id in ids.iter() {
+					if this_id != other_id {
+						if let Some(this_tetra) = tetra_store.get(this_id) {
+							let this_faces = this_tetra.get_triangle_3d_faces();
+							if let Some(other_tetra) = tetra_store.get(other_id) {
+								let other_faces = other_tetra.get_triangle_3d_faces();
+								for this_face in this_faces.iter() {
+									// if faces are next to each other
+									if other_faces.contains(this_face) {
+										if let Some(this_sphere) = this_tetra.compute_circumsphere() {
+											if let Some(other_sphere) = other_tetra.compute_circumsphere() {
+												//TODO currently includes edges going back and forth, doa contains on vec?
+												let e = Edge3d::new(*this_sphere.get_centre(), *other_sphere.get_centre());
+												edges.push(e);
+											}
+										}
+									}
+								}
+							}
+						}
+					}
 				}
-			});
+			}
+
+
+
+
+			//TODO need a means of valdiating the cell
+
+			// // find the midpoint of the cell vertices
+			// let mut total = Vec3::ZERO;
+			// for c in cell_vertices.iter() {
+			// 	total += c;
+			// }
+			// let midpoint = total / (cell_vertices.len() as f32);
+			// // sort the vertices in anti-clockwise order
+			// //TODO both vertices len squared cannot be zero
+			// //TODO test explcitly it works?
+			// cell_vertices.sort_by(|a, b| {
+			// 	if let Some(ordering) = (a - midpoint)
+			// 		.angle_between(*a)
+			// 		.partial_cmp(&(b - midpoint).angle_between(*b))
+			// 	{
+			// 		ordering
+			// 	} else {
+			// 		Ordering::Less
+			// 	}
+			// });
 			cells.insert(i as u32, VoronoiCell3d{
 				vertices: cell_vertices,
-				source_vertex: *common_vertex
+				edges,
+				generating_point: *common_vertex
 			});
 		}
 
@@ -117,7 +146,7 @@ impl VoronoiData<VoronoiCell3d> {
 	}
 	/// Convert each Voronoi Cell into a Bevy Mesh
 	pub fn as_bevy_meshes_3d(&self) -> Vec<(Mesh, Vec3)> {
-		//TODO
+		warn!("Unimplemented, this currently does nothing");
 		vec![]
 	}
 	/// Clip all the [VoronoiCell3d] so they cannot extend or exist outside of
@@ -127,7 +156,9 @@ impl VoronoiData<VoronoiCell3d> {
 	/// should be expressed in an anti-clockwise order around their centre
 	///
 	/// *NB: Delaunay and Voronoi are duals - they can precisely be converted from one fomrat to the other back and forth. By applying clipping to the Voronoi, cell vertices may be added/removed which will destroy the duality - i.e if you apply clipping you cannot convert Voronoi into Delaunay and expect to get your oringal dataset back*
-	pub fn clip_cells_to_boundary(&mut self, boundary: &[Vec3]) {}
+	pub fn clip_cells_to_boundary(&mut self, boundary: &[Vec3]) {
+		warn!("Unimplemented, this currently does nothing");
+	}
 }
 
 /// Compare the vertices of tetrahedra and identify groupings of IDs whereby 4

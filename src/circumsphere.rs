@@ -256,13 +256,23 @@ impl Circumsphere {
 	pub fn get_centre(&self) -> &Vec3 {
 		&self.circumcentre
 	}
+	/// Get the radius sqaured of the circumsphere
+	pub fn get_radius_squared(&self) -> f32 {
+		self.radius_squared
+	}
 	/// Is the `point` position within the sphere
 	pub fn is_point_within_sphere(&self, point: &Vec3) -> bool {
+		//TODO is there a way of informing tolerance based on the density/closeness of the data set?
+		// due to nature of floating points we introduce a
+		// tolerance factor to a handle cases where
+		// the point delta is extremely close to the
+		// radius squared
+		let tolerance = 0.001;
 		//(x - x_c)^2 + (y - y_c)^2 + (z - z_c)^2 > r^2
 		(point.x - self.get_centre().x).powf(2.0)
 			+ (point.y - self.get_centre().y).powf(2.0)
 			+ (point.z - self.get_centre().z).powf(2.0)
-			< self.radius_squared
+			< (self.radius_squared * (1.0 - tolerance))
 	}
 }
 
@@ -284,7 +294,7 @@ mod tests {
 		assert_eq!(156.25, c.radius_squared);
 	}
 	#[test]
-	fn point_is_within_circumcircle() {
+	fn point_is_within_circumsphere() {
 		let vertex_a = Vec3::new(10.0, 0.0, 0.0);
 		let vertex_b = Vec3::new(0.0, 0.0, 20.0);
 		let vertex_c = Vec3::new(-10.0, 0.0, 0.0);
@@ -295,7 +305,7 @@ mod tests {
 		assert!(c.is_point_within_sphere(&point));
 	}
 	#[test]
-	fn point_is_not_within_circumcircle() {
+	fn point_is_not_within_circumsphere() {
 		let vertex_a = Vec3::new(10.0, 0.0, 0.0);
 		let vertex_b = Vec3::new(0.0, 0.0, 20.0);
 		let vertex_c = Vec3::new(-10.0, 0.0, 0.0);

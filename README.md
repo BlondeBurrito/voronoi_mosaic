@@ -80,6 +80,8 @@ Once all data points have been added we must then remove any triangles using the
 
 #### 3d
 
+*NB: 3d functionality is gated behind feature `3d_unstable` as parts of the API are volatile or still under development*
+
 <details>
 <summary>To read through the tetrahedralization process click to exapnd</summary>
 
@@ -100,6 +102,8 @@ And we compute the circumsphere of each tetrahedron (we'll only show one here fo
 The point is evidently within the circumsphere so we note that its tetrahedron is *bad* and not Delaunay, so we remove it from the set of final tetrahedra leaving behind a polyhedral hole. We collect all the faces of the bad tetrahedra, identify unique faces (i.e a face that crosses the polyhedral hole is shared by two tetrahedra so we ignore it) and join them to the data point - this creates new tetrahedra that fill the hole. These can then be used to progress tetrahedralization.
 
 We continue adding data points one at a time and using circumcspheres to identify any invalid tetraheda. Once all data points have been computed we tidy up by removing any tetrahedra that make use of any of the vertices of the original 4 bounding tetrahedra. This gives us the final tetrahedralization where each one is Delaunay:
+
+<img src="https://raw.githubusercontent.com/BlondeBurrito/voronoi_mosaic/refs/heads/main/docs/png/delaunay_3d_process5.png" alt="e" width="300"/>
 
 </details>
 
@@ -139,6 +143,8 @@ From these properties we can construct the Voronoi Cells, on the left is a illus
 </details>
 
 #### 3d
+
+*NB: 3d functionality is gated behind feature `3d_unstable` as parts of the API are volatile or still under development*
 
 <details>
 <summary>For the details of converting Delanay Tetrahedralization into Voronoi click to expand</summary>
@@ -228,6 +234,10 @@ if let Some(delaunay) = DelaunayData::compute_triangulation_2d(&points) {
 For a full visualisation you can check out this exmaple [2d_meshes_clipped](https://github.com/BlondeBurrito/voronoi_mosaic/blob/main/examples/2d_meshes_clipped.rs).
 
 ### 3d
+
+*NB: 3d functionality is gated behind feature `3d_unstable` as parts of the API are volatile or still under development*
+
+*NB: a concept of tolerance is built into some of the 3d calculations to handle cases where points within a data set are close together, however, if points within the data set are extremely close together then due to floating point arithmetic the conditions for a tetrahedron to be Delaunay can break down and cause undesirable face intersections across sliver (narrow) tetrahedra*
 
 #### Delaunay
 

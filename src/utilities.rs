@@ -22,34 +22,35 @@ pub fn sort_vertices_2d(vertices: &mut [Vec2], point: &Vec2) {
 		}
 	});
 }
-/// Reorder a series of 3d vertices in-place based on their angular position around a point.
-///
-/// The ordering angle is between `0-pi`
-pub fn sort_vertices_3d(vertices: &mut [Vec3], point: &Vec3) {
-	//TODO both vertices len squared cannot be zero
-	vertices.sort_by(|a, b| {
-		let a_on_plane = a.truncate();
-		let b_on_plane = b.truncate();
-		let point_on_plane = point.truncate();
-		if let Some(ordering) = Vec2::Y
-			.angle_to(a_on_plane - point_on_plane)
-			.partial_cmp(&Vec2::Y.angle_to(b_on_plane - point_on_plane))
-		{
-			ordering
-		} else {
-			warn!("Unable to find Ordering between {} and {}", a, b);
-			Ordering::Less
-		}
-		// if let Some(ordering) = point
-		// 				.angle_between(*a)
-		// 				.partial_cmp(&point.angle_between(*b))
-		// 			{
-		// 				ordering
-		// 			} else {
-		// 				Ordering::Less
-		// 			}
-	});
-}
+//TODO
+// /// Reorder a series of 3d vertices in-place based on their angular position around a point.
+// ///
+// /// The ordering angle is between `0-pi`
+// pub fn sort_vertices_3d(vertices: &mut [Vec3], point: &Vec3) {
+// 	//TODO both vertices len squared cannot be zero
+// 	vertices.sort_by(|a, b| {
+// 		let a_on_plane = a.truncate();
+// 		let b_on_plane = b.truncate();
+// 		let point_on_plane = point.truncate();
+// 		if let Some(ordering) = Vec2::Y
+// 			.angle_to(a_on_plane - point_on_plane)
+// 			.partial_cmp(&Vec2::Y.angle_to(b_on_plane - point_on_plane))
+// 		{
+// 			ordering
+// 		} else {
+// 			warn!("Unable to find Ordering between {} and {}", a, b);
+// 			Ordering::Less
+// 		}
+// 		// if let Some(ordering) = point
+// 		// 				.angle_between(*a)
+// 		// 				.partial_cmp(&point.angle_between(*b))
+// 		// 			{
+// 		// 				ordering
+// 		// 			} else {
+// 		// 				Ordering::Less
+// 		// 			}
+// 	});
+// }
 /// Tests if a vertex sits inside of a polygon
 ///
 /// NB: the polygon edges need to have their own vertices specified in a anti-clockwise order
@@ -148,38 +149,6 @@ pub fn is_vertex_within_polygon(vertex: &Vec2, polygon_edges: &Vec<(Vec2, Vec2)>
 /// * Value == 0 means it is on the edge
 /// * Value < 0 means it is on the right
 pub fn is_vertex_left_of_edge(vertex: &Vec2, edge: (Vec2, Vec2)) -> f32 {
-	// // check orientation
-	// if Vec2::Y.angle_to(edge.1 - edge.0).is_sign_negative() {
-	// 	(edge.1.x - edge.0.x) * (vertex.y - edge.0.y) - (vertex.x - edge.0.x) * (edge.1.y - edge.0.y)
-	// } else {
-	// 	(edge.0.x - edge.1.x) * (vertex.y - edge.1.y) - (vertex.x - edge.1.x) * (edge.0.y - edge.1.y)
-	// }
-
-	// let dy = edge.1.y - edge.0.y;
-	// let dx = edge.1.x - edge.0.x;
-	// if dx == 0.0 {
-	// 	// vertical line
-	// 	if vertex.x < edge.0.x {
-	// 		1.0
-	// 	} else if vertex.x > edge.0.x {
-	// 		-1.0
-	// 	} else {
-	// 		0.0
-	// 	}
-	// } else {
-	// 	let m = dy / dx;
-	// 	let c = edge.0.y - (m * edge.0.x);
-	// 	// y - mx - c = 0
-	// 	// plug vert x-y in, if non-zero then sign indicates left or right
-
-	// 	// assumes for horizontal line, point above is positive (left), point below negative (right)
-	// 	let result = vertex.y - (m * vertex.x) - c;
-	// 	if result.powf(2.0) < EPSILON {
-	// 		0.0
-	// 	} else {
-	// 		result
-	// 	}
-	// }
 	(edge.1.x - edge.0.x) * (vertex.y - edge.0.y) - (vertex.x - edge.0.x) * (edge.1.y - edge.0.y)
 }
 
