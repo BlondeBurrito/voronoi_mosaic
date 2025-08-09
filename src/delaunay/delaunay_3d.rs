@@ -4,8 +4,10 @@
 //! the sphere contains no data points
 //!
 
-
-use crate::{prelude::{DelaunayData, Edge3d}, tetrahedron};
+use crate::{
+	prelude::{DelaunayData, Edge3d},
+	tetrahedron,
+};
 use bevy::prelude::*;
 
 impl DelaunayData<tetrahedron::Tetrahedron> {
@@ -28,7 +30,9 @@ impl DelaunayData<tetrahedron::Tetrahedron> {
 		// store tetrahedrons starting with the super one
 		let mut tetrahedrons = vec![];
 		for s_tetra in super_tetra.iter() {
-			tetrahedrons.push(tetrahedron::Tetrahedron::new(s_tetra[0], s_tetra[1], s_tetra[2], s_tetra[3]));
+			tetrahedrons.push(tetrahedron::Tetrahedron::new(
+				s_tetra[0], s_tetra[1], s_tetra[2], s_tetra[3],
+			));
 		}
 		// // record any points that after re-tetrahedralization fail to produce
 		// // Delaunay tetrahedra, these are discarded
@@ -74,11 +78,11 @@ impl DelaunayData<tetrahedron::Tetrahedron> {
 				let mut new_tetras = vec![];
 				for tri in face_triangles {
 					new_tetras.push(tetrahedron::Tetrahedron::new(
-							*point,
-							*tri.get_vertex_a(),
-							*tri.get_vertex_b(),
-							*tri.get_vertex_c(),
-						));
+						*point,
+						*tri.get_vertex_a(),
+						*tri.get_vertex_b(),
+						*tri.get_vertex_c(),
+					));
 				}
 				while let Some(n_tet) = new_tetras.pop() {
 					// only store a new tetra if it is Delaunay - test to
@@ -102,13 +106,16 @@ impl DelaunayData<tetrahedron::Tetrahedron> {
 					// line down the middle of each face of the
 					//  proposed new tetra and check to intersection
 					for face in n_tet.get_triangle_3d_faces().iter() {
-						let bisecting_edge = Edge3d::new(*face.get_vertex_a(), (*face.get_vertex_b() + *face.get_vertex_c()) / 2.0);
+						let bisecting_edge = Edge3d::new(
+							*face.get_vertex_a(),
+							(*face.get_vertex_b() + *face.get_vertex_c()) / 2.0,
+						);
 						for tetra in tetrahedrons.iter() {
 							for tetra_face in tetra.get_triangle_3d_faces() {
 								if tetra_face.does_edge_intersect(&bisecting_edge) {
 									is_valid = false;
 								}
-							} 
+							}
 						}
 					}
 					if is_valid {
@@ -132,12 +139,12 @@ impl DelaunayData<tetrahedron::Tetrahedron> {
 				let s_c = s_tetra[2];
 				let s_d = s_tetra[3];
 				if (a == s_a || a == s_b || a == s_c || a == s_d)
-				|| (b == s_a || b == s_b || b == s_c || b == s_d)
-				|| (c == s_a || c == s_b || c == s_c || c == s_d)
-				|| (d == s_a || d == s_b || d == s_c || d == s_d)
-			{
-				is_valid = false;
-			}
+					|| (b == s_a || b == s_b || b == s_c || b == s_d)
+					|| (c == s_a || c == s_b || c == s_c || c == s_d)
+					|| (d == s_a || d == s_b || d == s_c || d == s_d)
+				{
+					is_valid = false;
+				}
 			}
 			if is_valid {
 				final_tetrahedra.push(tetra.clone());
@@ -229,7 +236,7 @@ pub fn compute_super_tetrahedra(
 		[top_left, bottom_right, top_right, mid_up],
 		[top_left, bottom_right, bottom_left, mid_up],
 		[top_left, bottom_right, top_right, mid_down],
-		[top_left, bottom_right, bottom_left, mid_down]
+		[top_left, bottom_right, bottom_left, mid_down],
 	]
 }
 

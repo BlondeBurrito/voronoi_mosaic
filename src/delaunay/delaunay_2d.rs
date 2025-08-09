@@ -1,5 +1,5 @@
 //! From a series of 2d points in space compute a Delaunay Triangulation.
-//! 
+//!
 //! The Bowyer-Watson algorithm is used - use circumcircles to determine if a triangulation is valid
 //!
 
@@ -23,8 +23,7 @@ impl DelaunayData<triangle_2d::Triangle2d> {
 		}
 		//TODO ensure no dupciates in points?
 		// find the dimensions of a plane that the points occupy
-		let (minimum_world_dimensions, maximum_world_dimensions) =
-			compute_dimension_bounds(points);
+		let (minimum_world_dimensions, maximum_world_dimensions) = compute_dimension_bounds(points);
 		// compute the vertices of a super triangle which encompassess all the points
 		let super_vertices =
 			compute_super_triangle(&minimum_world_dimensions, &maximum_world_dimensions);

@@ -241,7 +241,8 @@ impl Circumsphere {
 			let y = det_y / (2.0 * a);
 			let z = det_z / (2.0 * a);
 
-			let radius_squared = (det_x.powf(2.0) + det_y.powf(2.0) + det_z.powf(2.0) - (4.0 * a * c))
+			let radius_squared = (det_x.powf(2.0) + det_y.powf(2.0) + det_z.powf(2.0)
+				- (4.0 * a * c))
 				/ (4.0 * a.powf(2.0));
 
 			Some(Circumsphere {

@@ -1,15 +1,16 @@
-//! 
+//!
 //!
 //!
 
-use std::{
-	cmp::Ordering,
-	collections::BTreeMap,
-};
+use std::collections::BTreeMap;
 
 use bevy::prelude::*;
 
-use crate::{prelude::{DelaunayData, Edge3d}, tetrahedron, voronoi::VoronoiData};
+use crate::{
+	prelude::{DelaunayData, Edge3d},
+	tetrahedron,
+	voronoi::VoronoiData,
+};
 
 /// The vertices of a Voronoi Cell in 3-dimensions
 pub struct VoronoiCell3d {
@@ -52,9 +53,7 @@ impl VoronoiData<VoronoiCell3d> {
 		&mut self.cells
 	}
 	/// From a Delaunay Tetrahedralization compute its dual - the Voronoi Cells
-	pub fn from_delaunay_3d(
-		delaunay: &DelaunayData<tetrahedron::Tetrahedron>,
-	) -> Option<Self> {
+	pub fn from_delaunay_3d(delaunay: &DelaunayData<tetrahedron::Tetrahedron>) -> Option<Self> {
 		// each circumcentre of a Delaunay tetrahedron is a vertex of a Voronoi cell
 		let tetras = delaunay.get();
 
@@ -96,10 +95,16 @@ impl VoronoiData<VoronoiCell3d> {
 								for this_face in this_faces.iter() {
 									// if faces are next to each other
 									if other_faces.contains(this_face) {
-										if let Some(this_sphere) = this_tetra.compute_circumsphere() {
-											if let Some(other_sphere) = other_tetra.compute_circumsphere() {
+										if let Some(this_sphere) = this_tetra.compute_circumsphere()
+										{
+											if let Some(other_sphere) =
+												other_tetra.compute_circumsphere()
+											{
 												//TODO currently includes edges going back and forth, doa contains on vec?
-												let e = Edge3d::new(*this_sphere.get_centre(), *other_sphere.get_centre());
+												let e = Edge3d::new(
+													*this_sphere.get_centre(),
+													*other_sphere.get_centre(),
+												);
 												edges.push(e);
 											}
 										}
@@ -110,9 +115,6 @@ impl VoronoiData<VoronoiCell3d> {
 					}
 				}
 			}
-
-
-
 
 			//TODO need a means of valdiating the cell
 
@@ -135,11 +137,14 @@ impl VoronoiData<VoronoiCell3d> {
 			// 		Ordering::Less
 			// 	}
 			// });
-			cells.insert(i as u32, VoronoiCell3d{
-				vertices: cell_vertices,
-				edges,
-				generating_point: *common_vertex
-			});
+			cells.insert(
+				i as u32,
+				VoronoiCell3d {
+					vertices: cell_vertices,
+					edges,
+					generating_point: *common_vertex,
+				},
+			);
 		}
 
 		Some(VoronoiData { cells })
@@ -156,7 +161,7 @@ impl VoronoiData<VoronoiCell3d> {
 	/// should be expressed in an anti-clockwise order around their centre
 	///
 	/// *NB: Delaunay and Voronoi are duals - they can precisely be converted from one fomrat to the other back and forth. By applying clipping to the Voronoi, cell vertices may be added/removed which will destroy the duality - i.e if you apply clipping you cannot convert Voronoi into Delaunay and expect to get your oringal dataset back*
-	pub fn clip_cells_to_boundary(&mut self, boundary: &[Vec3]) {
+	pub fn clip_cells_to_boundary(&mut self, _boundary: &[Vec3]) {
 		warn!("Unimplemented, this currently does nothing");
 	}
 }
@@ -165,7 +170,9 @@ impl VoronoiData<VoronoiCell3d> {
 /// or more tetrahedra share a vertex.
 ///
 /// The grouping forms the key and the value is the vertex they all have in common
-fn find_shared_sets_tetrahedra(map: &BTreeMap<usize, &tetrahedron::Tetrahedron>) -> BTreeMap<Vec<usize>, Vec3> {
+fn find_shared_sets_tetrahedra(
+	map: &BTreeMap<usize, &tetrahedron::Tetrahedron>,
+) -> BTreeMap<Vec<usize>, Vec3> {
 	let mut set = BTreeMap::new();
 	for (id, tetra) in map {
 		// compare each vert with the verts of all the other tetrahedra

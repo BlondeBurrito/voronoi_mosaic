@@ -5,7 +5,6 @@ use bevy::prelude::*;
 
 use crate::prelude::Edge3d;
 
-
 /// Describes the vertices and edges of a triangle
 #[derive(Clone, Debug)]
 pub struct Triangle3d {
@@ -102,9 +101,12 @@ impl Triangle3d {
 		let normal = tri_a_to_b.cross(tri_a_to_c);
 		let denom = (-edge_a_to_b).dot(normal);
 		if denom != 0.0 {
-			let t = ((tri_a_to_b.cross(tri_a_to_c)).dot(*edge.get_vertex_a() - self.vertex_a)) / denom;
-			let u = ((tri_a_to_c.cross(-edge_a_to_b)).dot(*edge.get_vertex_a() - self.vertex_a)) /denom;
-			let v = (((-edge_a_to_b).cross(tri_a_to_b)).dot(*edge.get_vertex_a() - self.vertex_a)) / denom;
+			let t =
+				((tri_a_to_b.cross(tri_a_to_c)).dot(*edge.get_vertex_a() - self.vertex_a)) / denom;
+			let u = ((tri_a_to_c.cross(-edge_a_to_b)).dot(*edge.get_vertex_a() - self.vertex_a))
+				/ denom;
+			let v = (((-edge_a_to_b).cross(tri_a_to_b)).dot(*edge.get_vertex_a() - self.vertex_a))
+				/ denom;
 
 			// if `t` is [0, 1] then intersection is on line
 			// however it IS ok for an edge to touch a face, so
@@ -113,11 +115,7 @@ impl Triangle3d {
 				// if u,v [0, 1] then intersecction is on parallelogram
 				if (u >= 0.0 && u <= 1.0) && (v >= 0.0 && v <= 1.0) {
 					// if sum of `u`, `v` is <= 1 then intersection is within points of triangle
-				if u + v <= 1.0 {
-					true
-				} else {
-					false
-				}
+					if u + v <= 1.0 { true } else { false }
 				} else {
 					false
 				}
@@ -129,7 +127,7 @@ impl Triangle3d {
 		}
 
 		// // find point where edge intersects plane
-		// let intersection = 
+		// let intersection =
 	}
 }
 
@@ -137,7 +135,7 @@ impl Triangle3d {
 mod tests {
 	use crate::{edge_3d, triangle_3d};
 
-use super::*;
+	use super::*;
 
 	#[test]
 	fn does_intersect_face() {

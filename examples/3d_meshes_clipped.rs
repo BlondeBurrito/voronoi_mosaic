@@ -100,9 +100,7 @@ fn visuals(
 		create_delaunay_visuals(&mut cmds, &mut mesh_assets, &mut materials, &data);
 		if let Some(mut voronoi) = VoronoiData::from_delaunay_3d(&data) {
 			//TODO proper boundary
-			let boundary = vec![
-				Vec3::new(-5.0, -5.0, -5.0), Vec3::new(5.0, -5.0, -5.0),
-			];
+			let boundary = vec![Vec3::new(-5.0, -5.0, -5.0), Vec3::new(5.0, -5.0, -5.0)];
 			create_voronoi_cell_visuals(&mut cmds, &mut mesh_assets, &mut materials, &voronoi);
 			voronoi.clip_cells_to_boundary(&boundary);
 			create_mesh_visuals(&mut cmds, &mut mesh_assets, &mut materials, &voronoi);
@@ -124,42 +122,48 @@ fn create_delaunay_visuals(
 	data: &DelaunayData<tetrahedron::Tetrahedron>,
 ) {
 	for tetra in data.get().iter() {
-			// create markers for vertices
-			let mesh = meshes.add(Sphere::new(0.5));
-			let material = materials.add(StandardMaterial {
-				base_color: DELAUNAY_VERTEX_COLOUR,
-				..default()
-			});
-			// vertices
-			let translations = [
-				tetra.get_vertex_a(),
-				tetra.get_vertex_b(),
-				tetra.get_vertex_c(),
-				tetra.get_vertex_d(),
-			];
-			for translation in translations.iter() {
-				cmds.spawn((
-					Mesh3d(mesh.clone()),
-					MeshMaterial3d(material.clone()),
-					Transform::from_translation(**translation),
-					Visibility::Hidden,
-					DelaunayLabel
-				));
-			}
-			// create markers for edges
-			let mat = materials.add(StandardMaterial {
-				base_color: DELAUNAY_EDGE_COLOUR,
-				..default()
-			});
-			for edge in tetra.get_edges().iter() {
-				let len = (edge.1 - edge.0).length();
-				let mesh = meshes.add(Cuboid::new(0.25, 0.25, len));
-				let translation = (edge.1 + edge.0) / 2.0;
-				let mut tform = Transform::from_translation(translation);
-				tform.look_at(edge.1, Vec3::Y);
-				cmds.spawn((Mesh3d(mesh), MeshMaterial3d(mat.clone()), tform, Visibility::Hidden, DelaunayLabel));
-			}
+		// create markers for vertices
+		let mesh = meshes.add(Sphere::new(0.5));
+		let material = materials.add(StandardMaterial {
+			base_color: DELAUNAY_VERTEX_COLOUR,
+			..default()
+		});
+		// vertices
+		let translations = [
+			tetra.get_vertex_a(),
+			tetra.get_vertex_b(),
+			tetra.get_vertex_c(),
+			tetra.get_vertex_d(),
+		];
+		for translation in translations.iter() {
+			cmds.spawn((
+				Mesh3d(mesh.clone()),
+				MeshMaterial3d(material.clone()),
+				Transform::from_translation(**translation),
+				Visibility::Hidden,
+				DelaunayLabel,
+			));
 		}
+		// create markers for edges
+		let mat = materials.add(StandardMaterial {
+			base_color: DELAUNAY_EDGE_COLOUR,
+			..default()
+		});
+		for edge in tetra.get_edges().iter() {
+			let len = (edge.1 - edge.0).length();
+			let mesh = meshes.add(Cuboid::new(0.25, 0.25, len));
+			let translation = (edge.1 + edge.0) / 2.0;
+			let mut tform = Transform::from_translation(translation);
+			tform.look_at(edge.1, Vec3::Y);
+			cmds.spawn((
+				Mesh3d(mesh),
+				MeshMaterial3d(mat.clone()),
+				tform,
+				Visibility::Hidden,
+				DelaunayLabel,
+			));
+		}
+	}
 }
 
 /// Labels an entity in the Voronoi view for querying
@@ -174,37 +178,43 @@ fn create_voronoi_cell_visuals(
 	voronoi: &VoronoiData<VoronoiCell3d>,
 ) {
 	// add simple shapes to showcase what the data looks like
-			for cell in voronoi.get_cells().values() {
-				for (i, point) in cell.get_vertices().iter().enumerate() {
-					// mark each vertex of every cell
-					let mesh = meshes.add(Sphere::new(0.5));
-					let material = materials.add(StandardMaterial {
-						base_color: VORONOI_VERTEX_COLOUR,
-						..default()
-					});
-					cmds.spawn((
-						Mesh3d(mesh.clone()),
-						MeshMaterial3d(material.clone()),
-						Transform::from_translation(*point),
-						Visibility::Hidden,
-						VoronoiLabel,
-					));
-				}
-				// markt the edges
-				let edges = cell.get_edges();
-				for edge in edges.iter() {
-					let len = (edge.get_vertex_b() - edge.get_vertex_a()).length();
-					let mesh = meshes.add(Cuboid::new(0.25, 0.25, len));
-					let mat = materials.add(StandardMaterial {
-						base_color: VORONOI_EDGE_COLOUR,
-						..default()
-					});
-					let translation = (edge.get_vertex_b() + edge.get_vertex_a()) / 2.0;
-					let mut tform = Transform::from_translation(translation);
-					tform.look_at(*edge.get_vertex_b(), Vec3::Y);
-					cmds.spawn((Mesh3d(mesh), MeshMaterial3d(mat.clone()), tform, Visibility::Hidden, VoronoiLabel));
-				}
-			}
+	for cell in voronoi.get_cells().values() {
+		for point in cell.get_vertices().iter() {
+			// mark each vertex of every cell
+			let mesh = meshes.add(Sphere::new(0.5));
+			let material = materials.add(StandardMaterial {
+				base_color: VORONOI_VERTEX_COLOUR,
+				..default()
+			});
+			cmds.spawn((
+				Mesh3d(mesh.clone()),
+				MeshMaterial3d(material.clone()),
+				Transform::from_translation(*point),
+				Visibility::Hidden,
+				VoronoiLabel,
+			));
+		}
+		// mark the edges
+		let edges = cell.get_edges();
+		for edge in edges.iter() {
+			let len = (edge.get_vertex_b() - edge.get_vertex_a()).length();
+			let mesh = meshes.add(Cuboid::new(0.25, 0.25, len));
+			let mat = materials.add(StandardMaterial {
+				base_color: VORONOI_EDGE_COLOUR,
+				..default()
+			});
+			let translation = (edge.get_vertex_b() + edge.get_vertex_a()) / 2.0;
+			let mut tform = Transform::from_translation(translation);
+			tform.look_at(*edge.get_vertex_b(), Vec3::Y);
+			cmds.spawn((
+				Mesh3d(mesh),
+				MeshMaterial3d(mat.clone()),
+				tform,
+				Visibility::Hidden,
+				VoronoiLabel,
+			));
+		}
+	}
 }
 
 /// Labels an entity in the bevy mesh view for querying
@@ -218,19 +228,23 @@ fn create_mesh_visuals(
 	materials: &mut ResMut<Assets<StandardMaterial>>,
 	voronoi: &VoronoiData<VoronoiCell3d>,
 ) {
-	// let meshes = voronoi.as_bevy_meshes_2d();
-	// for (i, (mesh, position)) in meshes.iter().enumerate() {
-	// 	// randomise mesh colour
-	// 	let colour = Color::hsl(360. * i as f32 / meshes.len() as f32, 0.95, 0.7);
-	// 	let tform = Transform::from_translation(position.extend(MESH_Z));
-	// 	cmds.spawn((
-	// 		Mesh2d(meshe_assets.add(mesh.clone())),
-	// 		MeshMaterial2d(materials.add(colour)),
-	// 		tform,
-	// 		MeshLabel,
-	// 		Visibility::Visible,
-	// 	));
-	// }
+	let meshes = voronoi.as_bevy_meshes_3d();
+	for (i, (mesh, position)) in meshes.iter().enumerate() {
+		// randomise mesh colour
+		let colour = Color::hsl(360. * i as f32 / meshes.len() as f32, 0.95, 0.7);
+		let tform = Transform::from_translation(*position);
+		let mat = StandardMaterial {
+			base_color: colour,
+			..default()
+		};
+		cmds.spawn((
+			Mesh3d(mesh_assets.add(mesh.clone())),
+			MeshMaterial3d(materials.add(mat)),
+			tform,
+			MeshLabel,
+			Visibility::Visible,
+		));
+	}
 }
 
 /// Labels the toggle buttons for easy querying

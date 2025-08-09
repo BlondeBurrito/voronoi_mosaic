@@ -1,5 +1,5 @@
 //! Defines an edge/segment
-//! 
+//!
 
 use bevy::prelude::*;
 
@@ -27,7 +27,7 @@ impl Edge3d {
 		&self.1
 	}
 	/// Get the edge vertices as an array
-	pub fn get_vertices(&self) -> [&Vec3;2] {
+	pub fn get_vertices(&self) -> [&Vec3; 2] {
 		[&self.0, &self.1]
 	}
 }

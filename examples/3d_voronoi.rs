@@ -95,7 +95,7 @@ fn visuals(
 		if let Some(voronoi) = VoronoiData::from_delaunay_3d(&data) {
 			// add simple shapes to showcase what the data looks like
 			for cell in voronoi.get_cells().values() {
-				for (i, point) in cell.get_vertices().iter().enumerate() {
+				for point in cell.get_vertices().iter() {
 					// mark each vertex of every cell
 					let mesh = meshes.add(Sphere::new(0.5));
 					let material = materials.add(StandardMaterial {
@@ -107,24 +107,8 @@ fn visuals(
 						MeshMaterial3d(material.clone()),
 						Transform::from_translation(*point),
 					));
-					// // mark the edges
-					// let (v1, v0) = if i < cell.get_vertices().len() - 1 {
-					// 	(cell.get_vertices()[i + 1], *point)
-					// } else {
-					// 	(cell.get_vertices()[0], *point)
-					// };
-					// let len = (v1 - v0).length();
-					// let mesh = meshes.add(Cuboid::new(0.25, 0.25, len));
-					// let mat = materials.add(StandardMaterial {
-					// 	base_color: VORONOI_EDGE_COLOUR,
-					// 	..default()
-					// });
-					// let translation = (v1 + v0) / 2.0;
-					// let mut tform = Transform::from_translation(translation);
-					// tform.look_at(v1, Vec3::Y);
-					// cmds.spawn((Mesh3d(mesh), MeshMaterial3d(mat.clone()), tform));
 				}
-				// markt the edges
+				// mark the edges
 				let edges = cell.get_edges();
 				for edge in edges.iter() {
 					let len = (edge.get_vertex_b() - edge.get_vertex_a()).length();

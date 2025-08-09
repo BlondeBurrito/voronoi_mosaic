@@ -86,19 +86,23 @@ impl Tetrahedron {
 		]
 	}
 	/// Get the vertices in sets of 3 for each face of the tetrahedron
-	pub fn get_face_vertices(&self) ->[[Vec3; 3]; 4] {
-		[[self.vertex_a, self.vertex_b, self.vertex_c],
-		[self.vertex_a, self.vertex_c, self.vertex_d],
-		[self.vertex_a, self.vertex_d, self.vertex_b],
-		[self.vertex_b, self.vertex_c, self.vertex_d]]
+	pub fn get_face_vertices(&self) -> [[Vec3; 3]; 4] {
+		[
+			[self.vertex_a, self.vertex_b, self.vertex_c],
+			[self.vertex_a, self.vertex_c, self.vertex_d],
+			[self.vertex_a, self.vertex_d, self.vertex_b],
+			[self.vertex_b, self.vertex_c, self.vertex_d],
+		]
 	}
 	/// Get [triangle_3d::Triangle3d] representations of each face of the
 	/// tetrahedron
 	pub fn get_triangle_3d_faces(&self) -> [triangle_3d::Triangle3d; 4] {
-		[triangle_3d::Triangle3d::new(self.vertex_a, self.vertex_b, self.vertex_c),
-		triangle_3d::Triangle3d::new(self.vertex_a, self.vertex_c, self.vertex_d),
-		triangle_3d::Triangle3d::new(self.vertex_a, self.vertex_d, self.vertex_b),
-		triangle_3d::Triangle3d::new(self.vertex_b, self.vertex_c, self.vertex_d),]
+		[
+			triangle_3d::Triangle3d::new(self.vertex_a, self.vertex_b, self.vertex_c),
+			triangle_3d::Triangle3d::new(self.vertex_a, self.vertex_c, self.vertex_d),
+			triangle_3d::Triangle3d::new(self.vertex_a, self.vertex_d, self.vertex_b),
+			triangle_3d::Triangle3d::new(self.vertex_b, self.vertex_c, self.vertex_d),
+		]
 	}
 	/// Compute the circumsphere of this tetrehedron
 	pub fn compute_circumsphere(&self) -> Option<Circumsphere> {
