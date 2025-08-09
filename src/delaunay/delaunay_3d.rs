@@ -44,12 +44,12 @@ impl DelaunayData<tetrahedron::Tetrahedron> {
 			let mut bad_tetras = vec![];
 			// check if the point lies within the circumsphere of the tetrahedron
 			for tetra in tetrahedrons.iter() {
-				if let Some(circumsphere) = tetra.compute_circumsphere() {
-					if circumsphere.is_point_within_sphere(point) {
-						// if a point is within then it is not a delaunay triangle,
-						// record this tetra for removal
-						bad_tetras.push(tetra.clone());
-					}
+				if let Some(circumsphere) = tetra.compute_circumsphere()
+					&& circumsphere.is_point_within_sphere(point)
+				{
+					// if a point is within then it is not a delaunay triangle,
+					// record this tetra for removal
+					bad_tetras.push(tetra.clone());
 				}
 			}
 			// remove any bad tetrahedrons from the list

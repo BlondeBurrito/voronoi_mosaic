@@ -1,12 +1,12 @@
 //! Cross module integration tests
 //!
 
-use voronoi_mosaic::prelude::*;
 use bevy::prelude::*;
+use voronoi_mosaic::prelude::*;
 
 #[test]
 fn delaunay_into_voronoi_2d() {
-	//NB: these points are the same in 2d_delaunay and 
+	//NB: these points are the same in 2d_delaunay and
 	// 3d_voronoi examples, useful for visually checking
 	let points = vec![
 		Vec2::new(-190.0, 90.0),

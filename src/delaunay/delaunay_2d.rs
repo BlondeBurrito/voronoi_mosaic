@@ -4,7 +4,7 @@
 //! enough to enclose all the points of a data set within it. This starting
 //! triangle is stored in a mutable list which grows as more Delaunay Triangles
 //! are calculated.
-//! 
+//!
 //! The first data point is added to the triangulation and we use the
 //! cirumcircles of any triangles in the list to determine if they are still
 //! Delaunay. If a triangles circumcircle contains a data point then the

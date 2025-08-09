@@ -13,10 +13,6 @@ pub use crate::{
 
 #[cfg(feature = "3d_unstable")]
 pub use crate::{
-	circumsphere::*,
-	triangle_3d::*,
-	edge_3d::*,
+	circumsphere::*, delaunay::delaunay_3d::*, edge_3d::*, tetrahedron::*, triangle_3d::*,
 	voronoi::voronoi_3d::*,
-	delaunay::delaunay_3d::*,
-	tetrahedron::*,
 };

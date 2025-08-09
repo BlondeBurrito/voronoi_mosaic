@@ -88,11 +88,11 @@ impl VoronoiData<VoronoiCell2d> {
 		for (i, (ids, common_vertex)) in id_sets.iter().enumerate() {
 			let mut cell_vertices = vec![];
 			for id in ids.iter() {
-				if let Some(triangle) = triangle_store.get(id) {
-					if let Some(circumcircle) = triangle.compute_circumcircle() {
-						let centre = circumcircle.get_centre();
-						cell_vertices.push(*centre);
-					}
+				if let Some(triangle) = triangle_store.get(id)
+					&& let Some(circumcircle) = triangle.compute_circumcircle()
+				{
+					let centre = circumcircle.get_centre();
+					cell_vertices.push(*centre);
 				}
 			}
 			// find the midpoint of the cell vertices
@@ -352,10 +352,10 @@ impl VoronoiData<VoronoiCell2d> {
 							}
 						};
 
-						if let Some(point) = intersection {
-							if !new_vertices.contains(&point) {
-								new_vertices.push(point);
-							}
+						if let Some(point) = intersection
+							&& !new_vertices.contains(&point)
+						{
+							new_vertices.push(point);
 						}
 					}
 				}

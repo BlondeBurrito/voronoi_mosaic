@@ -75,11 +75,11 @@ impl VoronoiData<VoronoiCell3d> {
 		for (i, (ids, common_vertex)) in id_sets.iter().enumerate() {
 			let mut cell_vertices = vec![];
 			for id in ids.iter() {
-				if let Some(tetra) = tetra_store.get(id) {
-					if let Some(circumsphere) = tetra.compute_circumsphere() {
-						let centre = circumsphere.get_centre();
-						cell_vertices.push(*centre);
-					}
+				if let Some(tetra) = tetra_store.get(id)
+					&& let Some(circumsphere) = tetra.compute_circumsphere()
+				{
+					let centre = circumsphere.get_centre();
+					cell_vertices.push(*centre);
 				}
 			}
 
@@ -89,28 +89,24 @@ impl VoronoiData<VoronoiCell3d> {
 			let mut edges = vec![];
 			for this_id in ids.iter() {
 				for other_id in ids.iter() {
-					if this_id != other_id {
-						if let Some(this_tetra) = tetra_store.get(this_id) {
-							let this_faces = this_tetra.get_triangle_3d_faces();
-							if let Some(other_tetra) = tetra_store.get(other_id) {
-								let other_faces = other_tetra.get_triangle_3d_faces();
-								for this_face in this_faces.iter() {
-									// if faces are next to each other
-									if other_faces.contains(this_face) {
-										if let Some(this_sphere) = this_tetra.compute_circumsphere()
-										{
-											if let Some(other_sphere) =
-												other_tetra.compute_circumsphere()
-											{
-												//TODO currently includes edges going back and forth, doa contains on vec?
-												let e = Edge3d::new(
-													*this_sphere.get_centre(),
-													*other_sphere.get_centre(),
-												);
-												edges.push(e);
-											}
-										}
-									}
+					if this_id != other_id
+						&& let Some(this_tetra) = tetra_store.get(this_id)
+					{
+						let this_faces = this_tetra.get_triangle_3d_faces();
+						if let Some(other_tetra) = tetra_store.get(other_id) {
+							let other_faces = other_tetra.get_triangle_3d_faces();
+							for this_face in this_faces.iter() {
+								// if faces are next to each other
+								if other_faces.contains(this_face)
+									&& let Some(this_sphere) = this_tetra.compute_circumsphere()
+									&& let Some(other_sphere) = other_tetra.compute_circumsphere()
+								{
+									//TODO includes edges going back and forth, do a contains on vec?
+									let e = Edge3d::new(
+										*this_sphere.get_centre(),
+										*other_sphere.get_centre(),
+									);
+									edges.push(e);
 								}
 							}
 						}
