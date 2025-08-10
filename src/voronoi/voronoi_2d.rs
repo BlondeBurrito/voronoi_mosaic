@@ -475,6 +475,21 @@ mod tests {
 		assert_eq!(actual, cell.get_edges());
 	}
 	#[test]
+	fn shared_generating_point() {
+		let t1 = triangle_2d::Triangle2d::new(vec2(0.0, 0.0), vec2(5.0, 0.0), vec2(0.0, 5.0));
+		let t2 = triangle_2d::Triangle2d::new(vec2(0.0, 0.0), vec2(0.0, 5.0), vec2(-5.0, 0.0));
+		let t3 = triangle_2d::Triangle2d::new(vec2(0.0, 0.0), vec2(-5.0, 0.0), vec2(0.0, -5.0));
+		let t4 = triangle_2d::Triangle2d::new(vec2(0.0, 0.0), vec2(0.0, -5.0), vec2(5.0, 0.0));
+		let map: BTreeMap<usize, &triangle_2d::Triangle2d> =
+			BTreeMap::from([(0, &t1), (1, &t2), (2, &t3), (3, &t4)]);
+		let shared_sets = find_shared_sets(&map);
+		assert!(shared_sets.len() == 1);
+		let (shared_ids, generating_point) = shared_sets.first_key_value().unwrap();
+		let actual_shared_ids = vec![0, 1, 2, 3];
+		assert!(actual_shared_ids == *shared_ids);
+		assert!(Vec2::ZERO == *generating_point);
+	}
+	#[test]
 	fn mesh_uvs() {
 		let vertices = vec![
 			Vec3::new(-5.0, -5.0, 0.0),
