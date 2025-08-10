@@ -415,7 +415,10 @@ fn find_shared_sets(map: &BTreeMap<usize, &triangle_2d::Triangle2d>) -> BTreeMap
 	set
 }
 
-/// Each vertex of a mesh requires a UV coordinate. A UV coordinate describes the texture mapping of a surface. UVs range from `[0, 0]` to `[1, 1]` with the origin being located in the bottom left corner of the surface and the maximum a the top right
+/// Each vertex of a mesh requires a UV coordinate. A UV coordinate describes
+/// the texture mapping of a surface. UVs range from `[0, 0]` to `[1, 1]` with
+/// the origin being located in the bottom left corner of the surface and the
+/// maximum a the top right
 fn compute_mesh_uvs(vertices: &[Vec3]) -> Vec<Vec2> {
 	// find min-max x-y of vertices to allow them to be normalised in range of [0,0] [1, 1]
 	let mut min = Vec2::ZERO;

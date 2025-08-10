@@ -50,7 +50,10 @@ fn setup(
 	mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
 	// camera
-	cmds.spawn((Camera2d,));
+	let mut orth = OrthographicProjection::default_2d();
+	orth.scale *= 1.5;
+	let proj = Projection::Orthographic(orth);
+	cmds.spawn((Camera2d, proj));
 	// background plane
 	let mesh = meshes.add(Rectangle::from_length(800.0));
 	let material = materials.add(Color::srgb(0.75, 0.75, 0.75));

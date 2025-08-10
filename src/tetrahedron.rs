@@ -159,4 +159,42 @@ mod tests {
 		let tet = Tetrahedron::new(a, b, c, d);
 		assert!([&a, &b, &c, &d] == tet.get_vertices())
 	}
+	#[test]
+	fn edges() {
+		let a = Vec3::new(-5.0, 0.0, 3.0);
+		let b = Vec3::new(5.0, 0.0, 3.0);
+		let c = Vec3::new(5.0, 0.0, 5.0);
+		let d = Vec3::new(0.0, 8.0, 1.0);
+		let tet = Tetrahedron::new(a, b, c, d);
+
+		let actual = [(a, b), (a, c), (a, d), (b, c), (c, d), (d, b)];
+		assert!(actual == tet.get_edges());
+	}
+	#[test]
+	fn face_verts() {
+		let a = Vec3::new(-5.0, 0.0, 3.0);
+		let b = Vec3::new(5.0, 0.0, 3.0);
+		let c = Vec3::new(5.0, 0.0, 5.0);
+		let d = Vec3::new(0.0, 8.0, 1.0);
+		let tet = Tetrahedron::new(a, b, c, d);
+
+		let actual = [[a, b, c], [a, c, d], [a, d, b], [b, c, d]];
+		assert!(actual == tet.get_face_vertices());
+	}
+	#[test]
+	fn triangle_faces() {
+		let a = Vec3::new(-5.0, 0.0, 3.0);
+		let b = Vec3::new(5.0, 0.0, 3.0);
+		let c = Vec3::new(5.0, 0.0, 5.0);
+		let d = Vec3::new(0.0, 8.0, 1.0);
+		let tet = Tetrahedron::new(a, b, c, d);
+
+		let actual = [
+			triangle_3d::Triangle3d::new(a, b, c),
+			triangle_3d::Triangle3d::new(a, c, d),
+			triangle_3d::Triangle3d::new(a, d, b),
+			triangle_3d::Triangle3d::new(b, c, d),
+		];
+		assert!(actual == tet.get_triangle_3d_faces());
+	}
 }
