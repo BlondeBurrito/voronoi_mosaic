@@ -141,8 +141,7 @@ impl VoronoiData<VoronoiCell2d> {
 					.map(|v| v.extend(0.0))
 					.collect();
 				let normals = vec![Vec3::Z; positions.len()];
-				//TODO compute UVs properly
-				let uvs = vec![Vec2::Y; positions.len()];
+				let uvs = compute_mesh_uvs(&positions);
 
 				//TODO tests to ensure right number of indices/postions
 				//TODO verify no "hole" in mesh
@@ -416,6 +415,42 @@ fn find_shared_sets(map: &BTreeMap<usize, &triangle_2d::Triangle2d>) -> BTreeMap
 	set
 }
 
+/// Each vertex of a mesh requires a UV coordinate. A UV coordinate describes the texture mapping of a surface. UVs range from `[0, 0]` to `[1, 1]` with the origin being located in the bottom left corner of the surface and the maximum a the top right
+fn compute_mesh_uvs(vertices: &[Vec3]) -> Vec<Vec2> {
+	// find min-max x-y of vertices to allow them to be normalised in range of [0,0] [1, 1]
+	let mut min = Vec2::ZERO;
+	let mut max = Vec2::ZERO;
+	for v in vertices {
+		if v.x < min.x {
+			min.x = v.x;
+		}
+		if v.y < min.y {
+			min.y = v.y;
+		}
+		if v.x > max.x {
+			max.x = v.x;
+		}
+		if v.y > max.y {
+			max.y = v.y;
+		}
+	}
+	let mut uvs = vec![];
+	for v in vertices {
+		// transpose v coordinate to uv coordinate space
+		let transposed = v.truncate() - min;
+		if max - min != Vec2::ZERO {
+			// normalise transposed based on coord range to bring
+			// it in between 0 and 1
+			let uv = transposed / (max - min);
+			uvs.push(uv);
+		} else {
+			// safety
+			uvs.push(Vec2::ONE);
+		}
+	}
+	uvs
+}
+
 #[cfg(test)]
 mod tests {
 	use super::*;
@@ -438,5 +473,21 @@ mod tests {
 			(Vec2::new(-1.0, 0.0), Vec2::new(1.0, 0.0)),
 		];
 		assert_eq!(actual, cell.get_edges());
+	}
+	#[test]
+	fn mesh_uvs() {
+		let vertices = vec![
+			Vec3::new(-5.0, -5.0, 0.0),
+			Vec3::new(5.0, -5.0, 0.0),
+			Vec3::new(5.0, 5.0, 0.0),
+			Vec3::new(-5.0, 5.0, 0.0),
+		];
+		let actual = vec![
+			Vec2::new(0.0, 0.0),
+			Vec2::new(1.0, 0.0),
+			Vec2::new(1.0, 1.0),
+			Vec2::new(0.0, 1.0),
+		];
+		assert_eq!(actual, compute_mesh_uvs(&vertices));
 	}
 }
