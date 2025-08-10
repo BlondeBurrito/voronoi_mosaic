@@ -93,6 +93,14 @@ mod tests {
 		assert_eq!(actual_radius, circumcircle.get_radius_sqaured());
 	}
 	#[test]
+	fn new_circumcircle_is_none() {
+		// invalid triangle vertices
+		let v_a = Vec2::new(0.0, 2.0);
+		let v_b = Vec2::new(0.0, 2.0);
+		let v_c = Vec2::new(2.0, 3.0);
+		assert!(Circumcircle::new(v_a, v_b, v_c).is_none());
+	}
+	#[test]
 	fn point_is_within_circumcircle() {
 		let v_a = Vec2::new(5.0, 0.0);
 		let v_b = Vec2::new(7.0, 3.0);

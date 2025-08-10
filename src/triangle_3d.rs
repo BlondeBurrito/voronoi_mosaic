@@ -115,16 +115,11 @@ impl Triangle3d {
 				// if u,v [0, 1] then intersecction is on parallelogram
 				if (0.0..=1.0).contains(&u) && (0.0..=1.0).contains(&v) {
 					// if sum of `u`, `v` is <= 1 then intersection is within points of triangle
-					u + v <= 1.0
-				} else {
-					false
+					return u + v <= 1.0;
 				}
-			} else {
-				false
 			}
-		} else {
-			false
 		}
+		false
 	}
 }
 

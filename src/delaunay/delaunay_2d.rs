@@ -258,4 +258,9 @@ mod tests {
 		let result = DelaunayData::compute_triangulation_2d(&points);
 		assert!(result.is_none());
 	}
+	#[test]
+	fn triangulation_is_none() {
+		let points = vec![Vec2::ZERO];
+		assert!(DelaunayData::compute_triangulation_2d(&points).is_none());
+	}
 }

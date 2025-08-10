@@ -45,4 +45,11 @@ mod tests {
 		let edge_j = Edge3d::new(b, a);
 		assert!(edge_i == edge_j)
 	}
+	#[test]
+	fn vert_array() {
+		let a = Vec3::new(0.0, 0.0, 0.0);
+		let b = Vec3::new(1.0, 0.0, 0.0);
+		let edge = Edge3d::new(a, b);
+		assert!([&a, &b] == edge.get_vertices())
+	}
 }

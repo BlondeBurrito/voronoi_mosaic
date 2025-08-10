@@ -105,7 +105,7 @@ impl DelaunayData<tetrahedron::Tetrahedron> {
 					// perform an additional check to verify that a face
 					// doesn't slice into another face - use a bisecting
 					// line down the middle of each face of the
-					//  proposed new tetra and check to intersection
+					// proposed new tetra and check for intersection
 					for face in n_tet.get_triangle_3d_faces().iter() {
 						let bisecting_edge = Edge3d::new(
 							*face.get_vertex_a(),
@@ -265,5 +265,40 @@ mod tests {
 		];
 		let result = DelaunayData::compute_triangulation_3d(&points);
 		assert!(result.is_none());
+	}
+	#[test]
+	fn super_tetra() {
+		let min = Vec3::new(-2.0, -2.0, 0.0);
+		let max = Vec3::new(2.0, 2.0, 2.0);
+		let super_tetrahedra = compute_super_tetrahedra(&min, &max);
+
+		let t1 = [
+			Vec3::new(-8.0, 0.0, 5.0),
+			Vec3::new(8.0, 0.0, -3.0),
+			Vec3::new(8.0, 0.0, 5.0),
+			Vec3::new(0.0, 8.0, 1.0),
+		];
+		assert_eq!(t1, super_tetrahedra[0]);
+		let t2 = [
+			Vec3::new(-8.0, 0.0, 5.0),
+			Vec3::new(8.0, 0.0, -3.0),
+			Vec3::new(-8.0, 0.0, -3.0),
+			Vec3::new(0.0, 8.0, 1.0),
+		];
+		assert_eq!(t2, super_tetrahedra[1]);
+		let t3 = [
+			Vec3::new(-8.0, 0.0, 5.0),
+			Vec3::new(8.0, 0.0, -3.0),
+			Vec3::new(8.0, 0.0, 5.0),
+			Vec3::new(0.0, -8.0, 1.0),
+		];
+		assert_eq!(t3, super_tetrahedra[2]);
+		let t4 = [
+			Vec3::new(-8.0, 0.0, 5.0),
+			Vec3::new(8.0, 0.0, -3.0),
+			Vec3::new(-8.0, 0.0, -3.0),
+			Vec3::new(0.0, -8.0, 1.0),
+		];
+		assert_eq!(t4, super_tetrahedra[3]);
 	}
 }
