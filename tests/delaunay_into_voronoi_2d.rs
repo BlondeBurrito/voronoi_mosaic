@@ -106,11 +106,11 @@ fn mesh_count_clipped() {
 	let delaunay = DelaunayData::compute_triangulation_2d(&points).unwrap();
 	let mut voronoi = VoronoiData::from_delaunay_2d(&delaunay).unwrap();
 	let boundary = vec![
-				Vec2::new(200.0, 200.0),
-				Vec2::new(-200.0, 200.0),
-				Vec2::new(-200.0, -200.0),
-				Vec2::new(200.0, -200.0),
-			];
+		Vec2::new(200.0, 200.0),
+		Vec2::new(-200.0, 200.0),
+		Vec2::new(-200.0, -200.0),
+		Vec2::new(200.0, -200.0),
+	];
 	voronoi.clip_cells_to_boundary(&boundary);
 
 	let expected_mesh_count = 18;
