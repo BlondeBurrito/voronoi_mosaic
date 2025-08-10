@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.0] - 2025-08-10
+
+### Features
+
+- Added 2d mesh UV calculation (#2)
+
+### Testing
+
+- Verify 2d voronoi generating point (#3)
+- Improve code coverage
+
 ## [0.1.0] - 2025-08-09
 
 ### Features

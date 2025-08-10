@@ -150,4 +150,13 @@ mod tests {
 		);
 		assert!(tet.compute_circumsphere().is_none());
 	}
+	#[test]
+	fn vert_array() {
+		let a = Vec3::new(-5.0, 0.0, 3.0);
+		let b = Vec3::new(5.0, 0.0, 3.0);
+		let c = Vec3::new(5.0, 0.0, 5.0);
+		let d = Vec3::new(0.0, 8.0, 1.0);
+		let tet = Tetrahedron::new(a, b, c, d);
+		assert!([&a, &b, &c, &d] == tet.get_vertices())
+	}
 }

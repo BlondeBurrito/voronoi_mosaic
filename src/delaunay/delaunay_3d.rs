@@ -209,7 +209,6 @@ pub fn compute_dimension_bounds(points: &[Vec3]) -> (Vec3, Vec3) {
 	)
 }
 
-//TODO test this
 /// Compute the vertices of 4 tetrahedra aligned in a diamond formation to ensure that all data points sit within the tetrahedra
 pub fn compute_super_tetrahedra(
 	minimum_world_dimensions: &Vec3,
