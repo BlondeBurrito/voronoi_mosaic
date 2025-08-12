@@ -1,6 +1,6 @@
 //! Defines an ID based triangle
-//! 
-//! 
+//!
+//!
 
 use std::collections::BTreeMap;
 
@@ -57,7 +57,7 @@ impl TriangleNode3d {
 		[
 			EdgeNode3d::new(self.0[0], self.0[1]),
 			EdgeNode3d::new(self.0[1], self.0[2]),
-			EdgeNode3d::new(self.0[2], self.0[0])
+			EdgeNode3d::new(self.0[2], self.0[0]),
 		]
 	}
 	// /// Reorder the vertex IDs so they are in anti-clockwise order, angle around their midpoint running negative to positive
@@ -86,7 +86,11 @@ impl TriangleNode3d {
 
 	/// Check if an edge/segment intersects the triangle - effectively testing
 	/// to see if a ray intersects a triangular face
-	pub fn does_edge_intersect_id(&self, edge: &EdgeNode3d, vertex_lookup: &BTreeMap<usize, Vec3>) -> bool {
+	pub fn does_edge_intersect_id(
+		&self,
+		edge: &EdgeNode3d,
+		vertex_lookup: &BTreeMap<usize, Vec3>,
+	) -> bool {
 		let tri_vertex_a = vertex_lookup.get(&self.get_vertex_a_id()).unwrap();
 		let tri_vertex_b = vertex_lookup.get(&self.get_vertex_b_id()).unwrap();
 		let tri_vertex_c = vertex_lookup.get(&self.get_vertex_c_id()).unwrap();
@@ -94,12 +98,25 @@ impl TriangleNode3d {
 		let edge_vertex_a = vertex_lookup.get(&edge.get_vertex_a_id()).unwrap();
 		let edge_vertex_b = vertex_lookup.get(&edge.get_vertex_b_id()).unwrap();
 
-		self.does_edge_intersect(tri_vertex_a, tri_vertex_b, tri_vertex_c, edge_vertex_a, edge_vertex_b)
+		self.does_edge_intersect(
+			tri_vertex_a,
+			tri_vertex_b,
+			tri_vertex_c,
+			edge_vertex_a,
+			edge_vertex_b,
+		)
 	}
 
 	/// Check if an edge/segment intersects the triangle - effectively testing
 	/// to see if a ray intersects a triangular face
-	pub fn does_edge_intersect(&self, tri_vertex_a: &Vec3, tri_vertex_b: &Vec3, tri_vertex_c: &Vec3, edge_vertex_a: &Vec3, edge_vertex_b: &Vec3) -> bool {
+	pub fn does_edge_intersect(
+		&self,
+		tri_vertex_a: &Vec3,
+		tri_vertex_b: &Vec3,
+		tri_vertex_c: &Vec3,
+		edge_vertex_a: &Vec3,
+		edge_vertex_b: &Vec3,
+	) -> bool {
 		// equation of a plane: ax + by + cz = d, `a, b, c` come from the normal of the plane
 
 		// Parametric solution: https://en.wikipedia.org/wiki/Line%E2%80%93plane_intersection
@@ -111,12 +128,9 @@ impl TriangleNode3d {
 		let normal = tri_a_to_b.cross(tri_a_to_c);
 		let denom = (-edge_a_to_b).dot(normal);
 		if denom != 0.0 {
-			let t =
-				((tri_a_to_b.cross(tri_a_to_c)).dot(edge_vertex_a - tri_vertex_a)) / denom;
-			let u = ((tri_a_to_c.cross(-edge_a_to_b)).dot(edge_vertex_a - tri_vertex_a))
-				/ denom;
-			let v = (((-edge_a_to_b).cross(tri_a_to_b)).dot(edge_vertex_a - tri_vertex_a))
-				/ denom;
+			let t = ((tri_a_to_b.cross(tri_a_to_c)).dot(edge_vertex_a - tri_vertex_a)) / denom;
+			let u = ((tri_a_to_c.cross(-edge_a_to_b)).dot(edge_vertex_a - tri_vertex_a)) / denom;
+			let v = (((-edge_a_to_b).cross(tri_a_to_b)).dot(edge_vertex_a - tri_vertex_a)) / denom;
 
 			// if `t` is [0, 1] then intersection is on line
 			// however it IS ok for an edge to touch a face, so

@@ -1,7 +1,6 @@
 //! Defines an ID based edge
-//! 
-//! 
-
+//!
+//!
 
 /// Describes an edge where the vertices are represented by vertex IDs
 #[derive(Clone, Copy, Debug)]
@@ -9,7 +8,8 @@ pub struct EdgeNode2d([usize; 2]);
 
 impl PartialEq for EdgeNode2d {
 	fn eq(&self, other: &Self) -> bool {
-		(self.0[0] == other.0[0] && self.0[1] == other.0[1]) || (self.0[0] == other.0[1] && self.0[1] == other.0[0])
+		(self.0[0] == other.0[0] && self.0[1] == other.0[1])
+			|| (self.0[0] == other.0[1] && self.0[1] == other.0[0])
 	}
 }
 

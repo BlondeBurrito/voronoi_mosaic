@@ -2,35 +2,20 @@
 //!
 
 #[doc(hidden)]
-pub use crate::{
-	circumcircle::*,
-	triangle_2d::*,
-	utilities::*,
-	*,
-};
+pub use crate::{circumcircle::*, triangle_2d::*, utilities::*, *};
 
 #[doc(hidden)]
 #[cfg(feature = "2d")]
-pub use crate::{
-	mosaic_2d::{
-		delaunay::*,
-		voronoi::*,
-		edge_node2d::*,
-		triangle_node2d::*,
-		*
-	},
-};
+pub use crate::mosaic_2d::{Mosaic2d, delaunay::*, edge_node2d::*, triangle_node2d::*, voronoi::*};
 
 #[doc(hidden)]
 #[cfg(feature = "3d_unstable")]
 pub use crate::{
-	circumsphere::*, edge_3d::*, tetrahedron::*, triangle_3d::*,
+	circumsphere::*,
+	edge_3d::*,
 	mosaic_3d::{
-		delaunay::*,
-		voronoi::*,
-		edge_node3d::*,
-		triangle_node3d::*,
-		tetrahedron_node::*,
-		*
+		Mosaic3d, delaunay::*, edge_node3d::*, tetrahedron_node::*, triangle_node3d::*, voronoi::*,
 	},
+	tetrahedron::*,
+	triangle_3d::*,
 };

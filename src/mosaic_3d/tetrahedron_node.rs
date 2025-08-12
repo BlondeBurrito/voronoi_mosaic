@@ -1,16 +1,30 @@
 //! Defines an ID based tetrahedron
-//! 
+//!
 
 use std::collections::BTreeMap;
 
 use bevy::math::Vec3;
 
-use crate::{mosaic_3d::{edge_node3d::EdgeNode3d, triangle_node3d::TriangleNode3d}, prelude::Circumsphere};
-
+use crate::{
+	mosaic_3d::{edge_node3d::EdgeNode3d, triangle_node3d::TriangleNode3d},
+	prelude::Circumsphere,
+};
 
 /// Describes a tetrahedron where the vertices are represented by vertex IDs
-#[derive(PartialEq, Eq, Debug, Clone, Copy, PartialOrd, Ord)]
+#[derive(Eq, Debug, Clone, Copy, PartialOrd, Ord)]
 pub struct TetrahedronNode([usize; 4]);
+
+impl PartialEq for TetrahedronNode {
+	fn eq(&self, other: &Self) -> bool {
+		let (self_a, self_b, self_c, self_d) = (self.0[0], self.0[1], self.0[2], self.0[3]);
+		let (other_a, other_b, other_c, other_d) = (other.0[0], other.0[1], other.0[2], other.0[3]);
+
+		(self_a == other_a && self_b == other_b && self_c == other_c && self_d == other_d)
+			|| (self_a == other_b && self_b == other_c && self_c == other_d && self_d == other_a)
+			|| (self_a == other_c && self_b == other_d && self_c == other_a && self_a == other_b)
+			|| (self_a == other_d && self_b == other_a && self_c == other_b && self_c == other_d)
+	}
+}
 
 impl TetrahedronNode {
 	/// Create a new [TetrahedronNode] from a series of vertex IDs
@@ -42,18 +56,21 @@ impl TetrahedronNode {
 		self.0[3]
 	}
 	/// If possible compute the circumsphere of this tetrahedron
-	pub fn compute_circumsphere(&self, vertex_lookup: &BTreeMap<usize, Vec3>) -> Option<Circumsphere> {
+	pub fn compute_circumsphere(
+		&self,
+		vertex_lookup: &BTreeMap<usize, Vec3>,
+	) -> Option<Circumsphere> {
 		let Some(vertex_a) = vertex_lookup.get(&self.0[0]) else {
-			return None
+			return None;
 		};
 		let Some(vertex_b) = vertex_lookup.get(&self.0[1]) else {
-			return None
+			return None;
 		};
 		let Some(vertex_c) = vertex_lookup.get(&self.0[2]) else {
-			return None
+			return None;
 		};
 		let Some(vertex_d) = vertex_lookup.get(&self.0[3]) else {
-			return None
+			return None;
 		};
 		Circumsphere::new(*vertex_a, *vertex_b, *vertex_c, *vertex_d)
 	}
@@ -65,18 +82,33 @@ impl TetrahedronNode {
 			EdgeNode3d::new(self.0[0], self.0[3]),
 			EdgeNode3d::new(self.0[1], self.0[2]),
 			EdgeNode3d::new(self.0[2], self.0[3]),
-			EdgeNode3d::new(self.0[3], self.0[1])
-
+			EdgeNode3d::new(self.0[3], self.0[1]),
 		]
 	}
 	/// Get [TriangleNode3d] representations of each face of the
 	/// tetrahedron
 	pub fn get_triangle_node_3d_faces(&self) -> [TriangleNode3d; 4] {
 		[
-			TriangleNode3d::new(self.get_vertex_a_id(), self.get_vertex_b_id(), self.get_vertex_c_id()),
-			TriangleNode3d::new(self.get_vertex_a_id(), self.get_vertex_c_id(), self.get_vertex_d_id()),
-			TriangleNode3d::new(self.get_vertex_a_id(), self.get_vertex_d_id(), self.get_vertex_b_id()),
-			TriangleNode3d::new(self.get_vertex_b_id(), self.get_vertex_c_id(), self.get_vertex_d_id()),
+			TriangleNode3d::new(
+				self.get_vertex_a_id(),
+				self.get_vertex_b_id(),
+				self.get_vertex_c_id(),
+			),
+			TriangleNode3d::new(
+				self.get_vertex_a_id(),
+				self.get_vertex_c_id(),
+				self.get_vertex_d_id(),
+			),
+			TriangleNode3d::new(
+				self.get_vertex_a_id(),
+				self.get_vertex_d_id(),
+				self.get_vertex_b_id(),
+			),
+			TriangleNode3d::new(
+				self.get_vertex_b_id(),
+				self.get_vertex_c_id(),
+				self.get_vertex_d_id(),
+			),
 		]
 	}
 }

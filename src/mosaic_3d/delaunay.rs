@@ -14,7 +14,7 @@ use bevy::prelude::*;
 /// vertices are stored with unique IDs
 pub struct Delaunay3d {
 	tetrahedra: BTreeMap<usize, TetrahedronNode>,
-	vertex_lookup: BTreeMap<usize, Vec3>
+	vertex_lookup: BTreeMap<usize, Vec3>,
 }
 
 impl Delaunay3d {
@@ -54,16 +54,22 @@ impl Delaunay3d {
 			TetrahedronNode::new(5, 3, 4, 1),
 		]);
 
+		let mut problematic_points = vec![];
 		// add each point at a time to the triangulation
-		for point in points {
-			// store the point with a unique ID
-			let new_point_id = vertex_lookup.len();
-			vertex_lookup.insert(new_point_id, *point);
 
+		for point in points {
 			// find tetrahedra that are not Delaunay
 			let bad_tetrahedra = find_bad_tetrahedra(&point, &tetrahedra, &vertex_lookup);
 
-			if !bad_tetrahedra.is_empty() {
+			if bad_tetrahedra.is_empty() {
+				// if empty then the point is in a hole where previous tetrahedralizations failed to produce delaunay tetras that could fill the void
+				// store the point to be retried at the end
+				problematic_points.push(point);
+			} else {
+				// store the point with a unique ID
+				let new_point_id = vertex_lookup.len();
+				vertex_lookup.insert(new_point_id, *point);
+
 				// remove any bad tetrahedrons from the set
 				tetrahedra.retain(|t| !bad_tetrahedra.contains(t));
 
@@ -126,17 +132,31 @@ impl Delaunay3d {
 						let c = vertex_lookup.get(&face.get_vertex_c_id()).unwrap();
 
 						let edge_vertex_a = a;
-						let edge_vertex_b = (b + c ) / 2.0;
+						let edge_vertex_b = (b + c) / 2.0;
 						for tetra in tetrahedra.iter() {
 							for tetra_face in tetra.get_triangle_node_3d_faces() {
-								let tri_vertex_a = vertex_lookup.get(&tetra_face.get_vertex_a_id()).unwrap();
-								let tri_vertex_b = vertex_lookup.get(&tetra_face.get_vertex_b_id()).unwrap();
-								let tri_vertex_c = vertex_lookup.get(&tetra_face.get_vertex_c_id()).unwrap();
-								if tetra_face.does_edge_intersect(tri_vertex_a, tri_vertex_b, tri_vertex_c, edge_vertex_a, &edge_vertex_b) {
+								let tri_vertex_a =
+									vertex_lookup.get(&tetra_face.get_vertex_a_id()).unwrap();
+								let tri_vertex_b =
+									vertex_lookup.get(&tetra_face.get_vertex_b_id()).unwrap();
+								let tri_vertex_c =
+									vertex_lookup.get(&tetra_face.get_vertex_c_id()).unwrap();
+								if tetra_face.does_edge_intersect(
+									tri_vertex_a,
+									tri_vertex_b,
+									tri_vertex_c,
+									edge_vertex_a,
+									&edge_vertex_b,
+								) {
 									is_valid = false;
 								}
 							}
 						}
+					}
+					// if the tetra has no circumsphere then consider it invalid,
+					// i.e its vertices are coplanar so it is degenerate
+					if n_tet.compute_circumsphere(&vertex_lookup).is_none() {
+						is_valid = false;
 					}
 					if is_valid {
 						tetrahedra.insert(n_tet);
@@ -144,6 +164,8 @@ impl Delaunay3d {
 				}
 			}
 		}
+
+		//TODO retry adding the problematic points
 
 		// remove any tetrahedra that use vertices of the starting
 		// super-tetrahedra - these were not real points in the data set,
@@ -159,9 +181,15 @@ impl Delaunay3d {
 			let s_e = 4;
 			let s_f = 5;
 
-			if !tet.get_vertex_ids().contains(&s_a) && !tet.get_vertex_ids().contains(&s_b) && !tet.get_vertex_ids().contains(&s_c) && !tet.get_vertex_ids().contains(&s_d) && !tet.get_vertex_ids().contains(&s_e) && !tet.get_vertex_ids().contains(&s_f) {
+			if !tet.get_vertex_ids().contains(&s_a)
+				&& !tet.get_vertex_ids().contains(&s_b)
+				&& !tet.get_vertex_ids().contains(&s_c)
+				&& !tet.get_vertex_ids().contains(&s_d)
+				&& !tet.get_vertex_ids().contains(&s_e)
+				&& !tet.get_vertex_ids().contains(&s_f)
+			{
 				final_tetrahedra.insert(count, tet);
-				count +=1;
+				count += 1;
 			}
 		}
 
@@ -189,7 +217,7 @@ impl Delaunay3d {
 		vertex_lookup.remove(&3);
 		vertex_lookup.remove(&4);
 		vertex_lookup.remove(&5);
-	
+
 		if final_tetrahedra.len() > 0 {
 			Some(Delaunay3d {
 				tetrahedra: final_tetrahedra,
@@ -270,11 +298,22 @@ pub fn compute_super_tetrahedra(
 		[top_left, bottom_right, top_right, mid_down],
 		[top_left, bottom_right, bottom_left, mid_down],
 	];
-	[mid_up, bottom_right, top_right, top_left, bottom_left, mid_down]
+	[
+		mid_up,
+		bottom_right,
+		top_right,
+		top_left,
+		bottom_left,
+		mid_down,
+	]
 }
 
 /// Search through tetrahedra and identify any that do not qualify as Delaunay with respect to `point`
-fn find_bad_tetrahedra(point: &Vec3, tetrahedra: &BTreeSet<TetrahedronNode>, vertex_lookup: &BTreeMap<usize, Vec3>) -> BTreeSet<TetrahedronNode> {
+fn find_bad_tetrahedra(
+	point: &Vec3,
+	tetrahedra: &BTreeSet<TetrahedronNode>,
+	vertex_lookup: &BTreeMap<usize, Vec3>,
+) -> BTreeSet<TetrahedronNode> {
 	let mut set = BTreeSet::new();
 	// check if the point lies within the circumsphere of a tetrahedron
 	for tet in tetrahedra.iter() {
@@ -282,7 +321,7 @@ fn find_bad_tetrahedra(point: &Vec3, tetrahedra: &BTreeSet<TetrahedronNode>, ver
 			&& circumsphere.is_point_within_sphere(point)
 		{
 			// if a point is within then it is not a delaunay tetrahedron,
-			// record this triangle for removal
+			// record this tetrahedron for removal
 			set.insert(tet.clone());
 		}
 	}

@@ -103,7 +103,13 @@ fn visuals(
 			create_voronoi_cell_visuals(&mut cmds, &mut mesh_assets, &mut materials, &voronoi);
 			//TODO proper boundary
 			let boundary = vec![Vec3::new(-5.0, -5.0, -5.0), Vec3::new(5.0, -5.0, -5.0)];
-			create_clipped_mesh_visuals(&mut cmds, &mut mesh_assets, &mut materials, &voronoi, &boundary);
+			create_clipped_mesh_visuals(
+				&mut cmds,
+				&mut mesh_assets,
+				&mut materials,
+				&voronoi,
+				&boundary,
+			);
 		}
 	} else {
 		warn!("Data computation failed");
@@ -200,7 +206,7 @@ fn create_voronoi_cell_visuals(
 				MeshMaterial3d(material.clone()),
 				Transform::from_translation(*pos),
 				Visibility::Hidden,
-				VoronoiLabel
+				VoronoiLabel,
 			));
 		}
 		// mark the edges
@@ -217,7 +223,13 @@ fn create_voronoi_cell_visuals(
 			let translation = (end + start) / 2.0;
 			let mut tform = Transform::from_translation(translation);
 			tform.look_at(*end, Vec3::Y);
-			cmds.spawn((Mesh3d(mesh), MeshMaterial3d(mat.clone()), tform, Visibility::Hidden, VoronoiLabel));
+			cmds.spawn((
+				Mesh3d(mesh),
+				MeshMaterial3d(mat.clone()),
+				tform,
+				Visibility::Hidden,
+				VoronoiLabel,
+			));
 		}
 	}
 }
@@ -232,7 +244,7 @@ fn create_clipped_mesh_visuals(
 	mesh_assets: &mut ResMut<Assets<Mesh>>,
 	materials: &mut ResMut<Assets<StandardMaterial>>,
 	voronoi: &Voronoi3d,
-	boundary: &[Vec3]
+	boundary: &[Vec3],
 ) {
 	let meshes = voronoi.as_clipped_bevy3d_meshes(boundary);
 	for (i, (mesh, position)) in meshes.iter().enumerate() {

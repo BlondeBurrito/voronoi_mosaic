@@ -27,7 +27,7 @@ fn setup(
 	// mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
 	// camera
-	let mut cam_tform = Transform::from_translation(Vec3::new(300.0, 75.0, 300.0));
+	let mut cam_tform = Transform::from_translation(Vec3::new(250.0, 75.0, 250.0));
 	cam_tform.look_at(Vec3::ZERO, Vec3::Y);
 	cmds.spawn((Camera3d::default(), cam_tform));
 	// // background plane
@@ -66,8 +66,8 @@ fn orbit_camera(
 		let dt = time.delta_secs();
 		let speed = 0.5;
 		*angle += speed * dt;
-		let x = 300.0 * angle.cos();
-		let z = 300.0 * angle.sin();
+		let x = 250.0 * angle.cos();
+		let z = 250.0 * angle.sin();
 		tform.translation.x = x;
 		tform.translation.z = z;
 		tform.look_at(Vec3::ZERO, Vec3::Y);

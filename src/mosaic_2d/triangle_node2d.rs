@@ -1,9 +1,9 @@
 //! Defines an ID based triangle
-//! 
-//! 
+//!
+//!
 
-use std::{cmp::Ordering, collections::BTreeMap};
 use bevy::prelude::*;
+use std::{cmp::Ordering, collections::BTreeMap};
 
 use crate::{mosaic_2d::edge_node2d::EdgeNode2d, prelude::Circumcircle};
 
@@ -37,15 +37,18 @@ impl TriangleNode2d {
 		self.0[2]
 	}
 	/// If possible compute the circumcircle of this triangle
-	pub fn compute_circumcircle(&self, vertex_lookup: &BTreeMap<usize, Vec2>) -> Option<Circumcircle> {
+	pub fn compute_circumcircle(
+		&self,
+		vertex_lookup: &BTreeMap<usize, Vec2>,
+	) -> Option<Circumcircle> {
 		let Some(vertex_a) = vertex_lookup.get(&self.0[0]) else {
-			return None
+			return None;
 		};
 		let Some(vertex_b) = vertex_lookup.get(&self.0[1]) else {
-			return None
+			return None;
 		};
 		let Some(vertex_c) = vertex_lookup.get(&self.0[2]) else {
-			return None
+			return None;
 		};
 		Circumcircle::new(*vertex_a, *vertex_b, *vertex_c)
 	}
@@ -54,7 +57,7 @@ impl TriangleNode2d {
 		[
 			EdgeNode2d::new(self.0[0], self.0[1]),
 			EdgeNode2d::new(self.0[1], self.0[2]),
-			EdgeNode2d::new(self.0[2], self.0[0])
+			EdgeNode2d::new(self.0[2], self.0[0]),
 		]
 	}
 	/// Reorder the vertex IDs so they are in anti-clockwise order, angle around their midpoint running negative to positive
@@ -69,15 +72,15 @@ impl TriangleNode2d {
 		ids.sort_by(|a, b| {
 			let a_pos = vertex_lookup.get(a).unwrap();
 			let b_pos = vertex_lookup.get(b).unwrap();
-		if let Some(ordering) = Vec2::Y
-			.angle_to(*a_pos - midpoint)
-			.partial_cmp(&Vec2::Y.angle_to(*b_pos - midpoint))
-		{
-			ordering
-		} else {
-			warn!("Unable to find Ordering between {} and {}", a, b);
-			Ordering::Less
-		}
-	});
+			if let Some(ordering) = Vec2::Y
+				.angle_to(*a_pos - midpoint)
+				.partial_cmp(&Vec2::Y.angle_to(*b_pos - midpoint))
+			{
+				ordering
+			} else {
+				warn!("Unable to find Ordering between {} and {}", a, b);
+				Ordering::Less
+			}
+		});
 	}
 }

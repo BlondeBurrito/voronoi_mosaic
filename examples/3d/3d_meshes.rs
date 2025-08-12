@@ -205,7 +205,7 @@ fn create_voronoi_cell_visuals(
 				MeshMaterial3d(material.clone()),
 				Transform::from_translation(*pos),
 				Visibility::Hidden,
-				VoronoiLabel
+				VoronoiLabel,
 			));
 		}
 		// mark the edges
@@ -222,7 +222,13 @@ fn create_voronoi_cell_visuals(
 			let translation = (end + start) / 2.0;
 			let mut tform = Transform::from_translation(translation);
 			tform.look_at(*end, Vec3::Y);
-			cmds.spawn((Mesh3d(mesh), MeshMaterial3d(mat.clone()), tform, Visibility::Hidden, VoronoiLabel));
+			cmds.spawn((
+				Mesh3d(mesh),
+				MeshMaterial3d(mat.clone()),
+				tform,
+				Visibility::Hidden,
+				VoronoiLabel,
+			));
 		}
 	}
 }

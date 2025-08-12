@@ -136,7 +136,13 @@ fn visuals(
 				Vec2::new(-200.0, -200.0),
 				Vec2::new(200.0, -200.0),
 			];
-			create_clipped_mesh_visuals(&mut cmds, &mut meshes, &mut materials, &voronoi, &boundary);
+			create_clipped_mesh_visuals(
+				&mut cmds,
+				&mut meshes,
+				&mut materials,
+				&voronoi,
+				&boundary,
+			);
 		}
 	} else {
 		warn!("Data computation failed");
@@ -264,7 +270,7 @@ fn create_clipped_mesh_visuals(
 	meshe_assets: &mut ResMut<Assets<Mesh>>,
 	materials: &mut ResMut<Assets<ColorMaterial>>,
 	voronoi: &Voronoi2d,
-	boundary: &[Vec2]
+	boundary: &[Vec2],
 ) {
 	let meshes = voronoi.as_clipped_bevy2d_meshes(boundary);
 	for (i, (mesh, position)) in meshes.iter().enumerate() {

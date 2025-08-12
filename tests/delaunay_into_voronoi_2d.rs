@@ -113,5 +113,8 @@ fn mesh_count_clipped() {
 	];
 
 	let expected_mesh_count = 18;
-	assert_eq!(expected_mesh_count, voronoi.as_clipped_bevy2d_meshes(&boundary).len());
+	assert_eq!(
+		expected_mesh_count,
+		voronoi.as_clipped_bevy2d_meshes(&boundary).len()
+	);
 }

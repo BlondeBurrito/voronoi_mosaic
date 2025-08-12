@@ -8,8 +8,8 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use bevy::prelude::*;
 
-use crate::{
-	mosaic_3d::{delaunay::Delaunay3d, edge_node3d::EdgeNode3d}, tetrahedron,
+use crate::mosaic_3d::{
+	delaunay::Delaunay3d, edge_node3d::EdgeNode3d, tetrahedron_node::TetrahedronNode,
 };
 
 /// The vertices of a Voronoi Cell in 3-dimensions
@@ -91,6 +91,8 @@ impl Voronoi3d {
 				let voronoi_id = voronoi_vertex_lookup.len();
 				voronoi_vertex_lookup.insert(voronoi_id, *centre);
 				tetrahedron_to_circumcentre_ids.insert(*tet_id, voronoi_id);
+			} else {
+				error!("Tet doesnt have circumsphere");
 			}
 		}
 
@@ -98,83 +100,19 @@ impl Voronoi3d {
 		// have a vertex id in common, this means that the circumcentres of
 		// those tetrahedra are the voronoi vertices of a cell.
 		// Keys are sets of tetrahedra IDs, value is the ID of the generating point
-		let mut cell_tetrahedra = BTreeMap::new();
-		for (this_tet_id, this_tet) in tetras_store.iter() {
-			// loop through all vertex IDs
-			for this_vert_id in this_tet.get_vertex_ids() {
-				let mut shared_tet_ids = BTreeSet::from([this_tet_id]);
-				// loop over other triangles
-				for (other_tet_id, other_tet) in tetras_store.iter() {
-					if this_tet_id != other_tet_id {
-						if other_tet.get_vertex_ids().contains(this_vert_id) {
-							// triangles share a common vertex ID, store other
-							shared_tet_ids.insert(other_tet_id);
-						}
-					}
-				}
-				if shared_tet_ids.len() >= 4 {
-					// we have found a series of tetrahedra with a common vertex,
-					// their circumcentres are voronoi vertices
-					cell_tetrahedra.insert(shared_tet_ids, this_vert_id);
-				}
-			}
-		}
+		let cell_tetrahedra = find_shared_sets(tetras_store);
 
 		// convert the tetrahedra groupings into voronoi vertices IDs
-		let mut cells = BTreeMap::new();
-		for (tet_ids, generating_point_id) in cell_tetrahedra.iter() {
-			// lookup the circumcentre IDs of each tetrahedron
-			let mut vertex_ids = vec![];
-			for tet_id in tet_ids.iter() {
-				if let Some(circum_id) = tetrahedron_to_circumcentre_ids.get(tet_id) {
-					vertex_ids.push(*circum_id);
-				}
-			}
-			//TODO need to find a way of linking the vertices
-
-			let mut edges = BTreeSet::new();
-			for this_tet_id in tet_ids.iter() {
-				for other_tet_id in tet_ids.iter() {
-					if this_tet_id != other_tet_id {
-						// if two tetrahedra share a face then their circumcentres
-						// form an edge
-						let this_tet = tetras_store.get(this_tet_id).unwrap();
-						let this_faces = this_tet.get_triangle_node_3d_faces();
-						let other_tet = tetras_store.get(other_tet_id).unwrap();
-						let other_faces = other_tet.get_triangle_node_3d_faces();
-						for this_face in this_faces {
-							if other_faces.contains(&this_face) {
-								// shared face so store an edge of circumcentres
-								let start = tetrahedron_to_circumcentre_ids.get(this_tet_id).unwrap();
-								let end = tetrahedron_to_circumcentre_ids.get(other_tet_id).unwrap();
-								let edge = EdgeNode3d::new(*start, *end);
-								edges.insert(edge);
-							}
-						}
-					}
-				}
-			}
-
-			let cell = VoronoiCell3d {
-				vertices: vertex_ids,
-				edges: edges,
-				generating_point: **generating_point_id,
-			};
-			let key = cells.len();
-			cells.insert(key, cell);
-		}
+		let cells = compute_cells_from_tetrahedra_sets(
+			&cell_tetrahedra,
+			tetras_store,
+			&tetrahedron_to_circumcentre_ids,
+		);
 
 		Some(Voronoi3d {
 			cells,
 			vertex_lookup: voronoi_vertex_lookup,
 		})
-
-
-
-
-
-
-
 
 		// // store each set of tetrahedron IDs that together form a voronoi cell
 		// // if a vertex is shared 4+ times then all the circumcentres of tetras that use it
@@ -283,32 +221,80 @@ impl Voronoi3d {
 /// or more tetrahedra share a vertex.
 ///
 /// The grouping forms the key and the value is the vertex they all have in common
-fn find_shared_sets_tetrahedra(
-	map: &BTreeMap<usize, &tetrahedron::Tetrahedron>,
-) -> BTreeMap<Vec<usize>, Vec3> {
-	let mut set = BTreeMap::new();
-	for (id, tetra) in map {
-		// compare each vert with the verts of all the other tetrahedra
-		let tetra_verts = tetra.get_vertices();
-		for vert in tetra_verts {
-			// store the ID of each other_tetra that shares this vertex
-			let mut shared = vec![];
-			for (other_id, other_tetra) in map {
-				if id != other_id {
-					let other_abc = other_tetra.get_vertices();
-					if other_abc.contains(&vert) {
-						shared.push(*other_id);
+fn find_shared_sets(
+	tetras_store: &BTreeMap<usize, TetrahedronNode>,
+) -> BTreeMap<BTreeSet<&usize>, &usize> {
+	let mut cell_tetrahedra = BTreeMap::new();
+	for (this_tet_id, this_tet) in tetras_store.iter() {
+		// loop through all vertex IDs
+		for this_vert_id in this_tet.get_vertex_ids() {
+			let mut shared_tet_ids = BTreeSet::from([this_tet_id]);
+			// loop over other triangles
+			for (other_tet_id, other_tet) in tetras_store.iter() {
+				if this_tet_id != other_tet_id {
+					if other_tet.get_vertex_ids().contains(this_vert_id) {
+						// triangles share a common vertex ID, store other
+						shared_tet_ids.insert(other_tet_id);
 					}
 				}
 			}
-			// including original id there must be 4+ ids sharing a vertex to constitute a cell
-			if shared.len() >= 3 {
-				let mut ids = shared;
-				ids.push(*id);
-				ids.sort();
-				set.insert(ids, *vert);
+			if shared_tet_ids.len() >= 4 {
+				// we have found a series of tetrahedra with a common vertex,
+				// their circumcentres are voronoi vertices
+				cell_tetrahedra.insert(shared_tet_ids, this_vert_id);
 			}
 		}
 	}
-	set
+	cell_tetrahedra
+}
+/// From tetrahedra groupings calculate each [VoronoiCell3d] from their
+/// circumcentres
+fn compute_cells_from_tetrahedra_sets(
+	cell_tetrahedra: &BTreeMap<BTreeSet<&usize>, &usize>,
+	tetras_store: &BTreeMap<usize, TetrahedronNode>,
+	tetrahedron_to_circumcentre_ids: &BTreeMap<usize, usize>,
+) -> BTreeMap<usize, VoronoiCell3d> {
+	let mut cells = BTreeMap::new();
+	for (tet_ids, generating_point_id) in cell_tetrahedra.iter() {
+		// lookup the circumcentre IDs of each tetrahedron
+		let mut vertex_ids = vec![];
+		for tet_id in tet_ids.iter() {
+			if let Some(circum_id) = tetrahedron_to_circumcentre_ids.get(tet_id) {
+				vertex_ids.push(*circum_id);
+			}
+		}
+		//TODO need to find a way of linking the vertices
+
+		let mut edges = BTreeSet::new();
+		for this_tet_id in tet_ids.iter() {
+			for other_tet_id in tet_ids.iter() {
+				if this_tet_id != other_tet_id {
+					// if two tetrahedra share a face then their circumcentres
+					// form an edge
+					let this_tet = tetras_store.get(this_tet_id).unwrap();
+					let this_faces = this_tet.get_triangle_node_3d_faces();
+					let other_tet = tetras_store.get(other_tet_id).unwrap();
+					let other_faces = other_tet.get_triangle_node_3d_faces();
+					for this_face in this_faces {
+						if other_faces.contains(&this_face) {
+							// shared face so store an edge of circumcentres
+							let start = tetrahedron_to_circumcentre_ids.get(this_tet_id).unwrap();
+							let end = tetrahedron_to_circumcentre_ids.get(other_tet_id).unwrap();
+							let edge = EdgeNode3d::new(*start, *end);
+							edges.insert(edge);
+						}
+					}
+				}
+			}
+		}
+
+		let cell = VoronoiCell3d {
+			vertices: vertex_ids,
+			edges: edges,
+			generating_point: **generating_point_id,
+		};
+		let key = cells.len();
+		cells.insert(key, cell);
+	}
+	cells
 }

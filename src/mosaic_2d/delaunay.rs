@@ -27,7 +27,7 @@ use crate::mosaic_2d::triangle_node2d::*;
 /// vertices are stored with unique IDs
 pub struct Delaunay2d {
 	triangles: BTreeMap<usize, TriangleNode2d>,
-	vertex_lookup: BTreeMap<usize, Vec2>
+	vertex_lookup: BTreeMap<usize, Vec2>,
 }
 
 impl Delaunay2d {
@@ -51,7 +51,7 @@ impl Delaunay2d {
 		let mut vertex_lookup = BTreeMap::from([
 			(0, super_vertices[0]),
 			(1, super_vertices[1]),
-			(2, super_vertices[2])
+			(2, super_vertices[2]),
 		]);
 		// store a node representation of the triangle
 		let mut triangles = BTreeSet::from([TriangleNode2d::new(0, 1, 2)]);
@@ -63,6 +63,10 @@ impl Delaunay2d {
 			vertex_lookup.insert(new_point_id, *point);
 			// record triangles that are not delaunay
 			let bad_triangles = find_bad_triangles(&point, &triangles, &vertex_lookup);
+
+			//TODO need to check for empty bad triangles?
+			//TODO in theory it means a point is duplicate in dataset
+			//TODO so we'd want to ignore it anyway...
 
 			if !bad_triangles.is_empty() {
 				// remove any bad triangles from the triangle list
@@ -111,9 +115,12 @@ impl Delaunay2d {
 			let super_a = 0;
 			let super_b = 1;
 			let super_c = 2;
-			if !tri.get_vertex_ids().contains(&super_a) && !tri.get_vertex_ids().contains(&super_b) && !tri.get_vertex_ids().contains(&super_c) {
+			if !tri.get_vertex_ids().contains(&super_a)
+				&& !tri.get_vertex_ids().contains(&super_b)
+				&& !tri.get_vertex_ids().contains(&super_c)
+			{
 				final_triangles.insert(count, tri);
-				count +=1;
+				count += 1;
 			}
 		}
 		// remove the super triangle vertices from the vertex lookup
@@ -124,7 +131,7 @@ impl Delaunay2d {
 		if final_triangles.len() > 0 {
 			Some(Delaunay2d {
 				triangles: final_triangles,
-				vertex_lookup
+				vertex_lookup,
 			})
 		} else {
 			warn!("No triangulation found");
@@ -232,7 +239,11 @@ fn compute_super_triangle(
 }
 
 /// Search through triangles and identify any that do not qualify as Delaunay with respect to `point`
-fn find_bad_triangles(point: &Vec2, triangles: &BTreeSet<TriangleNode2d>, vertex_lookup: &BTreeMap<usize, Vec2>) -> BTreeSet<TriangleNode2d> {
+fn find_bad_triangles(
+	point: &Vec2,
+	triangles: &BTreeSet<TriangleNode2d>,
+	vertex_lookup: &BTreeMap<usize, Vec2>,
+) -> BTreeSet<TriangleNode2d> {
 	let mut set = BTreeSet::new();
 	// check if the point lies within the circumcircle of a triangle
 	for tri in triangles.iter() {
