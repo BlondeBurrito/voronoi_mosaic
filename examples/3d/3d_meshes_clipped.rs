@@ -1,5 +1,5 @@
-//! Generates Delaunay Tetrahedrons, uses them to construct unbounded Voronoi Cells and then
-//! produces Bevy meshes from the cells
+//! Generates Delaunay Tetrahedrons, uses them to construct Voronoi Cells,
+//! clips them to a polyhedron and then produces Bevy meshes from the cells
 //!
 //! The visibility of each layer can be toggled with the buttons
 //!
@@ -94,21 +94,16 @@ fn visuals(
 		Vec3::new(4.0, 2.0, 12.0),
 		Vec3::new(-8.0, 15.0, -8.0),
 		Vec3::new(0.0, 12.0, 3.0),
-		//
-		// Vec3::new(1.0, -3.0, 4.0),
-		// Vec3::new(-5.0, -6.0, -4.0),
-		// Vec3::new(12.0, -10.0, -12.0),
-		// Vec3::new(-15.0, -2.0, 8.0),
-		// Vec3::new(4.0, -2.0, 12.0),
-		// Vec3::new(-8.0, -15.0, -8.0),
-		// Vec3::new(0.0, -12.0, 3.0),
 	];
 	// compute data
-	if let Some(data) = DelaunayData::compute_triangulation_3d(&points) {
-		create_delaunay_visuals(&mut cmds, &mut mesh_assets, &mut materials, &data);
-		if let Some(voronoi) = VoronoiData::from_delaunay_3d(&data) {
+	if let Some(delaunay) = Delaunay3d::compute_triangulation_3d(&points) {
+		create_delaunay_visuals(&mut cmds, &mut mesh_assets, &mut materials, &delaunay);
+		if let Some(voronoi) = Voronoi3d::from_delaunay_3d(&delaunay) {
+			// show voronoi pre-clip
 			create_voronoi_cell_visuals(&mut cmds, &mut mesh_assets, &mut materials, &voronoi);
-			create_mesh_visuals(&mut cmds, &mut mesh_assets, &mut materials, &voronoi);
+			//TODO proper boundary
+			let boundary = vec![Vec3::new(-5.0, -5.0, -5.0), Vec3::new(5.0, -5.0, -5.0)];
+			create_clipped_mesh_visuals(&mut cmds, &mut mesh_assets, &mut materials, &voronoi, &boundary);
 		}
 	} else {
 		warn!("Data computation failed");
@@ -124,9 +119,11 @@ fn create_delaunay_visuals(
 	cmds: &mut Commands,
 	meshes: &mut ResMut<Assets<Mesh>>,
 	materials: &mut ResMut<Assets<StandardMaterial>>,
-	data: &DelaunayData<tetrahedron::Tetrahedron>,
+	delaunay: &mosaic_3d::delaunay::Delaunay3d,
 ) {
-	for tetra in data.get().iter() {
+	let tetrahedra = delaunay.get_tetrahedra();
+	let vertex_lookup = delaunay.get_vertex_lookup();
+	for (_, tetra) in tetrahedra.iter() {
 		// create markers for vertices
 		let mesh = meshes.add(Sphere::new(0.5));
 		let material = materials.add(StandardMaterial {
@@ -135,10 +132,10 @@ fn create_delaunay_visuals(
 		});
 		// vertices
 		let translations = [
-			tetra.get_vertex_a(),
-			tetra.get_vertex_b(),
-			tetra.get_vertex_c(),
-			tetra.get_vertex_d(),
+			vertex_lookup.get(&tetra.get_vertex_a_id()).unwrap(),
+			vertex_lookup.get(&tetra.get_vertex_b_id()).unwrap(),
+			vertex_lookup.get(&tetra.get_vertex_c_id()).unwrap(),
+			vertex_lookup.get(&tetra.get_vertex_d_id()).unwrap(),
 		];
 		for translation in translations.iter() {
 			cmds.spawn((
@@ -150,16 +147,20 @@ fn create_delaunay_visuals(
 			));
 		}
 		// create markers for edges
+		// let c = Color::hsv(360. * i as f32 / data.get().len() as f32, 0.95, 0.7);
 		let mat = materials.add(StandardMaterial {
 			base_color: DELAUNAY_EDGE_COLOUR,
+			// base_color: c,
 			..default()
 		});
 		for edge in tetra.get_edges().iter() {
-			let len = (edge.1 - edge.0).length();
+			let start = vertex_lookup.get(&edge.get_vertex_a_id()).unwrap();
+			let end = vertex_lookup.get(&edge.get_vertex_b_id()).unwrap();
+			let len = (end - start).length();
 			let mesh = meshes.add(Cuboid::new(0.25, 0.25, len));
-			let translation = (edge.1 + edge.0) / 2.0;
+			let translation = (end + start) / 2.0;
 			let mut tform = Transform::from_translation(translation);
-			tform.look_at(edge.1, Vec3::Y);
+			tform.look_at(*end, Vec3::Y);
 			cmds.spawn((
 				Mesh3d(mesh),
 				MeshMaterial3d(mat.clone()),
@@ -180,60 +181,60 @@ fn create_voronoi_cell_visuals(
 	cmds: &mut Commands,
 	meshes: &mut ResMut<Assets<Mesh>>,
 	materials: &mut ResMut<Assets<StandardMaterial>>,
-	voronoi: &VoronoiData<VoronoiCell3d>,
+	voronoi: &Voronoi3d,
 ) {
-	// add simple shapes to showcase what the data looks like
-	for cell in voronoi.get_cells().values() {
-		for point in cell.get_vertices().iter() {
+	let cells = voronoi.get_cells();
+	let vertex_lookup = voronoi.get_vertex_lookup();
+	for (_, cell) in cells.iter() {
+		let cell_vertex_ids = cell.get_vertex_ids();
+		for vertex_id in cell_vertex_ids.iter() {
 			// mark each vertex of every cell
 			let mesh = meshes.add(Sphere::new(0.5));
 			let material = materials.add(StandardMaterial {
 				base_color: VORONOI_VERTEX_COLOUR,
 				..default()
 			});
+			let pos = vertex_lookup.get(vertex_id).unwrap();
 			cmds.spawn((
 				Mesh3d(mesh.clone()),
 				MeshMaterial3d(material.clone()),
-				Transform::from_translation(*point),
+				Transform::from_translation(*pos),
 				Visibility::Hidden,
-				VoronoiLabel,
+				VoronoiLabel
 			));
 		}
 		// mark the edges
 		let edges = cell.get_edges();
 		for edge in edges.iter() {
-			let len = (edge.get_vertex_b() - edge.get_vertex_a()).length();
+			let start = vertex_lookup.get(&edge.get_vertex_a_id()).unwrap();
+			let end = vertex_lookup.get(&edge.get_vertex_b_id()).unwrap();
+			let len = (end - start).length();
 			let mesh = meshes.add(Cuboid::new(0.25, 0.25, len));
 			let mat = materials.add(StandardMaterial {
 				base_color: VORONOI_EDGE_COLOUR,
 				..default()
 			});
-			let translation = (edge.get_vertex_b() + edge.get_vertex_a()) / 2.0;
+			let translation = (end + start) / 2.0;
 			let mut tform = Transform::from_translation(translation);
-			tform.look_at(*edge.get_vertex_b(), Vec3::Y);
-			cmds.spawn((
-				Mesh3d(mesh),
-				MeshMaterial3d(mat.clone()),
-				tform,
-				Visibility::Hidden,
-				VoronoiLabel,
-			));
+			tform.look_at(*end, Vec3::Y);
+			cmds.spawn((Mesh3d(mesh), MeshMaterial3d(mat.clone()), tform, Visibility::Hidden, VoronoiLabel));
 		}
 	}
 }
 
 /// Labels an entity in the bevy mesh view for querying
 #[derive(Component)]
-struct MeshLabel;
+struct MeshClippedLabel;
 
 /// Create the meshes
-fn create_mesh_visuals(
+fn create_clipped_mesh_visuals(
 	cmds: &mut Commands,
 	mesh_assets: &mut ResMut<Assets<Mesh>>,
 	materials: &mut ResMut<Assets<StandardMaterial>>,
-	voronoi: &VoronoiData<VoronoiCell3d>,
+	voronoi: &Voronoi3d,
+	boundary: &[Vec3]
 ) {
-	let meshes = voronoi.as_bevy_meshes_3d();
+	let meshes = voronoi.as_clipped_bevy3d_meshes(boundary);
 	for (i, (mesh, position)) in meshes.iter().enumerate() {
 		// randomise mesh colour
 		let colour = Color::hsl(360. * i as f32 / meshes.len() as f32, 0.95, 0.7);
@@ -246,7 +247,7 @@ fn create_mesh_visuals(
 			Mesh3d(mesh_assets.add(mesh.clone())),
 			MeshMaterial3d(materials.add(mat)),
 			tform,
-			MeshLabel,
+			MeshClippedLabel,
 			Visibility::Visible,
 		));
 	}
@@ -322,7 +323,7 @@ fn handle_toggle_buttons(
 		(
 			With<DelaunayLabel>,
 			Without<VoronoiLabel>,
-			Without<MeshLabel>,
+			Without<MeshClippedLabel>,
 		),
 	>,
 	mut voronoi_q: Query<
@@ -330,7 +331,7 @@ fn handle_toggle_buttons(
 		(
 			Without<DelaunayLabel>,
 			With<VoronoiLabel>,
-			Without<MeshLabel>,
+			Without<MeshClippedLabel>,
 		),
 	>,
 	mut mesh_q: Query<
@@ -338,7 +339,7 @@ fn handle_toggle_buttons(
 		(
 			Without<DelaunayLabel>,
 			Without<VoronoiLabel>,
-			With<MeshLabel>,
+			With<MeshClippedLabel>,
 		),
 	>,
 ) {

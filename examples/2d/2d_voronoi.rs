@@ -53,8 +53,8 @@ fn visuals(
 		Vec2::new(190.0, -60.0),
 	];
 	// compute data
-	if let Some(data) = DelaunayData::compute_triangulation_2d(&points) {
-		if let Some(voronoi) = VoronoiData::from_delaunay_2d(&data) {
+	if let Some(delaunay) = Delaunay2d::compute_triangulation_2d(&points) {
+		if let Some(voronoi) = Voronoi2d::from_delaunay_2d(&delaunay) {
 			// add simple shapes to showcase what the data looks like
 			create_voronoi_cell_visuals(&mut cmds, &mut meshes, &mut materials, &voronoi);
 		}
@@ -72,31 +72,36 @@ fn create_voronoi_cell_visuals(
 	cmds: &mut Commands,
 	meshes: &mut ResMut<Assets<Mesh>>,
 	materials: &mut ResMut<Assets<ColorMaterial>>,
-	voronoi: &VoronoiData<VoronoiCell2d>,
+	voronoi: &Voronoi2d,
 ) {
-	for cell in voronoi.get_cells().values() {
-		for (i, point) in cell.get_vertices().iter().enumerate() {
+	let cells = voronoi.get_cells();
+	let vertex_lookup = voronoi.get_vertex_lookup();
+	for (_cell_id, cell) in cells {
+		for (i, vertex_id) in cell.get_vertex_ids().iter().enumerate() {
 			// mark each vertex of every cell
 			let mesh = meshes.add(Circle::new(10.0));
 			let material = materials.add(VORONOI_VERTEX_COLOUR);
+			let position = vertex_lookup.get(vertex_id).unwrap();
 			cmds.spawn((
 				Mesh2d(mesh.clone()),
 				MeshMaterial2d(material.clone()),
-				Transform::from_translation(point.extend(VORONOI_CELL_VERTEX_Z)),
+				Transform::from_translation(position.extend(VORONOI_CELL_VERTEX_Z)),
 				VoronoiLabel,
 				Visibility::Visible,
 			));
 			// mark the edges
-			let (v1, v0) = if i < cell.get_vertices().len() - 1 {
-				(cell.get_vertices()[i + 1], *point)
+			let (v1, v0) = if i < cell.get_vertex_ids().len() - 1 {
+				(cell.get_vertex_ids()[i + 1], *vertex_id)
 			} else {
-				(cell.get_vertices()[0], *point)
+				(cell.get_vertex_ids()[0], *vertex_id)
 			};
-			let y_len = (v1 - v0).length();
+			let v1_pos = vertex_lookup.get(&v1).unwrap();
+			let v0_pos = vertex_lookup.get(&v0).unwrap();
+			let y_len = (v1_pos - v0_pos).length();
 			let mesh = meshes.add(Rectangle::from_size(Vec2::new(5.0, y_len)));
 			let mat = materials.add(VORONOI_EDGE_COLOUR);
-			let translation = (v1 + v0) / 2.0;
-			let angle = Vec2::Y.angle_to(v0 - v1);
+			let translation = (v1_pos + v0_pos) / 2.0;
+			let angle = Vec2::Y.angle_to(v0_pos - v1_pos);
 			let tform = Transform {
 				translation: translation.extend(VORONOI_CELL_EDGE_Z),
 				rotation: Quat::from_rotation_z(angle),

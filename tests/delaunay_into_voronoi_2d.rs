@@ -19,8 +19,8 @@ fn delaunay_into_voronoi_2d() {
 		Vec2::new(100.0, 140.0),
 		Vec2::new(190.0, -60.0),
 	];
-	let delaunay = DelaunayData::compute_triangulation_2d(&points).unwrap();
-	let voronoi = VoronoiData::from_delaunay_2d(&delaunay).unwrap();
+	let delaunay = Delaunay2d::compute_triangulation_2d(&points).unwrap();
+	let voronoi = Voronoi2d::from_delaunay_2d(&delaunay).unwrap();
 
 	let expected_cell_count = 3;
 	assert_eq!(expected_cell_count, voronoi.get_cells().len());
@@ -41,11 +41,11 @@ fn mesh_count_unclipped() {
 		Vec2::new(100.0, 140.0),
 		Vec2::new(190.0, -60.0),
 	];
-	let delaunay = DelaunayData::compute_triangulation_2d(&points).unwrap();
-	let voronoi = VoronoiData::from_delaunay_2d(&delaunay).unwrap();
+	let delaunay = Delaunay2d::compute_triangulation_2d(&points).unwrap();
+	let voronoi = Voronoi2d::from_delaunay_2d(&delaunay).unwrap();
 
 	let expected_mesh_count = 3;
-	assert_eq!(expected_mesh_count, voronoi.as_bevy_meshes_2d().len());
+	assert_eq!(expected_mesh_count, voronoi.as_bevy2d_meshes().len());
 }
 
 #[test]
@@ -103,16 +103,15 @@ fn mesh_count_clipped() {
 		Vec2::new(0.0, -399.0),
 		Vec2::new(399.0, 0.0),
 	];
-	let delaunay = DelaunayData::compute_triangulation_2d(&points).unwrap();
-	let mut voronoi = VoronoiData::from_delaunay_2d(&delaunay).unwrap();
+	let delaunay = Delaunay2d::compute_triangulation_2d(&points).unwrap();
+	let voronoi = Voronoi2d::from_delaunay_2d(&delaunay).unwrap();
 	let boundary = vec![
 		Vec2::new(200.0, 200.0),
 		Vec2::new(-200.0, 200.0),
 		Vec2::new(-200.0, -200.0),
 		Vec2::new(200.0, -200.0),
 	];
-	voronoi.clip_cells_to_boundary(&boundary);
 
 	let expected_mesh_count = 18;
-	assert_eq!(expected_mesh_count, voronoi.as_bevy_meshes_2d().len());
+	assert_eq!(expected_mesh_count, voronoi.as_clipped_bevy2d_meshes(&boundary).len());
 }

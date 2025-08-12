@@ -1,0 +1,83 @@
+//! Defines an ID based triangle
+//! 
+//! 
+
+use std::{cmp::Ordering, collections::BTreeMap};
+use bevy::prelude::*;
+
+use crate::{mosaic_2d::edge_node2d::EdgeNode2d, prelude::Circumcircle};
+
+/// Describes a triangle where the vertices are represented by vertex IDs
+#[derive(PartialEq, Eq, Debug, Clone, Copy, PartialOrd, Ord)]
+pub struct TriangleNode2d([usize; 3]);
+
+impl TriangleNode2d {
+	/// Create a new [TriangleNode2d] from a series of vertex IDs
+	pub fn new(a: usize, b: usize, c: usize) -> Self {
+		TriangleNode2d([a, b, c])
+	}
+	/// Get the vertex IDs
+	pub fn get_vertex_ids(&self) -> &[usize; 3] {
+		&self.0
+	}
+	/// Get a mutable refernce to the vertex IDs
+	pub fn get_vertex_ids_mut(&mut self) -> &mut [usize; 3] {
+		&mut self.0
+	}
+	/// Get the ID of vertex a
+	pub fn get_vertex_a_id(&self) -> usize {
+		self.0[0]
+	}
+	/// Get the ID of vertex b
+	pub fn get_vertex_b_id(&self) -> usize {
+		self.0[1]
+	}
+	/// Get the ID of vertex c
+	pub fn get_vertex_c_id(&self) -> usize {
+		self.0[2]
+	}
+	/// If possible compute the circumcircle of this triangle
+	pub fn compute_circumcircle(&self, vertex_lookup: &BTreeMap<usize, Vec2>) -> Option<Circumcircle> {
+		let Some(vertex_a) = vertex_lookup.get(&self.0[0]) else {
+			return None
+		};
+		let Some(vertex_b) = vertex_lookup.get(&self.0[1]) else {
+			return None
+		};
+		let Some(vertex_c) = vertex_lookup.get(&self.0[2]) else {
+			return None
+		};
+		Circumcircle::new(*vertex_a, *vertex_b, *vertex_c)
+	}
+	/// Get the edges of the triangle in ID form of [EdgeNode2d]
+	pub fn get_edges(&self) -> [EdgeNode2d; 3] {
+		[
+			EdgeNode2d::new(self.0[0], self.0[1]),
+			EdgeNode2d::new(self.0[1], self.0[2]),
+			EdgeNode2d::new(self.0[2], self.0[0])
+		]
+	}
+	/// Reorder the vertex IDs so they are in anti-clockwise order, angle around their midpoint running negative to positive
+	pub fn sort_vertices_anti_clockwise(&mut self, vertex_lookup: &BTreeMap<usize, Vec2>) {
+		let ids = self.get_vertex_ids_mut();
+		let midpoint = {
+			let pos_a = vertex_lookup.get(&ids[0]).unwrap();
+			let pos_b = vertex_lookup.get(&ids[1]).unwrap();
+			let pos_c = vertex_lookup.get(&ids[2]).unwrap();
+			(pos_a + pos_b + pos_c) / 3.0
+		};
+		ids.sort_by(|a, b| {
+			let a_pos = vertex_lookup.get(a).unwrap();
+			let b_pos = vertex_lookup.get(b).unwrap();
+		if let Some(ordering) = Vec2::Y
+			.angle_to(*a_pos - midpoint)
+			.partial_cmp(&Vec2::Y.angle_to(*b_pos - midpoint))
+		{
+			ordering
+		} else {
+			warn!("Unable to find Ordering between {} and {}", a, b);
+			Ordering::Less
+		}
+	});
+	}
+}

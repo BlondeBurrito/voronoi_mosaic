@@ -176,47 +176,71 @@ fn visuals(
 		Vec3::new(48.0, -45.0, -30.0),
 	];
 	// compute data
-	if let Some(data) = DelaunayData::compute_triangulation_3d(&points) {
-		for tetra in data.get().iter() {
-			// create markers for vertices
-			let mesh = meshes.add(Sphere::new(0.5));
-			let material = materials.add(StandardMaterial {
-				base_color: DELAUNAY_VERTEX_COLOUR,
-				..default()
-			});
-			// vertices
-			let translations = [
-				tetra.get_vertex_a(),
-				tetra.get_vertex_b(),
-				tetra.get_vertex_c(),
-				tetra.get_vertex_d(),
-			];
-			for translation in translations.iter() {
-				cmds.spawn((
-					Mesh3d(mesh.clone()),
-					MeshMaterial3d(material.clone()),
-					Transform::from_translation(**translation),
-				));
-			}
-			// create markers for edges
-			// let c = Color::hsv(360. * i as f32 / data.get().len() as f32, 0.95, 0.7);
-			let mat = materials.add(StandardMaterial {
-				base_color: DELAUNAY_EDGE_COLOUR,
-				// base_color: c,
-				..default()
-			});
-			for edge in tetra.get_edges().iter() {
-				let len = (edge.1 - edge.0).length();
-				let mesh = meshes.add(Cuboid::new(0.25, 0.25, len));
-				let translation = (edge.1 + edge.0) / 2.0;
-				let mut tform = Transform::from_translation(translation);
-				tform.look_at(edge.1, Vec3::Y);
-				// info!("edge {:?}", edge);
-				// info!("midpoint {}", translation);
-				cmds.spawn((Mesh3d(mesh), MeshMaterial3d(mat.clone()), tform));
-			}
-		}
+	if let Some(delaunay) = mosaic_3d::delaunay::Delaunay3d::compute_triangulation_3d(&points) {
+		create_delaunay_visuals(&mut cmds, &mut meshes, &mut materials, &delaunay);
 	} else {
 		warn!("Data computation failed");
+	}
+}
+
+/// Labels an entity in the Delaunay view for querying
+#[derive(Component)]
+struct DelaunayLabel;
+
+/// Create simple shapes to illustrate the raw delaunay data
+fn create_delaunay_visuals(
+	cmds: &mut Commands,
+	mesh_assets: &mut ResMut<Assets<Mesh>>,
+	materials: &mut ResMut<Assets<StandardMaterial>>,
+	delaunay: &mosaic_3d::delaunay::Delaunay3d,
+) {
+	let tetrahedra = delaunay.get_tetrahedra();
+	let vertex_lookup = delaunay.get_vertex_lookup();
+	for (_, tetra) in tetrahedra.iter() {
+		// create markers for vertices
+		let mesh = mesh_assets.add(Sphere::new(0.5));
+		let material = materials.add(StandardMaterial {
+			base_color: DELAUNAY_VERTEX_COLOUR,
+			..default()
+		});
+		// vertices
+		let translations = [
+			vertex_lookup.get(&tetra.get_vertex_a_id()).unwrap(),
+			vertex_lookup.get(&tetra.get_vertex_b_id()).unwrap(),
+			vertex_lookup.get(&tetra.get_vertex_c_id()).unwrap(),
+			vertex_lookup.get(&tetra.get_vertex_d_id()).unwrap(),
+		];
+		for translation in translations.iter() {
+			cmds.spawn((
+				Mesh3d(mesh.clone()),
+				MeshMaterial3d(material.clone()),
+				Transform::from_translation(**translation),
+				Visibility::Visible,
+				DelaunayLabel,
+			));
+		}
+		// create markers for edges
+		// let c = Color::hsv(360. * i as f32 / data.get().len() as f32, 0.95, 0.7);
+		let mat = materials.add(StandardMaterial {
+			base_color: DELAUNAY_EDGE_COLOUR,
+			// base_color: c,
+			..default()
+		});
+		for edge in tetra.get_edges().iter() {
+			let start = vertex_lookup.get(&edge.get_vertex_a_id()).unwrap();
+			let end = vertex_lookup.get(&edge.get_vertex_b_id()).unwrap();
+			let len = (end - start).length();
+			let mesh = mesh_assets.add(Cuboid::new(0.25, 0.25, len));
+			let translation = (end + start) / 2.0;
+			let mut tform = Transform::from_translation(translation);
+			tform.look_at(*end, Vec3::Y);
+			cmds.spawn((
+				Mesh3d(mesh),
+				MeshMaterial3d(mat.clone()),
+				tform,
+				Visibility::Visible,
+				DelaunayLabel,
+			));
+		}
 	}
 }

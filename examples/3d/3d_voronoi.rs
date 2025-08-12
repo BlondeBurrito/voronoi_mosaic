@@ -165,40 +165,62 @@ fn visuals(
 		Vec3::new(48.0, -45.0, -30.0),
 	];
 	// compute data
-	if let Some(data) = DelaunayData::compute_triangulation_3d(&points) {
-		if let Some(voronoi) = VoronoiData::from_delaunay_3d(&data) {
+	if let Some(delaunay) = Delaunay3d::compute_triangulation_3d(&points) {
+		if let Some(voronoi) = Voronoi3d::from_delaunay_3d(&delaunay) {
 			// add simple shapes to showcase what the data looks like
-			for cell in voronoi.get_cells().values() {
-				for point in cell.get_vertices().iter() {
-					// mark each vertex of every cell
-					let mesh = meshes.add(Sphere::new(0.5));
-					let material = materials.add(StandardMaterial {
-						base_color: VORONOI_VERTEX_COLOUR,
-						..default()
-					});
-					cmds.spawn((
-						Mesh3d(mesh.clone()),
-						MeshMaterial3d(material.clone()),
-						Transform::from_translation(*point),
-					));
-				}
-				// mark the edges
-				let edges = cell.get_edges();
-				for edge in edges.iter() {
-					let len = (edge.get_vertex_b() - edge.get_vertex_a()).length();
-					let mesh = meshes.add(Cuboid::new(0.25, 0.25, len));
-					let mat = materials.add(StandardMaterial {
-						base_color: VORONOI_EDGE_COLOUR,
-						..default()
-					});
-					let translation = (edge.get_vertex_b() + edge.get_vertex_a()) / 2.0;
-					let mut tform = Transform::from_translation(translation);
-					tform.look_at(*edge.get_vertex_b(), Vec3::Y);
-					cmds.spawn((Mesh3d(mesh), MeshMaterial3d(mat.clone()), tform));
-				}
-			}
+			create_voronoi_cell_visuals(&mut cmds, &mut meshes, &mut materials, &voronoi);
 		}
 	} else {
 		warn!("Data computation failed");
+	}
+}
+
+/// Labels an entity in the Voronoi view for querying
+#[derive(Component)]
+struct VoronoiLabel;
+
+/// Create simple shapes to illustrate the raw voronoi data
+fn create_voronoi_cell_visuals(
+	cmds: &mut Commands,
+	mesh_assets: &mut ResMut<Assets<Mesh>>,
+	materials: &mut ResMut<Assets<StandardMaterial>>,
+	voronoi: &Voronoi3d,
+) {
+	let cells = voronoi.get_cells();
+	let vertex_lookup = voronoi.get_vertex_lookup();
+	for (_, cell) in cells.iter() {
+		let cell_vertex_ids = cell.get_vertex_ids();
+		for vertex_id in cell_vertex_ids.iter() {
+			// mark each vertex of every cell
+			let mesh = mesh_assets.add(Sphere::new(0.5));
+			let material = materials.add(StandardMaterial {
+				base_color: VORONOI_VERTEX_COLOUR,
+				..default()
+			});
+			let pos = vertex_lookup.get(vertex_id).unwrap();
+			cmds.spawn((
+				Mesh3d(mesh.clone()),
+				MeshMaterial3d(material.clone()),
+				Transform::from_translation(*pos),
+				Visibility::Visible,
+				VoronoiLabel
+			));
+		}
+		// mark the edges
+		let edges = cell.get_edges();
+		for edge in edges.iter() {
+			let start = vertex_lookup.get(&edge.get_vertex_a_id()).unwrap();
+			let end = vertex_lookup.get(&edge.get_vertex_b_id()).unwrap();
+			let len = (end - start).length();
+			let mesh = mesh_assets.add(Cuboid::new(0.25, 0.25, len));
+			let mat = materials.add(StandardMaterial {
+				base_color: VORONOI_EDGE_COLOUR,
+				..default()
+			});
+			let translation = (end + start) / 2.0;
+			let mut tform = Transform::from_translation(translation);
+			tform.look_at(*end, Vec3::Y);
+			cmds.spawn((Mesh3d(mesh), MeshMaterial3d(mat.clone()), tform, Visibility::Visible, VoronoiLabel));
+		}
 	}
 }

@@ -7,10 +7,10 @@ use criterion::{Criterion, Throughput, criterion_group, criterion_main};
 use rand::{SeedableRng, seq::IteratorRandom};
 use rand_chacha::ChaCha20Rng;
 use std::hint::black_box;
-use voronoi_mosaic::{prelude::*, tetrahedron};
+use voronoi_mosaic::prelude::*;
 
 /// Create the required data before benchmarking
-fn prepare_data() -> DelaunayData<tetrahedron::Tetrahedron> {
+fn prepare_data() -> Delaunay3d {
 	let mut rng_seed = ChaCha20Rng::seed_from_u64(123456789);
 
 	let mut points = vec![];
@@ -36,20 +36,20 @@ fn prepare_data() -> DelaunayData<tetrahedron::Tetrahedron> {
 			points.push(point);
 		}
 	}
-	let data = DelaunayData::compute_triangulation_3d(&points);
+	let data = Delaunay3d::compute_triangulation_3d(&points);
 	data.unwrap()
 }
 
 /// Call the code to benchmark
-fn init(delaunay: &DelaunayData<tetrahedron::Tetrahedron>) {
-	let _v = VoronoiData::from_delaunay_3d(delaunay);
+fn init(delaunay: &Delaunay3d) {
+	let _v = Voronoi3d::from_delaunay_3d(delaunay);
 }
 /// Benchmark
 pub fn criterion_benchmark(c: &mut Criterion) {
 	let data = prepare_data();
 	let mut group = c.benchmark_group("3d");
 	group.significance_level(0.1).sample_size(100);
-	group.throughput(Throughput::Bytes(data.get().len() as u64));
+	group.throughput(Throughput::Bytes(data.get_tetrahedra().len() as u64));
 	group.bench_function("3d_voronoi", |b| b.iter(|| init(black_box(&data))));
 	group.finish();
 }

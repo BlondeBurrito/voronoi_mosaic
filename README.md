@@ -157,6 +157,13 @@ WIP
 
 ### 2d
 
+Update your Cargo.toml with
+
+```toml
+[dependencies]
+voronoi_mosaic = { version = "x.y.z", features = ["2d"] }
+```
+
 #### Delaunay
 
 Generating the Delaunay simply requires a series of points in space:
@@ -166,12 +173,12 @@ use bevy::prelude::*;
 use voronoi_mosaic::prelude::*;
 
 let points: Vec<Vec2> = vec![...];
-if let Some(delaunay) = DelaunayData::compute_triangulation_2d(&points) {
+if let Some(delaunay) = Delaunay2d::compute_triangulation_2d(&points) {
 	// do something with the data
 }
 ```
 
-For a full visualisation you can check out this example [2d_delaunay](https://github.com/BlondeBurrito/voronoi_mosaic/blob/main/examples/2d_delaunay.rs).
+For a full visualisation you can check out this example [2d_delaunay](https://github.com/BlondeBurrito/voronoi_mosaic/blob/main/examples/2d/2d_delaunay.rs).
 
 #### Voronoi
 
@@ -182,14 +189,14 @@ use bevy::prelude::*;
 use voronoi_mosaic::prelude::*;
 
 let points = vec![...];
-if let Some(delaunay) = DelaunayData::compute_triangulation_2d(&points) {
-	if let Some(voronoi) = VoronoiData::from_delaunay_2d(&delaunay) {
+if let Some(delaunay) = Delaunay2d::compute_triangulation_2d(&points) {
+	if let Some(voronoi) = Voronoi2d::from_delaunay_2d(&delaunay) {
 		// do something with the generated cells
 	}
 }
 ```
 
-For a full visualisation you can check out this example [2d_voronoi](https://github.com/BlondeBurrito/voronoi_mosaic/blob/main/examples/2d_voronoi.rs).
+For a full visualisation you can check out this example [2d_voronoi](https://github.com/BlondeBurrito/voronoi_mosaic/blob/main/examples/2d/2d_voronoi.rs).
 
 #### Meshes
 
@@ -200,15 +207,15 @@ use bevy::prelude::*;
 use voronoi_mosaic::prelude::*;
 
 let points = vec![...];
-if let Some(delaunay) = DelaunayData::compute_triangulation_2d(&points) {
-	if let Some(voronoi) = VoronoiData::from_delaunay_2d(&delaunay) {
+if let Some(delaunay) = Delaunay2d::compute_triangulation_2d(&points) {
+	if let Some(voronoi) = Voronoi2d::from_delaunay_2d(&delaunay) {
 		// convert the cell data structures into bevy meshes
-		let meshes = voronoi.as_bevy_meshes_2d();
+		let meshes = voronoi.as_bevy2d_meshes();
 	}
 }
 ```
 
-For a full visualisation you can check out this example [2d_meshes](https://github.com/BlondeBurrito/voronoi_mosaic/blob/main/examples/2d_meshes.rs).
+For a full visualisation you can check out this example [2d_meshes](https://github.com/BlondeBurrito/voronoi_mosaic/blob/main/examples/2d/2d_meshes.rs).
 
 #### Clipping
 
@@ -221,25 +228,31 @@ use bevy::prelude::*;
 use voronoi_mosaic::prelude::*;
 
 let points = vec![...];
-if let Some(delaunay) = DelaunayData::compute_triangulation_2d(&points) {
-	if let Some(mut voronoi) = VoronoiData::from_delaunay_2d(&delaunay) {
+if let Some(delaunay) = Delaunay2d::compute_triangulation_2d(&points) {
+	if let Some(voronoi) = Voronoi2d::from_delaunay_2d(&delaunay) {
 		// define a series of boundary vertices that form a polygon
 		// they must be in anti-clockwise order!
 		let boundary = vec![...];
-		voronoi.clip_cells_to_boundary(&boundary);
-		// do something with the clipped cells like turning them into meshes
-		let meshes = voronoi.as_bevy_meshes_2d();
+		// generate meshes clipped to the boundary
+		let meshes = voronoi.as_clipped_bevy2d_meshes();
 	}
 }
 ```
 
-For a full visualisation you can check out this exmaple [2d_meshes_clipped](https://github.com/BlondeBurrito/voronoi_mosaic/blob/main/examples/2d_meshes_clipped.rs). It has a button toggle to show the original Voronoi cells so you can see how they are clipped to the boundary.
+For a full visualisation you can check out this exmaple [2d_meshes_clipped](https://github.com/BlondeBurrito/voronoi_mosaic/blob/main/examples/2d/2d_meshes_clipped.rs). It has a button toggle to show the original Voronoi cells so you can see how they are clipped to the boundary.
 
 ### 3d
 
 *NB: 3d functionality is gated behind feature `3d_unstable` as parts of the API are volatile or still under development*
 
 *NB: a concept of tolerance is built into some of the 3d calculations to handle cases where points within a data set are close together, however, if points within the data set are extremely close together then due to floating point arithmetic the conditions for a tetrahedron to be Delaunay can break down and cause undesirable face intersections across sliver (narrow) tetrahedra*
+
+Update your Cargo.toml with
+
+```toml
+[dependencies]
+voronoi_mosaic = { version = "x.y.z", features = ["3d_unstable"] }
+```
 
 <details>
 <summary>3d usage minimised until API work complete, the enclosed functions are subject to change and some may not fucntion as expected yet</summary>
@@ -253,12 +266,12 @@ use bevy::prelude::*;
 use voronoi_mosaic::prelude::*;
 
 let points: Vec<Vec3> = vec![...];
-if let Some(delaunay) = DelaunayData::compute_triangulation_3d(&points) {
+if let Some(delaunay) = Delaunay3d::compute_triangulation_3d(&points) {
 	// do something with the data
 }
 ```
 
-For a full visualisation you can check out this example [3d_delaunay](https://github.com/BlondeBurrito/voronoi_mosaic/blob/main/examples/3d_delaunay.rs).
+For a full visualisation you can check out this example [3d_delaunay](https://github.com/BlondeBurrito/voronoi_mosaic/blob/main/examples/3d/3d_delaunay.rs).
 
 #### Voronoi
 
@@ -269,14 +282,14 @@ use bevy::prelude::*;
 use voronoi_mosaic::prelude::*;
 
 let points = vec![...];
-if let Some(delaunay) = DelaunayData::compute_triangulation_3d(&points) {
-	if let Some(voronoi) = VoronoiData::from_delaunay_3d(&delaunay) {
+if let Some(delaunay) = Delaunay3d::compute_triangulation_3d(&points) {
+	if let Some(voronoi) = Voronoi3d::from_delaunay_3d(&delaunay) {
 		// do something with the generated cells
 	}
 }
 ```
 
-For a full visualisation you can check out this example [3d_voronoi](https://github.com/BlondeBurrito/voronoi_mosaic/blob/main/examples/3d_voronoi.rs).
+For a full visualisation you can check out this example [3d_voronoi](https://github.com/BlondeBurrito/voronoi_mosaic/blob/main/examples/3d/3d_voronoi.rs).
 
 #### Meshes
 
@@ -287,15 +300,15 @@ use bevy::prelude::*;
 use voronoi_mosaic::prelude::*;
 
 let points = vec![...];
-if let Some(delaunay) = DelaunayData::compute_triangulation_3d(&points) {
-	if let Some(voronoi) = VoronoiData::from_delaunay_3d(&delaunay) {
+if let Some(delaunay) = Delaunay3d::compute_triangulation_3d(&points) {
+	if let Some(voronoi) = Voronoi3d::from_delaunay_3d(&delaunay) {
 		// convert the cell data structures into bevy meshes
-		let meshes = voronoi.as_bevy_meshes_3d();
+		let meshes = voronoi.as_bevy3d_meshes();
 	}
 }
 ```
 
-For a full visualisation you can check out this example [3d_meshes](https://github.com/BlondeBurrito/voronoi_mosaic/blob/main/examples/3d_meshes.rs).
+For a full visualisation you can check out this example [3d_meshes](https://github.com/BlondeBurrito/voronoi_mosaic/blob/main/examples/3d/3d_meshes.rs).
 
 #### Clipping
 
@@ -308,19 +321,18 @@ use bevy::prelude::*;
 use voronoi_mosaic::prelude::*;
 
 let points = vec![...];
-if let Some(delaunay) = DelaunayData::compute_triangulation_3d(&points) {
-	if let Some(mut voronoi) = VoronoiData::from_delaunay_3d(&delaunay) {
+if let Some(delaunay) = Delaunay3d::compute_triangulation_3d(&points) {
+	if let Some(mut voronoi) = Voronoi3d::from_delaunay_3d(&delaunay) {
 		// define a series of boundary vertices that form a polygon
 		// they must be in anti-clockwise order!
 		let boundary = vec![...];
-		voronoi.clip_cells_to_boundary(&boundary);
 		// do something with the clipped cells like turning them into meshes
-		let meshes = voronoi.as_bevy_meshes_3d();
+		let meshes = voronoi.as_clipped_bevy3d_meshes(&boundary);
 	}
 }
 ```
 
-For a full visualisation you can check out this exmaple [3d_meshes_clipped](https://github.com/BlondeBurrito/voronoi_mosaic/blob/main/examples/3d_meshes_clipped.rs).
+For a full visualisation you can check out this exmaple [3d_meshes_clipped](https://github.com/BlondeBurrito/voronoi_mosaic/blob/main/examples/3d/3d_meshes_clipped.rs).
 
 </details>
 
@@ -354,3 +366,5 @@ Dual license of MIT and Apache.
 - Add a means of testing DT for determinism
 - how to measure tetrahedron quality? Sterdian angles? Volume?
 - make edge and triangle modules generic across Vec2 and Vec3?
+- use two trinagles in delaunay? certain edges case where triangulating 3 points fails because theres no triangle between them, only with the super triangle
+- benches, use step_by()
