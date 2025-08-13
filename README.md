@@ -48,6 +48,8 @@ Triangulation involes generating a series of triangles and recording good and ba
 
 We begin with a set of data points (blue) and we enclose them in a super triangle (black):
 
+*NB: super triangle needs to enclose the all possible circumcircles between data points for the triangulation to be accurate. The diagrams show a smaller than normal super triangle for illustrative purposes*
+
 <img src="https://raw.githubusercontent.com/BlondeBurrito/voronoi_mosaic/main/docs/png/delaunay_2d_process1.png" alt="e" width="300"/>
 
 Beginning with just one of the data points we calculate the circumcircle (orange) of the known triangle:
@@ -366,5 +368,4 @@ Dual license of MIT and Apache.
 - Add a means of testing DT for determinism
 - how to measure tetrahedron quality? Sterdian angles? Volume?
 - make edge and triangle modules generic across Vec2 and Vec3?
-- use two trinagles in delaunay? certain edges case where triangulating 3 points fails because theres no triangle between them, only with the super triangle
 - benches, use step_by()

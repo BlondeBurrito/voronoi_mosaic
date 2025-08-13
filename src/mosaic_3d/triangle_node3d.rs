@@ -9,10 +9,16 @@ use bevy::math::Vec3;
 use crate::mosaic_3d::edge_node3d::EdgeNode3d;
 
 /// Describes a triangle where the vertices are represented by vertex IDs
-#[derive(PartialEq, Eq, Debug, Clone, Copy, PartialOrd, Ord)]
+#[derive(Eq, Debug, Clone, Copy, PartialOrd, Ord)]
 pub struct TriangleNode3d([usize; 3]);
 
-//TODO need a custom partialEq?
+impl PartialEq for TriangleNode3d {
+	fn eq(&self, other: &Self) -> bool {
+		(self.0[0] == other.0[0] && self.0[1] == other.0[1] && self.0[2] == other.0[2]) 
+		|| (self.0[0] == other.0[1] && self.0[1] == other.0[2] && self.0[2] == other.0[0]) 
+		|| (self.0[0] == other.0[2] && self.0[1] == other.0[0] && self.0[2] == other.0[1])
+	}
+}
 
 impl TriangleNode3d {
 	/// Create a new [TriangleNode2d] from a series of vertex IDs
@@ -151,18 +157,18 @@ impl TriangleNode3d {
 mod tests {
 	use super::*;
 
-	// #[test]
-	// fn equality() {
-	// 	let a = Vec3::new(0, 0, 0);
-	// 	let b = Vec3::new(1, 0, 1);
-	// 	let c = Vec3::new(0, 1, 0);
+	#[test]
+	fn equality() {
+		let a = 1;
+		let b = 2;
+		let c = 3;
 
-	// 	let tri_i = TriangleNode3d::new(a, b, c);
-	// 	let tri_j = TriangleNode3d::new(b, c, a);
-	// 	let tri_k = TriangleNode3d::new(c, a, b);
+		let tri_i = TriangleNode3d::new(a, b, c);
+		let tri_j = TriangleNode3d::new(b, c, a);
+		let tri_k = TriangleNode3d::new(c, a, b);
 
-	// 	assert!(tri_i == tri_j && tri_j == tri_k && tri_k == tri_i)
-	// }
+		assert!(tri_i == tri_j && tri_j == tri_k && tri_k == tri_i)
+	}
 
 	#[test]
 	fn does_intersect_face() {

@@ -21,7 +21,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use bevy::prelude::*;
 
-use crate::mosaic_2d::triangle_node2d::*;
+use crate::{mosaic_2d::triangle_node2d::*, prelude::Circumcircle};
 
 /// Describes the triangulation of a series of data points. Triangles and
 /// vertices are stored with unique IDs
@@ -172,9 +172,54 @@ fn compute_dimension_bounds(points: &[Vec2]) -> (Vec2, Vec2) {
 		maximum_world_dimensions + Vec2::ONE,
 	)
 }
-
-/// Compute the vertices of a triangle that encompasses all points, to ensure all points are contained we use the boundaries of the plane which all points sit within
+/// Triangulation requires a super triangle that encompasses all data points as
+/// well as any possible circumcircles bewteen the data points themselves.
+///
+/// To achieve this we construct a super plane from the minimum and maximum
+/// dimension bounds of the data points and use this plane to build a triangle
 fn compute_super_triangle(
+	minimum_world_dimensions: &Vec2,
+	maximum_world_dimensions: &Vec2,
+) -> [Vec2; 3] {
+	// define vertices of a rectangular plane
+	let top_left = Vec2::new(minimum_world_dimensions.x, maximum_world_dimensions.y);
+	let top_right = Vec2::new(maximum_world_dimensions.x, maximum_world_dimensions.y);
+	let bottom_left = Vec2::new(minimum_world_dimensions.x, minimum_world_dimensions.y);
+	let bottom_right = Vec2::new(maximum_world_dimensions.x, minimum_world_dimensions.y);
+	// define 4 triangles using each edge of the plane and a new midpoint along the edge that's offset to be slightly inside the area of the plane
+	let top_midpoint_offset = ((top_left + top_right) / 2.0) - Vec2::Y;
+	let tri_1 = [top_midpoint_offset, top_left, top_right];
+
+	let left_midpoint_offset = ((top_left + bottom_left) / 2.0) + Vec2::X;
+	let tri_2 = [top_left, bottom_left, left_midpoint_offset];
+
+	let bottom_midpoint_offset = ((bottom_left + bottom_right) / 2.0) + Vec2::Y;
+	let tri_3 = [bottom_left, bottom_midpoint_offset, bottom_right];
+
+	let right_midpoint_offset = ((top_right + bottom_right) / 2.0) - Vec2::X;
+	let tri_4 = [top_right, right_midpoint_offset, bottom_right];
+
+	// find the circumcircles of each triangle
+	let a = Circumcircle::new(tri_1[0], tri_1[1], tri_1[2]).unwrap();
+	let b = Circumcircle::new(tri_2[0], tri_2[1], tri_2[2]).unwrap();
+	let c = Circumcircle::new(tri_3[0], tri_3[1], tri_3[2]).unwrap();
+	let d = Circumcircle::new(tri_4[0], tri_4[1], tri_4[2]).unwrap();
+
+	// using centres and radii construct the bounds of a super plane that encloses all possible cirumcentres
+	let new_min = Vec2::new(
+		b.get_centre().x - b.get_radius_sqaured().sqrt(),
+		c.get_centre().y - c.get_radius_sqaured().sqrt(),
+	);
+	let new_max = Vec2::new(
+		d.get_centre().x + d.get_radius_sqaured().sqrt(),
+		a.get_centre().y + a.get_radius_sqaured().sqrt(),
+	);
+
+	compute_super_triangle_from_plane(&new_min, &new_max)
+}
+
+/// Compute the vertices of a triangle that encompasses all points, to ensure all points are contained we use the boundaries of a plane
+fn compute_super_triangle_from_plane(
 	minimum_world_dimensions: &Vec2,
 	maximum_world_dimensions: &Vec2,
 ) -> [Vec2; 3] {
@@ -198,7 +243,7 @@ fn compute_super_triangle(
 	let x = bottom_left.x + (bottom_right.x - bottom_left.x) / 2.0;
 	// we actually scale it away from the corners of the plane by a factor of 2 as if the plane is wide but thin then a very acute super triangle is produced which can cause holes in the triangualtion (all triangles formed with super verts that get removed at the end) when the data set is very small
 	let y = minimum_world_dimensions.y
-		- 2.0 * (maximum_world_dimensions.y - minimum_world_dimensions.y);
+		- (maximum_world_dimensions.y - minimum_world_dimensions.y);
 	let sup_triangle_vert_a = Vec2::new(x, y);
 	// by treating the maximum y of the plane as a striahgt line parallel to x we can
 	// take line equations from the furthest point sup_triangle_vert_a with the
@@ -219,16 +264,16 @@ fn compute_super_triangle(
 	// using y=mx + c we can find the point of y = max (plus a bit of wiggle room) for x giving us another
 	// vertex of the super triangle
 	let sup_triangle_vert_b = Vec2::new(
-		(2.0 * maximum_world_dimensions.y - intercept_b) / gradient_b,
-		2.0 * maximum_world_dimensions.y,
+		(maximum_world_dimensions.y - intercept_b) / gradient_b,
+		maximum_world_dimensions.y,
 	);
 	// repeat for the final vertex
 	let gradient_c =
 		(sup_triangle_vert_a.y - bottom_right.y) / (sup_triangle_vert_a.x - bottom_right.x);
 	let intercept_c = bottom_right.y - gradient_c * bottom_right.x;
 	let sup_triangle_vert_c = Vec2::new(
-		(2.0 * maximum_world_dimensions.y - intercept_c) / gradient_c,
-		2.0 * maximum_world_dimensions.y,
+		(maximum_world_dimensions.y - intercept_c) / gradient_c,
+		maximum_world_dimensions.y,
 	);
 	// we now have the vertices of a triangle that contains all cell origins
 	[
@@ -278,9 +323,9 @@ mod tests {
 		let minimum_world_dimensions = Vec2::new(-100.0, -200.0);
 		let maximum_world_dimensions = Vec2::new(100.0, 200.0);
 		let s = compute_super_triangle(&minimum_world_dimensions, &maximum_world_dimensions);
-		let a = Vec2::new(0.0, -1000.0);
-		let b = Vec2::new(-175.0, 400.0);
-		let c = Vec2::new(175.0, 400.0);
+		let a = Vec2::new(0.0, -30600.0);
+		let b = Vec2::new(-80199.99, 10200.0);
+		let c = Vec2::new(80199.99, 10200.0);
 		assert_eq!([a, b, c], s);
 	}
 	#[test]
@@ -291,9 +336,9 @@ mod tests {
 		// This test uses a small triangle and ensures that one
 		// final triangle is computed between the points
 		let points = vec![
-			Vec2::new(50.0, 0.0),
 			Vec2::new(-50.0, 0.0),
 			Vec2::new(0.0, 50.0),
+			Vec2::new(50.0, 0.0),
 		];
 		let data = Delaunay2d::compute_triangulation_2d(&points).unwrap();
 		// should only be 1 triangle

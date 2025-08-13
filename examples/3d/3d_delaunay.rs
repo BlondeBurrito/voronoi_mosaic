@@ -175,6 +175,19 @@ fn visuals(
 		Vec3::new(39.0, -38.0, -12.0),
 		Vec3::new(48.0, -45.0, -30.0),
 	];
+	let points = vec![
+		Vec3::new(-50.0, -50.0, -50.0),
+		Vec3::new(50.0, -50.0, -50.0),
+		Vec3::new(50.0, -50.0, 50.0),
+		Vec3::new(-50.0, -50.0, 50.0),
+		//
+		Vec3::new(-50.0, 50.0, -50.0),
+		Vec3::new(50.0, 50.0, -50.0),
+		Vec3::new(50.0, 50.0, 50.0),
+		Vec3::new(-50.0, 50.0, 50.0),
+		//
+		Vec3::new(0.0, 0.0, 0.0),
+	];
 	// compute data
 	if let Some(delaunay) = mosaic_3d::delaunay::Delaunay3d::compute_triangulation_3d(&points) {
 		create_delaunay_visuals(&mut cmds, &mut meshes, &mut materials, &delaunay);

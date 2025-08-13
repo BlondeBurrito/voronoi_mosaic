@@ -7,7 +7,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use crate::mosaic_3d::tetrahedron_node::TetrahedronNode;
+use crate::{mosaic_3d::tetrahedron_node::TetrahedronNode, prelude::Circumsphere};
 use bevy::prelude::*;
 
 /// Describes the tetrahedralization of a series of data points. Tetrahedra and
@@ -33,8 +33,9 @@ impl Delaunay3d {
 
 		// compute the positions of a super tetrahedron that encompasses all points in space
 		// [mid_up, bottom_right, top_right, top_left, bottom_left, mid_down]
+		// [ up, down, top, bottom, left, right]
 		let super_tetra =
-			compute_super_tetrahedra(&minimum_world_dimensions, &maximum_world_dimensions);
+			compute_super_tetrahedra(points, &minimum_world_dimensions, &maximum_world_dimensions);
 
 		// store vertices with a unique id
 		let mut vertex_lookup = BTreeMap::from([
@@ -48,15 +49,14 @@ impl Delaunay3d {
 
 		// store tetrahedra starting with the super 4
 		let mut tetrahedra = BTreeSet::from([
-			TetrahedronNode::new(0, 1, 2, 3),
-			TetrahedronNode::new(0, 3, 4, 1),
-			TetrahedronNode::new(5, 1, 2, 3),
-			TetrahedronNode::new(5, 3, 4, 1),
+			TetrahedronNode::new(0, 5, 2, 4),
+			TetrahedronNode::new(0, 5, 3, 4),
+			TetrahedronNode::new(1, 5, 2, 4),
+			TetrahedronNode::new(1, 5, 3, 4),
 		]);
 
 		let mut problematic_points = vec![];
 		// add each point at a time to the triangulation
-
 		for point in points {
 			// find tetrahedra that are not Delaunay
 			let bad_tetrahedra = find_bad_tetrahedra(&point, &tetrahedra, &vertex_lookup);
@@ -269,8 +269,38 @@ pub fn compute_dimension_bounds(points: &[Vec3]) -> (Vec3, Vec3) {
 	)
 }
 
-/// Compute the vertices of 4 tetrahedra aligned in a diamond formation to ensure that all data points sit within the tetrahedra
-pub fn compute_super_tetrahedra(
+fn compute_super_tetrahedra(
+	points: &[Vec3],
+	minimum_world_dimensions: &Vec3,
+	maximum_world_dimensions: &Vec3,
+) -> [Vec3; 6] {
+	let mut largest_radius_sq = 0.0;
+
+	//TODO if out duplicate points to avoid calling circumcpshere code, expensive
+	for vertex_a in points.iter() {
+		for vertex_b in points.iter() {
+			for vertex_c in points.iter() {
+				for vertex_d in points.iter() {
+					if let Some(sphere) = Circumsphere::new(*vertex_a, *vertex_b, *vertex_c, *vertex_d) {
+						if sphere.get_radius_squared() > largest_radius_sq {
+							largest_radius_sq = sphere.get_radius_squared();
+						}
+					}
+				}
+			}
+		}
+	}
+	let largest_radius = largest_radius_sq.sqrt();
+	info!("largest radius {}", largest_radius);
+	let diff = Vec3::new(largest_radius, largest_radius, largest_radius);
+	let new_min = minimum_world_dimensions - diff;
+	let new_max = maximum_world_dimensions + diff;
+	compute_super_tetrahedra2(&new_min, &new_max)
+	// compute_super_tetrahedra2(&minimum_world_dimensions, maximum_world_dimensions)
+}
+
+/// Compute the vertices of 4 tetrahedra aligned in a diamond formation to ensure that all data points sit within the tetrahedra and that all possible circumspheres between data points sit within the tetrahedra too
+pub fn compute_super_tetrahedra2(
 	minimum_world_dimensions: &Vec3,
 	maximum_world_dimensions: &Vec3,
 ) -> [Vec3; 6] {
@@ -279,7 +309,7 @@ pub fn compute_super_tetrahedra(
 	let delta_z = maximum_world_dimensions.z - minimum_world_dimensions.z;
 	let midpoint = (maximum_world_dimensions + minimum_world_dimensions) / 2.0;
 
-	let safety_factor = 2.0;
+	let safety_factor = 1.0;
 
 	let mid_up = midpoint + Vec3::new(0.0, delta_y * safety_factor, 0.0);
 	let mid_down = midpoint + Vec3::new(0.0, -delta_y * safety_factor, 0.0);
@@ -305,6 +335,15 @@ pub fn compute_super_tetrahedra(
 		top_left,
 		bottom_left,
 		mid_down,
+	];
+	let up = midpoint + Vec3::new(0.0, delta_y, 0.0);
+	let down = midpoint + Vec3::new(0.0, -delta_y, 0.0);
+	let top = midpoint + Vec3::new(0.0, 0.0, delta_z);
+	let bottom = midpoint + Vec3::new(0.0, 0.0, -delta_z);
+	let left = midpoint + Vec3::new(-delta_x, 0.0, 0.0);
+	let right = midpoint + Vec3::new(delta_x, 0.0, 0.0);
+	[
+		up, down, top, bottom, left, right
 	]
 }
 
@@ -355,9 +394,22 @@ mod tests {
 	}
 	#[test]
 	fn super_tetra() {
+		let points = vec![
+			Vec3::new(-50.0, -50.0, -50.0),
+			Vec3::new(50.0, -50.0, -50.0),
+			Vec3::new(50.0, -50.0, 50.0),
+			Vec3::new(-50.0, -50.0, 50.0),
+			//
+			Vec3::new(-50.0, 50.0, -50.0),
+			Vec3::new(50.0, 50.0, -50.0),
+			Vec3::new(50.0, 50.0, 50.0),
+			Vec3::new(-50.0, 50.0, 50.0),
+			//
+			Vec3::new(0.0, 0.0, 0.0),
+		];
 		let min = Vec3::new(-2.0, -2.0, 0.0);
 		let max = Vec3::new(2.0, 2.0, 2.0);
-		let super_tetrahedra = compute_super_tetrahedra(&min, &max);
+		let super_tetrahedra = compute_super_tetrahedra(&points, &min, &max);
 
 		let t1 = Vec3::new(0.0, 8.0, 1.0);
 		assert_eq!(t1, super_tetrahedra[0]);
@@ -371,5 +423,26 @@ mod tests {
 		assert_eq!(t5, super_tetrahedra[4]);
 		let t6 = Vec3::new(0.0, -8.0, 1.0);
 		assert_eq!(t6, super_tetrahedra[5]);
+	}
+	#[test]
+	fn delaunay() {
+		// ensure that the super tetra is sized correctly so that the points
+		// are perfectly triangulated.
+		// cube with a point in the middle
+		let points = vec![
+			Vec3::new(-50.0, -50.0, -50.0),
+			Vec3::new(50.0, -50.0, -50.0),
+			Vec3::new(50.0, -50.0, 50.0),
+			Vec3::new(-50.0, -50.0, 50.0),
+			//
+			Vec3::new(-50.0, 50.0, -50.0),
+			Vec3::new(50.0, 50.0, -50.0),
+			Vec3::new(50.0, 50.0, 50.0),
+			Vec3::new(-50.0, 50.0, 50.0),
+			//
+			Vec3::new(0.0, 0.0, 0.0),
+		];
+		let delaunay = Delaunay3d::compute_triangulation_3d(&points).unwrap();
+		assert_eq!(8, delaunay.get_tetrahedra().len());
 	}
 }
