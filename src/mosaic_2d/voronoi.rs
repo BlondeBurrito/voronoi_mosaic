@@ -127,11 +127,11 @@ impl Voronoi2d {
 	}
 
 	/// Convert each Voronoi Cell into a Bevy Mesh. These are for use in 2d with assumed normals of [Vec3::Z]
-	pub fn as_bevy2d_meshes(&self) -> Vec<(Mesh, Vec2)> {
-		let mut meshes = vec![];
+	pub fn as_bevy2d_meshes(&self) -> BTreeMap<usize, (Mesh, Vec2)> {
+		let mut meshes = BTreeMap::new();
 		let cells = self.get_cells();
 		let vertex_lookup = self.get_vertex_lookup();
-		for (_, cell) in cells.iter() {
+		for (id, cell) in cells.iter() {
 			let cell_vertex_ids = cell.get_vertex_ids();
 			// find the vertices in real-space
 			let mut cell_vertices = vec![];
@@ -148,7 +148,7 @@ impl Voronoi2d {
 
 			if let Some(mesh) = triangulate_mesh(&cell_vertices_normalised) {
 				let origin = cell.get_centre_position(vertex_lookup);
-				meshes.push((mesh, origin));
+				meshes.insert(*id, (mesh, origin));
 			}
 		}
 		meshes
@@ -160,12 +160,12 @@ impl Voronoi2d {
 	/// should be expressed in an anti-clockwise order around their centre
 	///
 	/// *NB: Delaunay and Voronoi are duals - they can precisely be converted from one fomrat to the other back and forth. By applying clipping to the Voronoi, cell vertices may be added/removed which will destroy the duality - i.e if you apply clipping you cannot convert meshes into Delaunay and expect to get your oringal dataset back*
-	pub fn as_clipped_bevy2d_meshes(&self, boundary: &[Vec2]) -> Vec<(Mesh, Vec2)> {
+	pub fn as_clipped_bevy2d_meshes(&self, boundary: &[Vec2]) -> BTreeMap<usize, (Mesh, Vec2)> {
 		//TODO sort the supplied boundary points or trust user input?
-		let mut meshes = vec![];
+		let mut meshes = BTreeMap::new();
 		let cells = self.get_cells();
 		let vertex_lookup = self.get_vertex_lookup();
-		for (_, cell) in cells.iter() {
+		for (id, cell) in cells.iter() {
 			let cell_vertex_ids = cell.get_vertex_ids();
 			// find the vertices in real-space
 			let mut cell_vertices = vec![];
@@ -183,7 +183,7 @@ impl Voronoi2d {
 
 				if let Some(mesh) = triangulate_mesh(&cell_vertices_normalised) {
 					let origin = cell.get_centre_position(vertex_lookup);
-					meshes.push((mesh, origin));
+					meshes.insert(*id, (mesh, origin));
 				}
 			}
 		}

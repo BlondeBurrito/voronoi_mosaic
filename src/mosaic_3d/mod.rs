@@ -4,6 +4,7 @@
 
 use bevy::math::Vec3;
 
+pub mod circumsphere;
 pub mod delaunay;
 pub mod edge_node3d;
 pub mod tetrahedron_node;

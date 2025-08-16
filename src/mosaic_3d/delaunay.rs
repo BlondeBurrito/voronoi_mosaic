@@ -29,8 +29,8 @@ impl Delaunay3d {
 			);
 			return None;
 		}
-		//TODO ensure no duplicates in points
-		// idenitfy spacial boundaries
+		//TODO ensure no duplicates in points?
+		// identify spacial boundaries
 		let (minimum_world_dimensions, maximum_world_dimensions) = compute_dimension_bounds(points);
 
 		// compute the positions of a super tetrahedron that encompasses all points in space
@@ -300,12 +300,10 @@ fn compute_super_tetrahedra(
 		}
 	}
 	let largest_radius = largest_radius_sq.sqrt();
-	info!("largest radius {}", largest_radius);
 	let diff = Vec3::new(largest_radius, largest_radius, largest_radius);
 	let new_min = minimum_world_dimensions - diff;
 	let new_max = maximum_world_dimensions + diff;
 	compute_super_tetra_vertices(&new_min, &new_max)
-	// compute_super_tetrahedra2(&minimum_world_dimensions, maximum_world_dimensions)
 }
 
 /// Given minimum and maximum bounds of space find the shared vertices of 4 super tetrahedra

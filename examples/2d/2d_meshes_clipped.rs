@@ -123,12 +123,13 @@ fn visuals(
 		Vec2::new(399.0, 0.0),
 	];
 	// compute data
-	if let Some(delaunay) = Delaunay2d::compute_triangulation_2d(&points) {
-		create_delaunay_visuals(&mut cmds, &mut meshes, &mut materials, &delaunay);
-		if let Some(voronoi) = Voronoi2d::from_delaunay_2d(&delaunay) {
+	let mosaic = Mosaic2d::new(&points);
+	if let Some(delaunay) = mosaic.get_delaunay() {
+		create_delaunay_visuals(&mut cmds, &mut meshes, &mut materials, delaunay);
+		if let Some(voronoi) = mosaic.get_voronoi() {
 			// create the voronoi markers before mutation so it can be
 			// seen with the actual meshes how they have been clipped
-			create_voronoi_cell_visuals(&mut cmds, &mut meshes, &mut materials, &voronoi);
+			create_voronoi_cell_visuals(&mut cmds, &mut meshes, &mut materials, voronoi);
 			// let boundary = vec![Vec2::new(400.0, 400.0), Vec2::new(-400.0, 400.0), Vec2::new(-400.0, -400.0), Vec2::new(400.0, -400.0)];
 			let boundary = vec![
 				Vec2::new(200.0, 200.0),
@@ -140,7 +141,7 @@ fn visuals(
 				&mut cmds,
 				&mut meshes,
 				&mut materials,
-				&voronoi,
+				voronoi,
 				&boundary,
 			);
 		}
@@ -218,7 +219,7 @@ fn create_voronoi_cell_visuals(
 ) {
 	let cells = voronoi.get_cells();
 	let vertex_lookup = voronoi.get_vertex_lookup();
-	for (_cell_id, cell) in cells {
+	for cell in cells.values() {
 		for (i, vertex_id) in cell.get_vertex_ids().iter().enumerate() {
 			// mark each vertex of every cell
 			let mesh = meshes.add(Circle::new(10.0));
@@ -273,7 +274,7 @@ fn create_clipped_mesh_visuals(
 	boundary: &[Vec2],
 ) {
 	let meshes = voronoi.as_clipped_bevy2d_meshes(boundary);
-	for (i, (mesh, position)) in meshes.iter().enumerate() {
+	for (i, (mesh, position)) in meshes.values().enumerate() {
 		// randomise mesh colour
 		let colour = Color::hsl(360. * i as f32 / meshes.len() as f32, 0.95, 0.7);
 		let tform = Transform::from_translation(position.extend(MESH_Z));

@@ -4,6 +4,7 @@
 
 use bevy::math::Vec2;
 
+pub mod circumcircle;
 pub mod delaunay;
 pub mod edge_node2d;
 pub mod triangle_node2d;

@@ -115,9 +115,9 @@ impl Voronoi3d {
 		})
 	}
 	/// Convert each Voronoi Cell into a Bevy Mesh
-	pub fn as_bevy3d_meshes(&self) -> Vec<(Mesh, Vec3)> {
+	pub fn as_bevy3d_meshes(&self) -> BTreeMap<usize, (Mesh, Vec3)> {
 		warn!("Unimplemented, this currently does nothing");
-		vec![]
+		BTreeMap::new()
 	}
 	/// Clip all the [VoronoiCell3d] so they cannot extend or exist outside of
 	/// a boundary polyhedron
@@ -126,9 +126,9 @@ impl Voronoi3d {
 	/// should be expressed in an anti-clockwise order around their centre
 	///
 	/// *NB: Delaunay and Voronoi are duals - they can precisely be converted from one fomrat to the other back and forth. By applying clipping to the Voronoi, cell vertices may be added/removed which will destroy the duality - i.e if you apply clipping you cannot convert Voronoi into Delaunay and expect to get your oringal dataset back*
-	pub fn as_clipped_bevy3d_meshes(&self, _boundary: &[Vec3]) -> Vec<(Mesh, Vec3)> {
+	pub fn as_clipped_bevy3d_meshes(&self, _boundary: &[Vec3]) -> BTreeMap<usize, (Mesh, Vec3)> {
 		warn!("Unimplemented, this currently does nothing");
-		vec![]
+		BTreeMap::new()
 	}
 }
 

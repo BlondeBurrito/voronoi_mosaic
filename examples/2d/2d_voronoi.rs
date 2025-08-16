@@ -76,7 +76,7 @@ fn create_voronoi_cell_visuals(
 ) {
 	let cells = voronoi.get_cells();
 	let vertex_lookup = voronoi.get_vertex_lookup();
-	for (_cell_id, cell) in cells {
+	for cell in cells.values() {
 		for (i, vertex_id) in cell.get_vertex_ids().iter().enumerate() {
 			// mark each vertex of every cell
 			let mesh = meshes.add(Circle::new(10.0));

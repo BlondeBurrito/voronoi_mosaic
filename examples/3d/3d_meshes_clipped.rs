@@ -32,7 +32,7 @@ fn setup(
 	// mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
 	// camera
-	let mut cam_tform = Transform::from_translation(Vec3::new(40.0, 25.0, 40.0));
+	let mut cam_tform = Transform::from_translation(Vec3::new(250.0, 75.0, 250.0));
 	cam_tform.look_at(Vec3::ZERO, Vec3::Y);
 	cmds.spawn((Camera3d::default(), cam_tform));
 	// // background plane
@@ -71,8 +71,8 @@ fn orbit_camera(
 		let dt = time.delta_secs();
 		let speed = 0.5;
 		*angle += speed * dt;
-		let x = 40.0 * angle.cos();
-		let z = 40.0 * angle.sin();
+		let x = 250.0 * angle.cos();
+		let z = 250.0 * angle.sin();
 		tform.translation.x = x;
 		tform.translation.z = z;
 		tform.look_at(Vec3::ZERO, Vec3::Y);
@@ -86,28 +86,32 @@ fn visuals(
 ) {
 	// points to be used
 	let points = vec![
-		Vec3::new(1.0, 3.0, 4.0),
-		Vec3::new(-5.0, 6.0, -4.0),
-		Vec3::new(6.0, 0.0, 5.0),
-		Vec3::new(12.0, 10.0, -12.0),
-		Vec3::new(-15.0, 2.0, 8.0),
-		Vec3::new(4.0, 2.0, 12.0),
-		Vec3::new(-8.0, 15.0, -8.0),
-		Vec3::new(0.0, 12.0, 3.0),
+		Vec3::new(-50.0, -50.0, -50.0),
+		Vec3::new(50.0, -50.0, -50.0),
+		Vec3::new(50.0, -50.0, 50.0),
+		Vec3::new(-50.0, -50.0, 50.0),
+		//
+		Vec3::new(-50.0, 50.0, -50.0),
+		Vec3::new(50.0, 50.0, -50.0),
+		Vec3::new(50.0, 50.0, 50.0),
+		Vec3::new(-50.0, 50.0, 50.0),
+		//
+		Vec3::new(0.0, 0.0, 0.0),
 	];
 	// compute data
-	if let Some(delaunay) = Delaunay3d::compute_triangulation_3d(&points) {
-		create_delaunay_visuals(&mut cmds, &mut mesh_assets, &mut materials, &delaunay);
-		if let Some(voronoi) = Voronoi3d::from_delaunay_3d(&delaunay) {
+	let mosaic = Mosaic3d::new(&points);
+	if let Some(delaunay) = mosaic.get_delaunay() {
+		create_delaunay_visuals(&mut cmds, &mut mesh_assets, &mut materials, delaunay);
+		if let Some(voronoi) = mosaic.get_voronoi() {
 			// show voronoi pre-clip
-			create_voronoi_cell_visuals(&mut cmds, &mut mesh_assets, &mut materials, &voronoi);
+			create_voronoi_cell_visuals(&mut cmds, &mut mesh_assets, &mut materials, voronoi);
 			//TODO proper boundary
 			let boundary = vec![Vec3::new(-5.0, -5.0, -5.0), Vec3::new(5.0, -5.0, -5.0)];
 			create_clipped_mesh_visuals(
 				&mut cmds,
 				&mut mesh_assets,
 				&mut materials,
-				&voronoi,
+				voronoi,
 				&boundary,
 			);
 		}
@@ -247,7 +251,7 @@ fn create_clipped_mesh_visuals(
 	boundary: &[Vec3],
 ) {
 	let meshes = voronoi.as_clipped_bevy3d_meshes(boundary);
-	for (i, (mesh, position)) in meshes.iter().enumerate() {
+	for (i, (mesh, position)) in meshes.values().enumerate() {
 		// randomise mesh colour
 		let colour = Color::hsl(360. * i as f32 / meshes.len() as f32, 0.95, 0.7);
 		let tform = Transform::from_translation(*position);
