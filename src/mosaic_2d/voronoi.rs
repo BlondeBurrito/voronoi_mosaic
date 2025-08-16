@@ -589,6 +589,29 @@ mod tests {
 	// 	assert!(Vec2::ZERO == *generating_point);
 	// }
 	#[test]
+	fn shared_groupings() {
+		let a = 0;
+		let b = 1;
+		let c = 2;
+		let d = 3;
+		let e = 4;
+		let triangle_store = BTreeMap::from([
+			(0, TriangleNode2d::new(a, b, c)),
+			(1, TriangleNode2d::new(a, b, d)),
+			(2, TriangleNode2d::new(a, b, e)),
+			(3, TriangleNode2d::new(e, b, c)),
+			(4, TriangleNode2d::new(d, b, c)),
+		]);
+		let sets = find_shared_sets(&triangle_store);
+		let actual: BTreeMap<BTreeSet<&usize>, &usize> = BTreeMap::from([
+			(BTreeSet::from([&0, &1, &2]), &a),
+			(BTreeSet::from([&0, &1, &2, &3, &4]), &b),
+			(BTreeSet::from([&0, &3, &4]), &c),
+		]);
+		assert_eq!(actual, sets);
+	}
+
+	#[test]
 	fn mesh_uvs() {
 		let vertices = vec![
 			Vec3::new(-5.0, -5.0, 0.0),

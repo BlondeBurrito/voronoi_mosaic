@@ -124,4 +124,38 @@ mod tests {
 			tet_i == tet_j && tet_j == tet_k && tet_k == tet_h && tet_h == tet_l && tet_l == tet_i
 		)
 	}
+	#[test]
+	fn edges() {
+		let a = 0;
+		let b = 1;
+		let c = 2;
+		let d = 3;
+		let tetra = TetrahedronNode::new(a, b, c, d);
+		let edges = tetra.get_edges();
+
+		assert_eq!(
+			[a, b],
+			[edges[0].get_vertex_a_id(), edges[0].get_vertex_b_id()]
+		);
+		assert_eq!(
+			[a, c],
+			[edges[1].get_vertex_a_id(), edges[1].get_vertex_b_id()]
+		);
+		assert_eq!(
+			[a, d],
+			[edges[2].get_vertex_a_id(), edges[2].get_vertex_b_id()]
+		);
+		assert_eq!(
+			[b, c],
+			[edges[3].get_vertex_a_id(), edges[3].get_vertex_b_id()]
+		);
+		assert_eq!(
+			[c, d],
+			[edges[4].get_vertex_a_id(), edges[4].get_vertex_b_id()]
+		);
+		assert_eq!(
+			[d, b],
+			[edges[5].get_vertex_a_id(), edges[5].get_vertex_b_id()]
+		);
+	}
 }

@@ -106,4 +106,19 @@ mod tests {
 			tri_i == tri_j && tri_j == tri_k && tri_k == tri_h && tri_h == tri_l && tri_l == tri_i
 		)
 	}
+
+	#[test]
+	fn sorting_vertices() {
+		let a = 0;
+		let b = 1;
+		let c = 2;
+		let vertex_lookup = BTreeMap::from([
+			(a, Vec2::new(-5.0, 0.0)),
+			(b, Vec2::new(0.0, 10.0)),
+			(c, Vec2::new(5.0, 0.0)),
+		]);
+		let mut triangle = TriangleNode2d::new(a, b, c);
+		triangle.sort_vertices_anti_clockwise(&vertex_lookup);
+		assert_eq!([c, b, a], *triangle.get_vertex_ids());
+	}
 }
