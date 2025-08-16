@@ -94,18 +94,9 @@ impl Voronoi2d {
 		let delaunay_vertex_lookup = delaunay.get_vertex_lookup();
 
 		// store IDs for all the cirumcentres
-		let mut voronoi_vertex_lookup = BTreeMap::new();
 		// store the triangle ID and what circumcentre ID is corresponds to
-		let mut triangle_to_circumcentre_ids = BTreeMap::new();
-
-		for (tri_id, triangle) in triangle_store.iter() {
-			if let Some(circumcircle) = triangle.compute_circumcircle(delaunay_vertex_lookup) {
-				let centre = circumcircle.get_centre();
-				let voronoi_id = voronoi_vertex_lookup.len();
-				voronoi_vertex_lookup.insert(voronoi_id, *centre);
-				triangle_to_circumcentre_ids.insert(*tri_id, voronoi_id);
-			}
-		}
+		let (voronoi_vertex_lookup, triangle_to_circumcentre_ids) =
+			create_voronoi_lookup(triangle_store, delaunay_vertex_lookup);
 
 		// loop thorugh triangles and find cases where 3 or more triangles have
 		// a vertex id in common, this means that the circumcentres of those
@@ -189,6 +180,27 @@ impl Voronoi2d {
 		}
 		meshes
 	}
+}
+
+/// Find and store all Voronoi vertices with a unique ID for each one.
+/// Additionally create a map of triangle ids to circumcentre ids
+fn create_voronoi_lookup(
+	triangle_store: &BTreeMap<usize, TriangleNode2d>,
+	delaunay_vertex_lookup: &BTreeMap<usize, Vec2>,
+) -> (BTreeMap<usize, Vec2>, BTreeMap<usize, usize>) {
+	// store IDs for all the cirumcentres
+	let mut voronoi_vertex_lookup = BTreeMap::new();
+	// store the triangle ID and what circumcentre ID is corresponds to
+	let mut triangle_to_circumcentre_ids = BTreeMap::new();
+	for (tri_id, triangle) in triangle_store.iter() {
+		if let Some(circumcircle) = triangle.compute_circumcircle(delaunay_vertex_lookup) {
+			let centre = circumcircle.get_centre();
+			let voronoi_id = voronoi_vertex_lookup.len();
+			voronoi_vertex_lookup.insert(voronoi_id, *centre);
+			triangle_to_circumcentre_ids.insert(*tri_id, voronoi_id);
+		}
+	}
+	(voronoi_vertex_lookup, triangle_to_circumcentre_ids)
 }
 
 /// Compare the vertices of triangles and identify groupings of IDs whereby 3
@@ -626,5 +638,65 @@ mod tests {
 			Vec2::new(0.0, 1.0),
 		];
 		assert_eq!(actual, compute_mesh_uvs(&vertices));
+	}
+	#[test]
+	fn mesh_triangulation() {
+		let offset_cell_vertices = vec![
+			Vec2::new(5.0, -5.0),
+			Vec2::new(5.0, 5.0),
+			Vec2::new(-5.0, 5.0),
+			Vec2::new(-5.0, -5.0),
+		];
+		let mesh = triangulate_mesh(&offset_cell_vertices);
+		assert!(mesh.is_some());
+	}
+	#[test]
+	fn voronoi_lookup() {
+		let points = vec![
+			Vec2::new(-190.0, 90.0),
+			Vec2::new(-145.0, 120.0),
+			Vec2::new(-120.0, -45.0),
+			Vec2::new(-60.0, -120.0),
+			Vec2::new(-20.0, 190.0),
+			Vec2::new(60.0, -10.0),
+			Vec2::new(80.0, -190.0),
+			Vec2::new(100.0, 140.0),
+			Vec2::new(190.0, -60.0),
+		];
+		let delaunay = Delaunay2d::compute_triangulation_2d(&points).unwrap();
+		let triangle_store = delaunay.get_triangles();
+		let delaunay_vertex_lookup = delaunay.get_vertex_lookup();
+		let (voronoi_vertex_lookup, triangle_to_circumcentre_ids) =
+			create_voronoi_lookup(triangle_store, delaunay_vertex_lookup);
+		assert!(voronoi_vertex_lookup.len() == 8);
+		assert!(triangle_to_circumcentre_ids.len() == 8);
+	}
+	#[test]
+	fn compute_cells() {
+		let points = vec![
+			Vec2::new(-190.0, 90.0),
+			Vec2::new(-145.0, 120.0),
+			Vec2::new(-120.0, -45.0),
+			Vec2::new(-60.0, -120.0),
+			Vec2::new(-20.0, 190.0),
+			Vec2::new(60.0, -10.0),
+			Vec2::new(80.0, -190.0),
+			Vec2::new(100.0, 140.0),
+			Vec2::new(190.0, -60.0),
+		];
+		let delaunay = Delaunay2d::compute_triangulation_2d(&points).unwrap();
+		let triangle_store = delaunay.get_triangles();
+		let delaunay_vertex_lookup = delaunay.get_vertex_lookup();
+		let (voronoi_vertex_lookup, triangle_to_circumcentre_ids) =
+			create_voronoi_lookup(triangle_store, delaunay_vertex_lookup);
+		let cell_triangles = find_shared_sets(triangle_store);
+
+		let cells = compute_cells_from_triangle_sets(
+			&cell_triangles,
+			&voronoi_vertex_lookup,
+			&triangle_to_circumcentre_ids,
+		);
+
+		assert!(cells.len() == 3);
 	}
 }
