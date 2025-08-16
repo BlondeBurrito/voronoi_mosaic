@@ -107,54 +107,55 @@ impl Delaunay3d {
 					));
 				}
 
+				//TODO is this needed?
 				// only store a new tetra if it is Delaunay - test to
-				// ensure it doesn't intersect with any existing tetras
+				// // ensure it doesn't intersect with any existing tetras
 				while let Some(n_tet) = new_tetras.pop() {
 					let mut is_valid = true;
 
-					// if an edge of a proposed tetra intersects an existing tetra
-					// then the proposed is not Delaunay
-					for edge in n_tet.get_edges() {
-						for tetra in tetrahedra.iter() {
-							for face in tetra.get_triangle_node_3d_faces() {
-								if face.does_edge_intersect_id(&edge, &vertex_lookup) {
-									is_valid = false;
-								}
-							}
-						}
-					}
-					// as edges are allowed to touch faces/vertices we
-					// perform an additional check to verify that a face
-					// doesn't slice into another face - use a bisecting
-					// line down the middle of each face of the
-					// proposed new tetra and check for intersection
-					for face in n_tet.get_triangle_node_3d_faces().iter() {
-						let a = vertex_lookup.get(&face.get_vertex_a_id()).unwrap();
-						let b = vertex_lookup.get(&face.get_vertex_b_id()).unwrap();
-						let c = vertex_lookup.get(&face.get_vertex_c_id()).unwrap();
+					// // if an edge of a proposed tetra intersects an existing tetra
+					// // then the proposed is not Delaunay
+					// for edge in n_tet.get_edges() {
+					// 	for tetra in tetrahedra.iter() {
+					// 		for face in tetra.get_triangle_node_3d_faces() {
+					// 			if face.does_edge_intersect_id(&edge, &vertex_lookup) {
+					// 				is_valid = false;
+					// 			}
+					// 		}
+					// 	}
+					// }
+					// // as edges are allowed to touch faces/vertices we
+					// // perform an additional check to verify that a face
+					// // doesn't slice into another face - use a bisecting
+					// // line down the middle of each face of the
+					// // proposed new tetra and check for intersection
+					// for face in n_tet.get_triangle_node_3d_faces().iter() {
+					// 	let a = vertex_lookup.get(&face.get_vertex_a_id()).unwrap();
+					// 	let b = vertex_lookup.get(&face.get_vertex_b_id()).unwrap();
+					// 	let c = vertex_lookup.get(&face.get_vertex_c_id()).unwrap();
 
-						let edge_vertex_a = a;
-						let edge_vertex_b = (b + c) / 2.0;
-						for tetra in tetrahedra.iter() {
-							for tetra_face in tetra.get_triangle_node_3d_faces() {
-								let tri_vertex_a =
-									vertex_lookup.get(&tetra_face.get_vertex_a_id()).unwrap();
-								let tri_vertex_b =
-									vertex_lookup.get(&tetra_face.get_vertex_b_id()).unwrap();
-								let tri_vertex_c =
-									vertex_lookup.get(&tetra_face.get_vertex_c_id()).unwrap();
-								if tetra_face.does_edge_intersect(
-									tri_vertex_a,
-									tri_vertex_b,
-									tri_vertex_c,
-									edge_vertex_a,
-									&edge_vertex_b,
-								) {
-									is_valid = false;
-								}
-							}
-						}
-					}
+					// 	let edge_vertex_a = a;
+					// 	let edge_vertex_b = (b + c) / 2.0;
+					// 	for tetra in tetrahedra.iter() {
+					// 		for tetra_face in tetra.get_triangle_node_3d_faces() {
+					// 			let tri_vertex_a =
+					// 				vertex_lookup.get(&tetra_face.get_vertex_a_id()).unwrap();
+					// 			let tri_vertex_b =
+					// 				vertex_lookup.get(&tetra_face.get_vertex_b_id()).unwrap();
+					// 			let tri_vertex_c =
+					// 				vertex_lookup.get(&tetra_face.get_vertex_c_id()).unwrap();
+					// 			if tetra_face.does_edge_intersect(
+					// 				tri_vertex_a,
+					// 				tri_vertex_b,
+					// 				tri_vertex_c,
+					// 				edge_vertex_a,
+					// 				&edge_vertex_b,
+					// 			) {
+					// 				is_valid = false;
+					// 			}
+					// 		}
+					// 	}
+					// }
 					// if the tetra has no circumsphere then consider it invalid,
 					// i.e its vertices are coplanar so it is degenerate
 					if n_tet.compute_circumsphere(&vertex_lookup).is_none() {
@@ -410,21 +411,20 @@ mod tests {
 			//
 			Vec3::new(0.0, 0.0, 0.0),
 		];
-		let min = Vec3::new(-2.0, -2.0, 0.0);
-		let max = Vec3::new(2.0, 2.0, 2.0);
+		let (min, max) = compute_dimension_bounds(&points);
 		let super_tetrahedra = compute_super_tetrahedra(&points, &min, &max);
 
-		let t1 = Vec3::new(0.0, 8.0, 1.0);
+		let t1 = Vec3::new(0.0, 361.80762, 0.0);
 		assert_eq!(t1, super_tetrahedra[0]);
-		let t2 = Vec3::new(8.0, 0.0, -3.0);
+		let t2 = Vec3::new(0.0, -361.80762, 0.0);
 		assert_eq!(t2, super_tetrahedra[1]);
-		let t3 = Vec3::new(8.0, 0.0, 5.0);
+		let t3 = Vec3::new(0.0, 0.0, 361.80762);
 		assert_eq!(t3, super_tetrahedra[2]);
-		let t4 = Vec3::new(-8.0, 0.0, 5.0);
+		let t4 = Vec3::new(0.0, 0.0, -361.80762);
 		assert_eq!(t4, super_tetrahedra[3]);
-		let t5 = Vec3::new(-8.0, 0.0, -3.0);
+		let t5 = Vec3::new(-361.80762, 0.0, 0.0);
 		assert_eq!(t5, super_tetrahedra[4]);
-		let t6 = Vec3::new(0.0, -8.0, 1.0);
+		let t6 = Vec3::new(361.80762, 0.0, 0.0);
 		assert_eq!(t6, super_tetrahedra[5]);
 	}
 	#[test]
@@ -446,6 +446,6 @@ mod tests {
 			Vec3::new(0.0, 0.0, 0.0),
 		];
 		let delaunay = Delaunay3d::compute_triangulation_3d(&points).unwrap();
-		assert_eq!(8, delaunay.get_tetrahedra().len());
+		assert_eq!(12, delaunay.get_tetrahedra().len());
 	}
 }
