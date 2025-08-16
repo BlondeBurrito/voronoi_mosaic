@@ -272,6 +272,7 @@ pub fn compute_dimension_bounds(points: &[Vec3]) -> (Vec3, Vec3) {
 	)
 }
 
+/// Compute the vertices of 4 tetrahedra aligned in a diamond formation to ensure that all data points sit within the tetrahedra and that all possible circumspheres between data points sit within the tetrahedra too
 fn compute_super_tetrahedra(
 	points: &[Vec3],
 	minimum_world_dimensions: &Vec3,
@@ -297,47 +298,47 @@ fn compute_super_tetrahedra(
 	let diff = Vec3::new(largest_radius, largest_radius, largest_radius);
 	let new_min = minimum_world_dimensions - diff;
 	let new_max = maximum_world_dimensions + diff;
-	compute_super_tetrahedra2(&new_min, &new_max)
+	compute_super_tetra_vertices(&new_min, &new_max)
 	// compute_super_tetrahedra2(&minimum_world_dimensions, maximum_world_dimensions)
 }
 
-/// Compute the vertices of 4 tetrahedra aligned in a diamond formation to ensure that all data points sit within the tetrahedra and that all possible circumspheres between data points sit within the tetrahedra too
-pub fn compute_super_tetrahedra2(
-	minimum_world_dimensions: &Vec3,
-	maximum_world_dimensions: &Vec3,
+/// Given minimum and maximum bounds of space find the shared vertices of 4 super tetrahedra
+pub fn compute_super_tetra_vertices(
+	min_dimensions: &Vec3,
+	max_dimensions: &Vec3,
 ) -> [Vec3; 6] {
-	let delta_x = maximum_world_dimensions.x - minimum_world_dimensions.x;
-	let delta_y = maximum_world_dimensions.y - minimum_world_dimensions.y;
-	let delta_z = maximum_world_dimensions.z - minimum_world_dimensions.z;
-	let midpoint = (maximum_world_dimensions + minimum_world_dimensions) / 2.0;
+	let delta_x = max_dimensions.x - min_dimensions.x;
+	let delta_y = max_dimensions.y - min_dimensions.y;
+	let delta_z = max_dimensions.z - min_dimensions.z;
+	let midpoint = (max_dimensions + min_dimensions) / 2.0;
 
-	let safety_factor = 1.0;
+	// let safety_factor = 1.0;
 
-	let mid_up = midpoint + Vec3::new(0.0, delta_y * safety_factor, 0.0);
-	let mid_down = midpoint + Vec3::new(0.0, -delta_y * safety_factor, 0.0);
-	// in the -x, z plane
-	let top_left = midpoint + Vec3::new(-delta_x * safety_factor, 0.0, delta_z * safety_factor);
-	// in the x, z plane
-	let top_right = midpoint + Vec3::new(delta_x * safety_factor, 0.0, delta_z * safety_factor);
-	// in the x, -z plane
-	let bottom_right = midpoint + Vec3::new(delta_x * safety_factor, 0.0, -delta_z * safety_factor);
-	// in the -x, -z plane
-	let bottom_left = midpoint + Vec3::new(-delta_x * safety_factor, 0.0, -delta_z * safety_factor);
+	// let mid_up = midpoint + Vec3::new(0.0, delta_y * safety_factor, 0.0);
+	// let mid_down = midpoint + Vec3::new(0.0, -delta_y * safety_factor, 0.0);
+	// // in the -x, z plane
+	// let top_left = midpoint + Vec3::new(-delta_x * safety_factor, 0.0, delta_z * safety_factor);
+	// // in the x, z plane
+	// let top_right = midpoint + Vec3::new(delta_x * safety_factor, 0.0, delta_z * safety_factor);
+	// // in the x, -z plane
+	// let bottom_right = midpoint + Vec3::new(delta_x * safety_factor, 0.0, -delta_z * safety_factor);
+	// // in the -x, -z plane
+	// let bottom_left = midpoint + Vec3::new(-delta_x * safety_factor, 0.0, -delta_z * safety_factor);
 
-	[
-		[top_left, bottom_right, top_right, mid_up],
-		[top_left, bottom_right, bottom_left, mid_up],
-		[top_left, bottom_right, top_right, mid_down],
-		[top_left, bottom_right, bottom_left, mid_down],
-	];
-	[
-		mid_up,
-		bottom_right,
-		top_right,
-		top_left,
-		bottom_left,
-		mid_down,
-	];
+	// [
+	// 	[top_left, bottom_right, top_right, mid_up],
+	// 	[top_left, bottom_right, bottom_left, mid_up],
+	// 	[top_left, bottom_right, top_right, mid_down],
+	// 	[top_left, bottom_right, bottom_left, mid_down],
+	// ];
+	// [
+	// 	mid_up,
+	// 	bottom_right,
+	// 	top_right,
+	// 	top_left,
+	// 	bottom_left,
+	// 	mid_down,
+	// ];
 	let up = midpoint + Vec3::new(0.0, delta_y, 0.0);
 	let down = midpoint + Vec3::new(0.0, -delta_y, 0.0);
 	let top = midpoint + Vec3::new(0.0, 0.0, delta_z);

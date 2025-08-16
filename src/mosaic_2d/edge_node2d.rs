@@ -27,3 +27,18 @@ impl EdgeNode2d {
 		self.0[1]
 	}
 }
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+	#[test]
+	fn equality() {
+		let a = 1;
+		let b = 2;
+
+		let edge_i = EdgeNode2d::new(a, b);
+		let edge_j = EdgeNode2d::new(b, a);
+
+		assert!(edge_i == edge_j)
+	}
+}

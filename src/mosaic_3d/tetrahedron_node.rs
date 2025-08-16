@@ -17,12 +17,8 @@ pub struct TetrahedronNode([usize; 4]);
 impl PartialEq for TetrahedronNode {
 	fn eq(&self, other: &Self) -> bool {
 		let (self_a, self_b, self_c, self_d) = (self.0[0], self.0[1], self.0[2], self.0[3]);
-		let (other_a, other_b, other_c, other_d) = (other.0[0], other.0[1], other.0[2], other.0[3]);
 
-		(self_a == other_a && self_b == other_b && self_c == other_c && self_d == other_d)
-			|| (self_a == other_b && self_b == other_c && self_c == other_d && self_d == other_a)
-			|| (self_a == other_c && self_b == other_d && self_c == other_a && self_d == other_b)
-			|| (self_a == other_d && self_b == other_a && self_c == other_b && self_d == other_c)
+		other.0.contains(&self_a) && other.0.contains(&self_b) && other.0.contains(&self_c) && other.0.contains(&self_d)
 	}
 }
 
@@ -120,7 +116,8 @@ mod tests {
 		let tet_j = TetrahedronNode::new(b, c, d, a);
 		let tet_k = TetrahedronNode::new(c, d, a, b);
 		let tet_h = TetrahedronNode::new(d, a, b, c);
+		let tet_l = TetrahedronNode::new(a, c, b, d);
 
-		assert!(tet_i == tet_j && tet_j == tet_k && tet_k == tet_h && tet_h == tet_i)
+		assert!(tet_i == tet_j && tet_j == tet_k && tet_k == tet_h && tet_h == tet_l && tet_l == tet_i)
 	}
 }

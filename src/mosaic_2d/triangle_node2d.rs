@@ -8,8 +8,16 @@ use std::{cmp::Ordering, collections::BTreeMap};
 use crate::{mosaic_2d::edge_node2d::EdgeNode2d, prelude::Circumcircle};
 
 /// Describes a triangle where the vertices are represented by vertex IDs
-#[derive(PartialEq, Eq, Debug, Clone, Copy, PartialOrd, Ord)]
+#[derive(Eq, Debug, Clone, Copy, PartialOrd, Ord)]
 pub struct TriangleNode2d([usize; 3]);
+
+impl PartialEq for TriangleNode2d {
+	fn eq(&self, other: &Self) -> bool {
+		let (self_a, self_b, self_c) = (self.0[0], self.0[1], self.0[2]);
+
+		other.0.contains(&self_a) && other.0.contains(&self_b) && other.0.contains(&self_c)
+	}
+}
 
 impl TriangleNode2d {
 	/// Create a new [TriangleNode2d] from a series of vertex IDs
@@ -76,5 +84,24 @@ impl TriangleNode2d {
 				Ordering::Less
 			}
 		});
+	}
+}
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+	#[test]
+	fn equality() {
+		let a = 1;
+		let b = 2;
+		let c = 3;
+
+		let tri_i = TriangleNode2d::new(a, b, c);
+		let tri_j = TriangleNode2d::new(b, c, a);
+		let tri_k = TriangleNode2d::new(c, a, b);
+		let tri_h = TriangleNode2d::new(a, c, b);
+		let tri_l = TriangleNode2d::new(b, a, c);
+
+		assert!(tri_i == tri_j && tri_j == tri_k && tri_k == tri_h && tri_h == tri_l && tri_l == tri_i)
 	}
 }

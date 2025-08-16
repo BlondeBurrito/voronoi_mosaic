@@ -14,9 +14,9 @@ pub struct TriangleNode3d([usize; 3]);
 
 impl PartialEq for TriangleNode3d {
 	fn eq(&self, other: &Self) -> bool {
-		(self.0[0] == other.0[0] && self.0[1] == other.0[1] && self.0[2] == other.0[2]) 
-		|| (self.0[0] == other.0[1] && self.0[1] == other.0[2] && self.0[2] == other.0[0]) 
-		|| (self.0[0] == other.0[2] && self.0[1] == other.0[0] && self.0[2] == other.0[1])
+		let (self_a, self_b, self_c) = (self.0[0], self.0[1], self.0[2]);
+
+		other.0.contains(&self_a) && other.0.contains(&self_b) && other.0.contains(&self_c)
 	}
 }
 
@@ -166,8 +166,10 @@ mod tests {
 		let tri_i = TriangleNode3d::new(a, b, c);
 		let tri_j = TriangleNode3d::new(b, c, a);
 		let tri_k = TriangleNode3d::new(c, a, b);
+		let tri_h = TriangleNode3d::new(a, c, b);
+		let tri_l = TriangleNode3d::new(b, a, c);
 
-		assert!(tri_i == tri_j && tri_j == tri_k && tri_k == tri_i)
+		assert!(tri_i == tri_j && tri_j == tri_k && tri_k == tri_h && tri_h == tri_l && tri_l == tri_i)
 	}
 
 	#[test]
