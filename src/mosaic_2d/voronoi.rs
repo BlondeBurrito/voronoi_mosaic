@@ -699,4 +699,27 @@ mod tests {
 
 		assert!(cells.len() == 3);
 	}
+	#[test]
+	fn clipping() {
+		let cell_vertices = vec![
+			Vec2::new(0.0, -15.0),
+			Vec2::new(0.0, 0.0),
+			Vec2::new(-15.0, 0.0),
+			Vec2::new(-15.0, -15.0),
+		];
+		let boundary = vec![
+			Vec2::new(10.0, -10.0),
+			Vec2::new(10.0, 10.0),
+			Vec2::new(-10.0, 10.0),
+			Vec2::new(-10.0, -10.0),
+		];
+		let clipped = clip_vertices_to_boundary(cell_vertices, &boundary).unwrap();
+		let actual = vec![
+			Vec2::new(0.0, -10.0),
+			Vec2::new(0.0, 0.0),
+			Vec2::new(-10.0, 0.0),
+			Vec2::new(-10.0, -10.0),
+		];
+		assert_eq!(actual, clipped)
+	}
 }
