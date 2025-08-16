@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.3.0] - 2025-08-16
+
+### Refactor
+
+- [**breaking**] Modularise 2d and 3d behind feature flags (#4)
+
 ## [0.2.0] - 2025-08-10
 
 ### Features
