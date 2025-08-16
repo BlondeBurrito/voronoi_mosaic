@@ -41,15 +41,9 @@ impl TriangleNode2d {
 		&self,
 		vertex_lookup: &BTreeMap<usize, Vec2>,
 	) -> Option<Circumcircle> {
-		let Some(vertex_a) = vertex_lookup.get(&self.0[0]) else {
-			return None;
-		};
-		let Some(vertex_b) = vertex_lookup.get(&self.0[1]) else {
-			return None;
-		};
-		let Some(vertex_c) = vertex_lookup.get(&self.0[2]) else {
-			return None;
-		};
+		let vertex_a = vertex_lookup.get(&self.0[0])?;
+		let vertex_b = vertex_lookup.get(&self.0[1])?;
+		let vertex_c = vertex_lookup.get(&self.0[2])?;
 		Circumcircle::new(*vertex_a, *vertex_b, *vertex_c)
 	}
 	/// Get the edges of the triangle in ID form of [EdgeNode2d]

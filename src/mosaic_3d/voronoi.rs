@@ -146,12 +146,11 @@ fn find_shared_sets(
 			let mut shared_tet_ids = BTreeSet::from([this_tet_id]);
 			// loop over other triangles
 			for (other_tet_id, other_tet) in tetras_store.iter() {
-				if this_tet_id != other_tet_id {
-					if other_tet.get_vertex_ids().contains(this_vert_id) {
+				if this_tet_id != other_tet_id 
+					&& other_tet.get_vertex_ids().contains(this_vert_id) {
 						// triangles share a common vertex ID, store other
 						shared_tet_ids.insert(other_tet_id);
 					}
-				}
 			}
 			if shared_tet_ids.len() >= 4 {
 				// we have found a series of tetrahedra with a common vertex,
@@ -205,7 +204,7 @@ fn compute_cells_from_tetrahedra_sets(
 
 		let cell = VoronoiCell3d {
 			vertices: vertex_ids,
-			edges: edges,
+			edges,
 			generating_point: **generating_point_id,
 		};
 		let key = cells.len();

@@ -1,4 +1,4 @@
-//!
+//! Delaunay and Voronoi in 2d space
 //!
 //!
 
@@ -11,7 +11,9 @@ pub mod voronoi;
 
 /// Defines the Delaunay-Voronoi dual
 pub struct Mosaic2d {
+	/// Generated Delaunay Triangulation
 	delaunay: Option<delaunay::Delaunay2d>,
+	/// Generated Voronoi Tesselation
 	voronoi: Option<voronoi::Voronoi2d>,
 }
 

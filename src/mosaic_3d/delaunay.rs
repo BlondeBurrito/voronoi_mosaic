@@ -13,7 +13,9 @@ use bevy::prelude::*;
 /// Describes the tetrahedralization of a series of data points. Tetrahedra and
 /// vertices are stored with unique IDs
 pub struct Delaunay3d {
+	/// Uniquely ID'ed tetrahedra nodes
 	tetrahedra: BTreeMap<usize, TetrahedronNode>,
+	/// Uniquely ID'ed positions in space of each vertex
 	vertex_lookup: BTreeMap<usize, Vec3>,
 }
 
@@ -59,7 +61,7 @@ impl Delaunay3d {
 		// add each point at a time to the triangulation
 		for point in points {
 			// find tetrahedra that are not Delaunay
-			let bad_tetrahedra = find_bad_tetrahedra(&point, &tetrahedra, &vertex_lookup);
+			let bad_tetrahedra = find_bad_tetrahedra(point, &tetrahedra, &vertex_lookup);
 
 			if bad_tetrahedra.is_empty() {
 				// if empty then the point is in a hole where previous tetrahedralizations failed to produce delaunay tetras that could fill the void
@@ -85,9 +87,9 @@ impl Delaunay3d {
 					let faces = bad_tetra.get_triangle_node_3d_faces();
 					for face in faces.iter() {
 						if !face_triangles.contains(face) {
-							face_triangles.push(face.clone());
+							face_triangles.push(*face);
 						} else {
-							duplicate_face_triangles.push(face.clone());
+							duplicate_face_triangles.push(*face);
 						}
 					}
 				}
@@ -166,6 +168,7 @@ impl Delaunay3d {
 		}
 
 		//TODO retry adding the problematic points
+		warn!("Number of problematic points ignored {}", problematic_points.len());
 
 		// remove any tetrahedra that use vertices of the starting
 		// super-tetrahedra - these were not real points in the data set,
@@ -218,10 +221,10 @@ impl Delaunay3d {
 		vertex_lookup.remove(&4);
 		vertex_lookup.remove(&5);
 
-		if final_tetrahedra.len() > 0 {
+		if !final_tetrahedra.is_empty() {
 			Some(Delaunay3d {
 				tetrahedra: final_tetrahedra,
-				vertex_lookup: vertex_lookup,
+				vertex_lookup,
 			})
 		} else {
 			warn!("No tetrahedralization found");
@@ -281,10 +284,9 @@ fn compute_super_tetrahedra(
 		for vertex_b in points.iter() {
 			for vertex_c in points.iter() {
 				for vertex_d in points.iter() {
-					if let Some(sphere) = Circumsphere::new(*vertex_a, *vertex_b, *vertex_c, *vertex_d) {
-						if sphere.get_radius_squared() > largest_radius_sq {
+					if let Some(sphere) = Circumsphere::new(*vertex_a, *vertex_b, *vertex_c, *vertex_d)
+						&& sphere.get_radius_squared() > largest_radius_sq {
 							largest_radius_sq = sphere.get_radius_squared();
-						}
 					}
 				}
 			}
@@ -361,7 +363,7 @@ fn find_bad_tetrahedra(
 		{
 			// if a point is within then it is not a delaunay tetrahedron,
 			// record this tetrahedron for removal
-			set.insert(tet.clone());
+			set.insert(*tet);
 		}
 	}
 	set

@@ -26,7 +26,9 @@ use crate::{mosaic_2d::triangle_node2d::*, prelude::Circumcircle};
 /// Describes the triangulation of a series of data points. Triangles and
 /// vertices are stored with unique IDs
 pub struct Delaunay2d {
+	/// Unqiuely ID'ed triangles
 	triangles: BTreeMap<usize, TriangleNode2d>,
+	/// Uniquely ID'ed vertices
 	vertex_lookup: BTreeMap<usize, Vec2>,
 }
 
@@ -62,7 +64,7 @@ impl Delaunay2d {
 			let new_point_id = vertex_lookup.len();
 			vertex_lookup.insert(new_point_id, *point);
 			// record triangles that are not delaunay
-			let bad_triangles = find_bad_triangles(&point, &triangles, &vertex_lookup);
+			let bad_triangles = find_bad_triangles(point, &triangles, &vertex_lookup);
 
 			//TODO need to check for empty bad triangles?
 			//TODO in theory it means a point is duplicate in dataset
@@ -128,7 +130,7 @@ impl Delaunay2d {
 		vertex_lookup.remove(&1);
 		vertex_lookup.remove(&2);
 
-		if final_triangles.len() > 0 {
+		if !final_triangles.is_empty() {
 			Some(Delaunay2d {
 				triangles: final_triangles,
 				vertex_lookup,
@@ -297,7 +299,7 @@ fn find_bad_triangles(
 		{
 			// if a point is within then it is not a delaunay triangle,
 			// record this triangle for removal
-			set.insert(tri.clone());
+			set.insert(*tri);
 		}
 	}
 	set

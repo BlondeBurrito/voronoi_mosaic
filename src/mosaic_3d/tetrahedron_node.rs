@@ -60,18 +60,10 @@ impl TetrahedronNode {
 		&self,
 		vertex_lookup: &BTreeMap<usize, Vec3>,
 	) -> Option<Circumsphere> {
-		let Some(vertex_a) = vertex_lookup.get(&self.0[0]) else {
-			return None;
-		};
-		let Some(vertex_b) = vertex_lookup.get(&self.0[1]) else {
-			return None;
-		};
-		let Some(vertex_c) = vertex_lookup.get(&self.0[2]) else {
-			return None;
-		};
-		let Some(vertex_d) = vertex_lookup.get(&self.0[3]) else {
-			return None;
-		};
+		let vertex_a = vertex_lookup.get(&self.0[0])?;
+		let vertex_b = vertex_lookup.get(&self.0[1])?;
+		let vertex_c = vertex_lookup.get(&self.0[2])?;
+		let vertex_d = vertex_lookup.get(&self.0[3])?;
 		Circumsphere::new(*vertex_a, *vertex_b, *vertex_c, *vertex_d)
 	}
 	/// Get the edges of the tetrahedron in ID form of [EdgeNode3d]

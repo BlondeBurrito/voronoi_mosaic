@@ -1,4 +1,4 @@
-//!
+//! Delaunay and Voronoi in 3d
 //!
 //!
 
@@ -12,13 +12,15 @@ pub mod voronoi;
 
 /// Defines the Delaunay-Voronoi dual
 pub struct Mosaic3d {
+	/// The generated Delaunay Tetrahedralization
 	delaunay: Option<delaunay::Delaunay3d>,
+	/// The generated Voronoi Tessellation
 	voronoi: Option<voronoi::Voronoi3d>,
 }
 
 impl Mosaic3d {
 	/// Generate the Delaunay and Voronoi for a series of 3d points
-	pub fn new(data_points: &Vec<Vec3>) -> Self {
+	pub fn new(data_points: &[Vec3]) -> Self {
 		if let Some(delaunay) = delaunay::Delaunay3d::compute_triangulation_3d(data_points) {
 			if let Some(voronoi) = voronoi::Voronoi3d::from_delaunay_3d(&delaunay) {
 				Mosaic3d {
