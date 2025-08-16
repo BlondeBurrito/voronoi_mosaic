@@ -118,12 +118,13 @@ fn visuals(
 		Vec2::new(399.0, 0.0),
 	];
 	// compute data
-	if let Some(data) = DelaunayData::compute_triangulation_2d(&points) {
-		create_delaunay_visuals(&mut cmds, &mut meshes, &mut materials, &data);
-		if let Some(voronoi) = VoronoiData::from_delaunay_2d(&data) {
+	let mosaic = Mosaic2d::new(&points);
+	if let Some(delaunay) = mosaic.get_delaunay() {
+		create_delaunay_visuals(&mut cmds, &mut meshes, &mut materials, delaunay);
+		if let Some(voronoi) = mosaic.get_voronoi() {
 			// add simple shapes to showcase what the data looks like
-			create_voronoi_cell_visuals(&mut cmds, &mut meshes, &mut materials, &voronoi);
-			create_mesh_visuals(&mut cmds, &mut meshes, &mut materials, &voronoi);
+			create_voronoi_cell_visuals(&mut cmds, &mut meshes, &mut materials, voronoi);
+			create_mesh_visuals(&mut cmds, &mut meshes, &mut materials, voronoi);
 		}
 	} else {
 		warn!("Data computation failed");
@@ -139,17 +140,18 @@ fn create_delaunay_visuals(
 	cmds: &mut Commands,
 	meshes: &mut ResMut<Assets<Mesh>>,
 	materials: &mut ResMut<Assets<ColorMaterial>>,
-	data: &DelaunayData<triangle_2d::Triangle2d>,
+	data: &Delaunay2d,
 ) {
-	for triangle in data.get().iter() {
+	let vertex_lookup = data.get_vertex_lookup();
+	for (_tri_id, triangle) in data.get_triangles().iter() {
 		// create markers for vertices
 		let mesh = meshes.add(Circle::new(10.0));
 		let material = materials.add(DELAUNAY_VERTEX_COLOUR);
 		// vertices
 		let translations = [
-			triangle.get_vertex_a(),
-			triangle.get_vertex_b(),
-			triangle.get_vertex_c(),
+			vertex_lookup.get(&triangle.get_vertex_a_id()).unwrap(),
+			vertex_lookup.get(&triangle.get_vertex_b_id()).unwrap(),
+			vertex_lookup.get(&triangle.get_vertex_c_id()).unwrap(),
 		];
 		for translation in translations.iter() {
 			cmds.spawn((
@@ -163,10 +165,12 @@ fn create_delaunay_visuals(
 		// create markers for edges
 		let mat = materials.add(DELAUNAY_EDGE_COLOUR);
 		for edge in triangle.get_edges().iter() {
-			let y_len = (edge.1 - edge.0).length();
+			let start = vertex_lookup.get(&edge.get_vertex_a_id()).unwrap();
+			let end = vertex_lookup.get(&edge.get_vertex_b_id()).unwrap();
+			let y_len = (end - start).length();
 			let mesh = meshes.add(Rectangle::from_size(Vec2::new(5.0, y_len)));
-			let translation = (edge.1 + edge.0) / 2.0;
-			let angle = Vec2::Y.angle_to(edge.0 - edge.1);
+			let translation = (end + start) / 2.0;
+			let angle = Vec2::Y.angle_to(start - end);
 			let tform = Transform {
 				translation: translation.extend(DELAUNAY_EDGE_Z),
 				rotation: Quat::from_rotation_z(angle),
@@ -192,31 +196,36 @@ fn create_voronoi_cell_visuals(
 	cmds: &mut Commands,
 	meshes: &mut ResMut<Assets<Mesh>>,
 	materials: &mut ResMut<Assets<ColorMaterial>>,
-	voronoi: &VoronoiData<VoronoiCell2d>,
+	voronoi: &Voronoi2d,
 ) {
-	for cell in voronoi.get_cells().values() {
-		for (i, point) in cell.get_vertices().iter().enumerate() {
+	let cells = voronoi.get_cells();
+	let vertex_lookup = voronoi.get_vertex_lookup();
+	for cell in cells.values() {
+		for (i, vertex_id) in cell.get_vertex_ids().iter().enumerate() {
 			// mark each vertex of every cell
 			let mesh = meshes.add(Circle::new(10.0));
 			let material = materials.add(VORONOI_VERTEX_COLOUR);
+			let position = vertex_lookup.get(vertex_id).unwrap();
 			cmds.spawn((
 				Mesh2d(mesh.clone()),
 				MeshMaterial2d(material.clone()),
-				Transform::from_translation(point.extend(VORONOI_CELL_VERTEX_Z)),
+				Transform::from_translation(position.extend(VORONOI_CELL_VERTEX_Z)),
 				VoronoiLabel,
 				Visibility::Hidden,
 			));
 			// mark the edges
-			let (v1, v0) = if i < cell.get_vertices().len() - 1 {
-				(cell.get_vertices()[i + 1], *point)
+			let (v1, v0) = if i < cell.get_vertex_ids().len() - 1 {
+				(cell.get_vertex_ids()[i + 1], *vertex_id)
 			} else {
-				(cell.get_vertices()[0], *point)
+				(cell.get_vertex_ids()[0], *vertex_id)
 			};
-			let y_len = (v1 - v0).length();
+			let v1_pos = vertex_lookup.get(&v1).unwrap();
+			let v0_pos = vertex_lookup.get(&v0).unwrap();
+			let y_len = (v1_pos - v0_pos).length();
 			let mesh = meshes.add(Rectangle::from_size(Vec2::new(5.0, y_len)));
 			let mat = materials.add(VORONOI_EDGE_COLOUR);
-			let translation = (v1 + v0) / 2.0;
-			let angle = Vec2::Y.angle_to(v0 - v1);
+			let translation = (v1_pos + v0_pos) / 2.0;
+			let angle = Vec2::Y.angle_to(v0_pos - v1_pos);
 			let tform = Transform {
 				translation: translation.extend(VORONOI_CELL_EDGE_Z),
 				rotation: Quat::from_rotation_z(angle),
@@ -242,10 +251,10 @@ fn create_mesh_visuals(
 	cmds: &mut Commands,
 	meshe_assets: &mut ResMut<Assets<Mesh>>,
 	materials: &mut ResMut<Assets<ColorMaterial>>,
-	voronoi: &VoronoiData<VoronoiCell2d>,
+	voronoi: &Voronoi2d,
 ) {
-	let meshes = voronoi.as_bevy_meshes_2d();
-	for (i, (mesh, position)) in meshes.iter().enumerate() {
+	let meshes = voronoi.as_bevy2d_meshes();
+	for (i, (mesh, position)) in meshes.values().enumerate() {
 		// randomise mesh colour
 		let colour = Color::hsl(360. * i as f32 / meshes.len() as f32, 0.95, 0.7);
 		let tform = Transform::from_translation(position.extend(MESH_Z));

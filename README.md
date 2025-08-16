@@ -48,6 +48,8 @@ Triangulation involes generating a series of triangles and recording good and ba
 
 We begin with a set of data points (blue) and we enclose them in a super triangle (black):
 
+*NB: super triangle needs to enclose the all possible circumcircles between data points for the triangulation to be accurate. The diagrams show a smaller than normal super triangle for illustrative purposes*
+
 <img src="https://raw.githubusercontent.com/BlondeBurrito/voronoi_mosaic/main/docs/png/delaunay_2d_process1.png" alt="e" width="300"/>
 
 Beginning with just one of the data points we calculate the circumcircle (orange) of the known triangle:
@@ -80,14 +82,12 @@ Once all data points have been added we must then remove any triangles using the
 
 #### 3d
 
-*NB: 3d functionality is gated behind feature `3d_unstable` as parts of the API are volatile or still under development*
-
 <details>
 <summary>To read through the tetrahedralization process click to exapnd</summary>
 
 Triangulation in 3d is also known as tetrahedralization.
 
-In a simialr fashtion to the 2d case we want to enclose all data points within a structure, rather than using a single tetrahedron we in fact use 4 tetrahedra (yellow) arranged in a diamond like configuration to ensure that all data points (blue) are enclosed:
+In a simialr fashtion to the 2d case we want to enclose all data points within a structure, rather than using a single tetrahedron we in fact use 4 tetrahedra (yellow) arranged in a diamond like configuration to ensure that all data points (blue) are enclosed and that any circumspheres between data points are also enclosed:
 
 <img src="https://raw.githubusercontent.com/BlondeBurrito/voronoi_mosaic/main/docs/png/delaunay_3d_process1.png" alt="e" width="300"/>
 
@@ -102,6 +102,8 @@ And we compute the circumsphere of each tetrahedron (we'll only show one here fo
 The point is evidently within the circumsphere so we note that its tetrahedron is *bad* and not Delaunay, so we remove it from the set of final tetrahedra leaving behind a polyhedral hole. We collect all the faces of the bad tetrahedra, identify unique faces (i.e a face that crosses the polyhedral hole is shared by two tetrahedra so we ignore it) and join them to the data point - this creates new tetrahedra that fill the hole. These can then be used to progress tetrahedralization.
 
 We continue adding data points one at a time and using circumcspheres to identify any invalid tetraheda. Once all data points have been computed we tidy up by removing any tetrahedra that make use of any of the vertices of the original 4 bounding tetrahedra. This gives us the final tetrahedralization where each one is Delaunay:
+
+TODO: replace this image now that 3d delaunay is fixed
 
 <img src="https://raw.githubusercontent.com/BlondeBurrito/voronoi_mosaic/main/docs/png/delaunay_3d_process5.png" alt="e" width="300"/>
 
@@ -144,7 +146,7 @@ From these properties we can construct the Voronoi Cells, on the left is a illus
 
 #### 3d
 
-*NB: 3d functionality is gated behind feature `3d_unstable` as parts of the API are volatile or still under development*
+*NB: parts of the 3d API are volatile or still under development*
 
 <details>
 <summary>For the details of converting Delanay Tetrahedralization into Voronoi click to expand</summary>
@@ -157,6 +159,13 @@ WIP
 
 ### 2d
 
+Update your Cargo.toml with
+
+```toml
+[dependencies]
+voronoi_mosaic = { version = "x.y.z", features = ["2d"] }
+```
+
 #### Delaunay
 
 Generating the Delaunay simply requires a series of points in space:
@@ -166,12 +175,12 @@ use bevy::prelude::*;
 use voronoi_mosaic::prelude::*;
 
 let points: Vec<Vec2> = vec![...];
-if let Some(delaunay) = DelaunayData::compute_triangulation_2d(&points) {
+if let Some(delaunay) = Delaunay2d::compute_triangulation_2d(&points) {
 	// do something with the data
 }
 ```
 
-For a full visualisation you can check out this example [2d_delaunay](https://github.com/BlondeBurrito/voronoi_mosaic/blob/main/examples/2d_delaunay.rs).
+For a full visualisation you can check out this example [2d_delaunay](https://github.com/BlondeBurrito/voronoi_mosaic/blob/main/examples/2d/2d_delaunay.rs).
 
 #### Voronoi
 
@@ -182,14 +191,14 @@ use bevy::prelude::*;
 use voronoi_mosaic::prelude::*;
 
 let points = vec![...];
-if let Some(delaunay) = DelaunayData::compute_triangulation_2d(&points) {
-	if let Some(voronoi) = VoronoiData::from_delaunay_2d(&delaunay) {
+if let Some(delaunay) = Delaunay2d::compute_triangulation_2d(&points) {
+	if let Some(voronoi) = Voronoi2d::from_delaunay_2d(&delaunay) {
 		// do something with the generated cells
 	}
 }
 ```
 
-For a full visualisation you can check out this example [2d_voronoi](https://github.com/BlondeBurrito/voronoi_mosaic/blob/main/examples/2d_voronoi.rs).
+For a full visualisation you can check out this example [2d_voronoi](https://github.com/BlondeBurrito/voronoi_mosaic/blob/main/examples/2d/2d_voronoi.rs).
 
 #### Meshes
 
@@ -200,15 +209,15 @@ use bevy::prelude::*;
 use voronoi_mosaic::prelude::*;
 
 let points = vec![...];
-if let Some(delaunay) = DelaunayData::compute_triangulation_2d(&points) {
-	if let Some(voronoi) = VoronoiData::from_delaunay_2d(&delaunay) {
+if let Some(delaunay) = Delaunay2d::compute_triangulation_2d(&points) {
+	if let Some(voronoi) = Voronoi2d::from_delaunay_2d(&delaunay) {
 		// convert the cell data structures into bevy meshes
-		let meshes = voronoi.as_bevy_meshes_2d();
+		let meshes = voronoi.as_bevy2d_meshes();
 	}
 }
 ```
 
-For a full visualisation you can check out this example [2d_meshes](https://github.com/BlondeBurrito/voronoi_mosaic/blob/main/examples/2d_meshes.rs).
+For a full visualisation you can check out this example [2d_meshes](https://github.com/BlondeBurrito/voronoi_mosaic/blob/main/examples/2d/2d_meshes.rs).
 
 #### Clipping
 
@@ -221,25 +230,31 @@ use bevy::prelude::*;
 use voronoi_mosaic::prelude::*;
 
 let points = vec![...];
-if let Some(delaunay) = DelaunayData::compute_triangulation_2d(&points) {
-	if let Some(mut voronoi) = VoronoiData::from_delaunay_2d(&delaunay) {
+if let Some(delaunay) = Delaunay2d::compute_triangulation_2d(&points) {
+	if let Some(voronoi) = Voronoi2d::from_delaunay_2d(&delaunay) {
 		// define a series of boundary vertices that form a polygon
 		// they must be in anti-clockwise order!
 		let boundary = vec![...];
-		voronoi.clip_cells_to_boundary(&boundary);
-		// do something with the clipped cells like turning them into meshes
-		let meshes = voronoi.as_bevy_meshes_2d();
+		// generate meshes clipped to the boundary
+		let meshes = voronoi.as_clipped_bevy2d_meshes();
 	}
 }
 ```
 
-For a full visualisation you can check out this exmaple [2d_meshes_clipped](https://github.com/BlondeBurrito/voronoi_mosaic/blob/main/examples/2d_meshes_clipped.rs). It has a button toggle to show the original Voronoi cells so you can see how they are clipped to the boundary.
+For a full visualisation you can check out this exmaple [2d_meshes_clipped](https://github.com/BlondeBurrito/voronoi_mosaic/blob/main/examples/2d/2d_meshes_clipped.rs). It has a button toggle to show the original Voronoi cells so you can see how they are clipped to the boundary.
 
 ### 3d
 
-*NB: 3d functionality is gated behind feature `3d_unstable` as parts of the API are volatile or still under development*
+*NB: parts of the 3d API are volatile or still under development*
 
 *NB: a concept of tolerance is built into some of the 3d calculations to handle cases where points within a data set are close together, however, if points within the data set are extremely close together then due to floating point arithmetic the conditions for a tetrahedron to be Delaunay can break down and cause undesirable face intersections across sliver (narrow) tetrahedra*
+
+Update your Cargo.toml with
+
+```toml
+[dependencies]
+voronoi_mosaic = { version = "x.y.z", features = ["3d"] }
+```
 
 <details>
 <summary>3d usage minimised until API work complete, the enclosed functions are subject to change and some may not fucntion as expected yet</summary>
@@ -253,12 +268,12 @@ use bevy::prelude::*;
 use voronoi_mosaic::prelude::*;
 
 let points: Vec<Vec3> = vec![...];
-if let Some(delaunay) = DelaunayData::compute_triangulation_3d(&points) {
+if let Some(delaunay) = Delaunay3d::compute_triangulation_3d(&points) {
 	// do something with the data
 }
 ```
 
-For a full visualisation you can check out this example [3d_delaunay](https://github.com/BlondeBurrito/voronoi_mosaic/blob/main/examples/3d_delaunay.rs).
+For a full visualisation you can check out this example [3d_delaunay](https://github.com/BlondeBurrito/voronoi_mosaic/blob/main/examples/3d/3d_delaunay.rs).
 
 #### Voronoi
 
@@ -269,16 +284,18 @@ use bevy::prelude::*;
 use voronoi_mosaic::prelude::*;
 
 let points = vec![...];
-if let Some(delaunay) = DelaunayData::compute_triangulation_3d(&points) {
-	if let Some(voronoi) = VoronoiData::from_delaunay_3d(&delaunay) {
+if let Some(delaunay) = Delaunay3d::compute_triangulation_3d(&points) {
+	if let Some(voronoi) = Voronoi3d::from_delaunay_3d(&delaunay) {
 		// do something with the generated cells
 	}
 }
 ```
 
-For a full visualisation you can check out this example [3d_voronoi](https://github.com/BlondeBurrito/voronoi_mosaic/blob/main/examples/3d_voronoi.rs).
+For a full visualisation you can check out this example [3d_voronoi](https://github.com/BlondeBurrito/voronoi_mosaic/blob/main/examples/3d/3d_voronoi.rs).
 
 #### Meshes
+
+*NB: still in development*
 
 The Voronoi data can be converted into Bevy meshes like so:
 
@@ -287,17 +304,19 @@ use bevy::prelude::*;
 use voronoi_mosaic::prelude::*;
 
 let points = vec![...];
-if let Some(delaunay) = DelaunayData::compute_triangulation_3d(&points) {
-	if let Some(voronoi) = VoronoiData::from_delaunay_3d(&delaunay) {
+if let Some(delaunay) = Delaunay3d::compute_triangulation_3d(&points) {
+	if let Some(voronoi) = Voronoi3d::from_delaunay_3d(&delaunay) {
 		// convert the cell data structures into bevy meshes
-		let meshes = voronoi.as_bevy_meshes_3d();
+		let meshes = voronoi.as_bevy3d_meshes();
 	}
 }
 ```
 
-For a full visualisation you can check out this example [3d_meshes](https://github.com/BlondeBurrito/voronoi_mosaic/blob/main/examples/3d_meshes.rs).
+For a full visualisation you can check out this example [3d_meshes](https://github.com/BlondeBurrito/voronoi_mosaic/blob/main/examples/3d/3d_meshes.rs).
 
 #### Clipping
+
+*NB: still in development*
 
 Voronoi Cells can be clipped to a boundary - this means that any Cells outside of a given boundary are dropped and any that overlap the boundary have their vertices clipped to the boundary edge.
 
@@ -308,19 +327,18 @@ use bevy::prelude::*;
 use voronoi_mosaic::prelude::*;
 
 let points = vec![...];
-if let Some(delaunay) = DelaunayData::compute_triangulation_3d(&points) {
-	if let Some(mut voronoi) = VoronoiData::from_delaunay_3d(&delaunay) {
+if let Some(delaunay) = Delaunay3d::compute_triangulation_3d(&points) {
+	if let Some(mut voronoi) = Voronoi3d::from_delaunay_3d(&delaunay) {
 		// define a series of boundary vertices that form a polygon
 		// they must be in anti-clockwise order!
 		let boundary = vec![...];
-		voronoi.clip_cells_to_boundary(&boundary);
 		// do something with the clipped cells like turning them into meshes
-		let meshes = voronoi.as_bevy_meshes_3d();
+		let meshes = voronoi.as_clipped_bevy3d_meshes(&boundary);
 	}
 }
 ```
 
-For a full visualisation you can check out this exmaple [3d_meshes_clipped](https://github.com/BlondeBurrito/voronoi_mosaic/blob/main/examples/3d_meshes_clipped.rs).
+For a full visualisation you can check out this exmaple [3d_meshes_clipped](https://github.com/BlondeBurrito/voronoi_mosaic/blob/main/examples/3d/3d_meshes_clipped.rs).
 
 </details>
 
@@ -354,3 +372,4 @@ Dual license of MIT and Apache.
 - Add a means of testing DT for determinism
 - how to measure tetrahedron quality? Sterdian angles? Volume?
 - make edge and triangle modules generic across Vec2 and Vec3?
+- benches, use step_by()

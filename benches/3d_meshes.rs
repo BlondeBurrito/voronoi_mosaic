@@ -10,7 +10,7 @@ use std::hint::black_box;
 use voronoi_mosaic::prelude::*;
 
 /// Create the required data before benchmarking
-fn prepare_data() -> VoronoiData<VoronoiCell3d> {
+fn prepare_data() -> Voronoi3d {
 	let mut rng_seed = ChaCha20Rng::seed_from_u64(123456789);
 
 	let mut points = vec![];
@@ -36,14 +36,14 @@ fn prepare_data() -> VoronoiData<VoronoiCell3d> {
 			points.push(point);
 		}
 	}
-	let data = DelaunayData::compute_triangulation_3d(&points).unwrap();
-	let voronoi = VoronoiData::from_delaunay_3d(&data);
+	let data = Delaunay3d::compute_triangulation_3d(&points).unwrap();
+	let voronoi = Voronoi3d::from_delaunay_3d(&data);
 	voronoi.unwrap()
 }
 
 /// Call the code to benchmark
-fn init(voronoi: &VoronoiData<VoronoiCell3d>) {
-	let _m = voronoi.as_bevy_meshes_3d();
+fn init(voronoi: &Voronoi3d) {
+	let _m = voronoi.as_bevy3d_meshes();
 }
 /// Benchmark
 pub fn criterion_benchmark(c: &mut Criterion) {

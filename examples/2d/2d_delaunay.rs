@@ -58,10 +58,15 @@ fn visuals(
 	// 		Vec2::new(0.0, 50.0),
 	// 	];
 	// compute data
-	if let Some(data) = DelaunayData::compute_triangulation_2d(&points) {
-		create_delaunay_visuals(&mut cmds, &mut meshes, &mut materials, &data);
+	// if let Some(data) = DelaunayData::compute_triangulation_2d(&points) {
+	// 	create_delaunay_visuals(&mut cmds, &mut meshes, &mut materials, &data);
+	// } else {
+	// 	warn!("Data computation failed");
+	// }
+	if let Some(delaunay) = Delaunay2d::compute_triangulation_2d(&points) {
+		create_delaunay_visuals(&mut cmds, &mut meshes, &mut materials, &delaunay);
 	} else {
-		warn!("Data computation failed");
+		warn!("Delaunay computation failed");
 	}
 }
 
@@ -74,17 +79,18 @@ fn create_delaunay_visuals(
 	cmds: &mut Commands,
 	meshes: &mut ResMut<Assets<Mesh>>,
 	materials: &mut ResMut<Assets<ColorMaterial>>,
-	data: &DelaunayData<triangle_2d::Triangle2d>,
+	data: &Delaunay2d,
 ) {
-	for triangle in data.get().iter() {
+	let vertex_lookup = data.get_vertex_lookup();
+	for (_tri_id, triangle) in data.get_triangles().iter() {
 		// create markers for vertices
 		let mesh = meshes.add(Circle::new(10.0));
 		let material = materials.add(DELAUNAY_VERTEX_COLOUR);
 		// vertices
 		let translations = [
-			triangle.get_vertex_a(),
-			triangle.get_vertex_b(),
-			triangle.get_vertex_c(),
+			vertex_lookup.get(&triangle.get_vertex_a_id()).unwrap(),
+			vertex_lookup.get(&triangle.get_vertex_b_id()).unwrap(),
+			vertex_lookup.get(&triangle.get_vertex_c_id()).unwrap(),
 		];
 		for translation in translations.iter() {
 			cmds.spawn((
@@ -98,10 +104,12 @@ fn create_delaunay_visuals(
 		// create markers for edges
 		let mat = materials.add(DELAUNAY_EDGE_COLOUR);
 		for edge in triangle.get_edges().iter() {
-			let y_len = (edge.1 - edge.0).length();
+			let start = vertex_lookup.get(&edge.get_vertex_a_id()).unwrap();
+			let end = vertex_lookup.get(&edge.get_vertex_b_id()).unwrap();
+			let y_len = (end - start).length();
 			let mesh = meshes.add(Rectangle::from_size(Vec2::new(5.0, y_len)));
-			let translation = (edge.1 + edge.0) / 2.0;
-			let angle = Vec2::Y.angle_to(edge.0 - edge.1);
+			let translation = (end + start) / 2.0;
+			let angle = Vec2::Y.angle_to(start - end);
 			let tform = Transform {
 				translation: translation.extend(DELAUNAY_EDGE_Z),
 				rotation: Quat::from_rotation_z(angle),

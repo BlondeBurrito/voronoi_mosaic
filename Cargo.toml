@@ -59,10 +59,11 @@ bevy = { workspace = true, default-features = false, features = ["bevy_render", 
 
 [features]
 default = []
-3d_unstable =[]
+2d = []
+3d =[]
 
 [package.metadata.docs.rs]
-# features = ["3d_unstable"] # ignore documenting the 3d stuff until it's complete
+features = ["2d", "3d"]
 
 [profile.dev]
 opt-level = 1
@@ -109,36 +110,40 @@ harness = false
 
 [[example]]
 name = "2d_delaunay"
-path = "examples/2d_delaunay.rs"
+path = "examples/2d/2d_delaunay.rs"
+required-features = ["2d"]
 
 [[example]]
 name = "2d_voronoi"
-path = "examples/2d_voronoi.rs"
+path = "examples/2d/2d_voronoi.rs"
+required-features = ["2d"]
 
 [[example]]
 name = "2d_meshes"
-path = "examples/2d_meshes.rs"
+path = "examples/2d/2d_meshes.rs"
+required-features = ["2d"]
 
 [[example]]
 name = "2d_meshes_clipped"
-path = "examples/2d_meshes_clipped.rs"
+path = "examples/2d/2d_meshes_clipped.rs"
+required-features = ["2d"]
 
 [[example]]
 name = "3d_delaunay"
-path = "examples/3d_delaunay.rs"
-required-features = ["3d_unstable"]
+path = "examples/3d/3d_delaunay.rs"
+required-features = ["3d"]
 
 [[example]]
 name = "3d_voronoi"
-path = "examples/3d_voronoi.rs"
-required-features = ["3d_unstable"]
+path = "examples/3d/3d_voronoi.rs"
+required-features = ["3d"]
 
 [[example]]
 name = "3d_meshes"
-path = "examples/3d_meshes.rs"
-required-features = ["3d_unstable"]
+path = "examples/3d/3d_meshes.rs"
+required-features = ["3d"]
 
 [[example]]
 name = "3d_meshes_clipped"
-path = "examples/3d_meshes_clipped.rs"
-required-features = ["3d_unstable"]
+path = "examples/3d/3d_meshes_clipped.rs"
+required-features = ["3d"]
