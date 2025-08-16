@@ -207,10 +207,10 @@ fn find_shared_sets(
 			let mut shared_tri_ids = BTreeSet::from([this_tri_id]);
 			// loop over other triangles
 			for (other_tri_id, other_tri) in triangle_store.iter() {
-				if this_tri_id != other_tri_id 
-					&& other_tri.get_vertex_ids().contains(this_vert_id) {
-						// triangles share a common vertex ID, store other
-						shared_tri_ids.insert(other_tri_id);
+				if this_tri_id != other_tri_id && other_tri.get_vertex_ids().contains(this_vert_id)
+				{
+					// triangles share a common vertex ID, store other
+					shared_tri_ids.insert(other_tri_id);
 				}
 			}
 			if shared_tri_ids.len() >= 3 {

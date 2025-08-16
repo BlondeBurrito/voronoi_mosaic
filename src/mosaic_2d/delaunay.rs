@@ -244,8 +244,7 @@ fn compute_super_triangle_from_plane(
 	let bottom_right = Vec2::new(maximum_world_dimensions.x, minimum_world_dimensions.y);
 	let x = bottom_left.x + (bottom_right.x - bottom_left.x) / 2.0;
 	// we actually scale it away from the corners of the plane by a factor of 2 as if the plane is wide but thin then a very acute super triangle is produced which can cause holes in the triangualtion (all triangles formed with super verts that get removed at the end) when the data set is very small
-	let y = minimum_world_dimensions.y
-		- (maximum_world_dimensions.y - minimum_world_dimensions.y);
+	let y = minimum_world_dimensions.y - (maximum_world_dimensions.y - minimum_world_dimensions.y);
 	let sup_triangle_vert_a = Vec2::new(x, y);
 	// by treating the maximum y of the plane as a striahgt line parallel to x we can
 	// take line equations from the furthest point sup_triangle_vert_a with the

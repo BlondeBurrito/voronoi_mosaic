@@ -18,7 +18,10 @@ impl PartialEq for TetrahedronNode {
 	fn eq(&self, other: &Self) -> bool {
 		let (self_a, self_b, self_c, self_d) = (self.0[0], self.0[1], self.0[2], self.0[3]);
 
-		other.0.contains(&self_a) && other.0.contains(&self_b) && other.0.contains(&self_c) && other.0.contains(&self_d)
+		other.0.contains(&self_a)
+			&& other.0.contains(&self_b)
+			&& other.0.contains(&self_c)
+			&& other.0.contains(&self_d)
 	}
 }
 
@@ -118,6 +121,8 @@ mod tests {
 		let tet_h = TetrahedronNode::new(d, a, b, c);
 		let tet_l = TetrahedronNode::new(a, c, b, d);
 
-		assert!(tet_i == tet_j && tet_j == tet_k && tet_k == tet_h && tet_h == tet_l && tet_l == tet_i)
+		assert!(
+			tet_i == tet_j && tet_j == tet_k && tet_k == tet_h && tet_h == tet_l && tet_l == tet_i
+		)
 	}
 }

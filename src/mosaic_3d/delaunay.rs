@@ -169,7 +169,10 @@ impl Delaunay3d {
 		}
 
 		//TODO retry adding the problematic points
-		warn!("Number of problematic points ignored {}", problematic_points.len());
+		warn!(
+			"Number of problematic points ignored {}",
+			problematic_points.len()
+		);
 
 		// remove any tetrahedra that use vertices of the starting
 		// super-tetrahedra - these were not real points in the data set,
@@ -286,9 +289,11 @@ fn compute_super_tetrahedra(
 		for vertex_b in points.iter() {
 			for vertex_c in points.iter() {
 				for vertex_d in points.iter() {
-					if let Some(sphere) = Circumsphere::new(*vertex_a, *vertex_b, *vertex_c, *vertex_d)
-						&& sphere.get_radius_squared() > largest_radius_sq {
-							largest_radius_sq = sphere.get_radius_squared();
+					if let Some(sphere) =
+						Circumsphere::new(*vertex_a, *vertex_b, *vertex_c, *vertex_d)
+						&& sphere.get_radius_squared() > largest_radius_sq
+					{
+						largest_radius_sq = sphere.get_radius_squared();
 					}
 				}
 			}
@@ -304,10 +309,7 @@ fn compute_super_tetrahedra(
 }
 
 /// Given minimum and maximum bounds of space find the shared vertices of 4 super tetrahedra
-pub fn compute_super_tetra_vertices(
-	min_dimensions: &Vec3,
-	max_dimensions: &Vec3,
-) -> [Vec3; 6] {
+pub fn compute_super_tetra_vertices(min_dimensions: &Vec3, max_dimensions: &Vec3) -> [Vec3; 6] {
 	let delta_x = max_dimensions.x - min_dimensions.x;
 	let delta_y = max_dimensions.y - min_dimensions.y;
 	let delta_z = max_dimensions.z - min_dimensions.z;
@@ -346,9 +348,7 @@ pub fn compute_super_tetra_vertices(
 	let bottom = midpoint + Vec3::new(0.0, 0.0, -delta_z);
 	let left = midpoint + Vec3::new(-delta_x, 0.0, 0.0);
 	let right = midpoint + Vec3::new(delta_x, 0.0, 0.0);
-	[
-		up, down, top, bottom, left, right
-	]
+	[up, down, top, bottom, left, right]
 }
 
 /// Search through tetrahedra and identify any that do not qualify as Delaunay with respect to `point`

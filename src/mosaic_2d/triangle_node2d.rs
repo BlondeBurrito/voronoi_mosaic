@@ -102,6 +102,8 @@ mod tests {
 		let tri_h = TriangleNode2d::new(a, c, b);
 		let tri_l = TriangleNode2d::new(b, a, c);
 
-		assert!(tri_i == tri_j && tri_j == tri_k && tri_k == tri_h && tri_h == tri_l && tri_l == tri_i)
+		assert!(
+			tri_i == tri_j && tri_j == tri_k && tri_k == tri_h && tri_h == tri_l && tri_l == tri_i
+		)
 	}
 }
