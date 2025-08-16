@@ -210,3 +210,32 @@ fn compute_cells_from_tetrahedra_sets(
 	}
 	cells
 }
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+
+	#[test]
+	fn shared_groupings() {
+		let a = 0;
+		let b = 1;
+		let c = 2;
+		let d = 3;
+		let e = 4;
+		let f = 5;
+		let g = 6;
+		let tetra_store = BTreeMap::from([
+			(0, TetrahedronNode::new(a, b, c, d)),
+			(1, TetrahedronNode::new(a, b, d, c)),
+			(2, TetrahedronNode::new(a, b, e, f)),
+			(3, TetrahedronNode::new(e, b, c, g)),
+			(4, TetrahedronNode::new(d, b, c, f)),
+		]);
+		let sets = find_shared_sets(&tetra_store);
+		let actual: BTreeMap<BTreeSet<&usize>, &usize> = BTreeMap::from([
+			(BTreeSet::from([&0, &1, &2, &3, &4]), &b),
+			(BTreeSet::from([&0, &1, &3, &4]), &c),
+		]);
+		assert_eq!(actual, sets);
+	}
+}

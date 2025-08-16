@@ -169,10 +169,12 @@ impl Delaunay3d {
 		}
 
 		//TODO retry adding the problematic points
-		warn!(
-			"Number of problematic points ignored {}",
-			problematic_points.len()
-		);
+		if !problematic_points.is_empty() {
+			warn!(
+				"Number of problematic points ignored {}",
+				problematic_points.len()
+			);
+		}
 
 		// remove any tetrahedra that use vertices of the starting
 		// super-tetrahedra - these were not real points in the data set,
