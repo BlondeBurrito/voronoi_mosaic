@@ -11,7 +11,7 @@ pub use crate::mosaic_2d::{
 };
 
 #[doc(hidden)]
-#[cfg(feature = "3d_unstable")]
+#[cfg(feature = "3d")]
 pub use crate::mosaic_3d::{
 	Mosaic3d, circumsphere::*, delaunay::*, edge_node3d::*, tetrahedron_node::*,
 	triangle_node3d::*, voronoi::*,

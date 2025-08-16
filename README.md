@@ -245,7 +245,7 @@ For a full visualisation you can check out this exmaple [2d_meshes_clipped](http
 
 ### 3d
 
-*NB: 3d functionality is gated behind feature `3d_unstable` as parts of the API are volatile or still under development*
+*NB: parts of the 3d API are volatile or still under development*
 
 *NB: a concept of tolerance is built into some of the 3d calculations to handle cases where points within a data set are close together, however, if points within the data set are extremely close together then due to floating point arithmetic the conditions for a tetrahedron to be Delaunay can break down and cause undesirable face intersections across sliver (narrow) tetrahedra*
 
@@ -253,7 +253,7 @@ Update your Cargo.toml with
 
 ```toml
 [dependencies]
-voronoi_mosaic = { version = "x.y.z", features = ["3d_unstable"] }
+voronoi_mosaic = { version = "x.y.z", features = ["3d"] }
 ```
 
 <details>
@@ -295,6 +295,8 @@ For a full visualisation you can check out this example [3d_voronoi](https://git
 
 #### Meshes
 
+*NB: still in development*
+
 The Voronoi data can be converted into Bevy meshes like so:
 
 ```rust
@@ -313,6 +315,8 @@ if let Some(delaunay) = Delaunay3d::compute_triangulation_3d(&points) {
 For a full visualisation you can check out this example [3d_meshes](https://github.com/BlondeBurrito/voronoi_mosaic/blob/main/examples/3d/3d_meshes.rs).
 
 #### Clipping
+
+*NB: still in development*
 
 Voronoi Cells can be clipped to a boundary - this means that any Cells outside of a given boundary are dropped and any that overlap the boundary have their vertices clipped to the boundary edge.
 

@@ -137,13 +137,7 @@ fn visuals(
 				Vec2::new(-200.0, -200.0),
 				Vec2::new(200.0, -200.0),
 			];
-			create_clipped_mesh_visuals(
-				&mut cmds,
-				&mut meshes,
-				&mut materials,
-				voronoi,
-				&boundary,
-			);
+			create_clipped_mesh_visuals(&mut cmds, &mut meshes, &mut materials, voronoi, &boundary);
 		}
 	} else {
 		warn!("Data computation failed");

@@ -91,8 +91,6 @@ impl Voronoi3d {
 				let voronoi_id = voronoi_vertex_lookup.len();
 				voronoi_vertex_lookup.insert(voronoi_id, *centre);
 				tetrahedron_to_circumcentre_ids.insert(*tet_id, voronoi_id);
-			} else {
-				error!("Tet doesnt have circumsphere");
 			}
 		}
 

@@ -5,9 +5,8 @@ use std::collections::BTreeMap;
 
 use bevy::math::Vec3;
 
-use crate::{
-	mosaic_3d::{edge_node3d::EdgeNode3d, triangle_node3d::TriangleNode3d},
-	prelude::Circumsphere,
+use crate::mosaic_3d::{
+	circumsphere::Circumsphere, edge_node3d::EdgeNode3d, triangle_node3d::TriangleNode3d,
 };
 
 /// Describes a tetrahedron where the vertices are represented by vertex IDs

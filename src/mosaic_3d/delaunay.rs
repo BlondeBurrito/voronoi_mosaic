@@ -7,7 +7,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use crate::{mosaic_3d::tetrahedron_node::TetrahedronNode, prelude::Circumsphere};
+use crate::{mosaic_3d::circumsphere::Circumsphere, mosaic_3d::tetrahedron_node::TetrahedronNode};
 use bevy::prelude::*;
 
 /// Describes the tetrahedralization of a series of data points. Tetrahedra and
