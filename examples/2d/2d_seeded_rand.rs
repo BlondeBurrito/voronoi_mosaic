@@ -1,10 +1,12 @@
-//! Generates Delaunay Triangles, uses them to construct Voronoi Cells, clips
-//! them to a polygon and then produces Bevy meshes from the cells
+//! An example of meshes, clipped and unclipped using a seed to randomly pick
+//! a series of points in space to create the starting data
 //!
 //! The visibility of each layer can be toggled with the buttons
 //!
 
 use bevy::{color::palettes::css::WHITE, prelude::*};
+use rand::{SeedableRng, seq::IteratorRandom};
+use rand_chacha::ChaCha20Rng;
 use voronoi_mosaic::prelude::*;
 
 /// Z location of the generated meshes
@@ -50,7 +52,10 @@ fn setup(
 	mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
 	// camera
-	cmds.spawn((Camera2d,));
+	let mut orth = OrthographicProjection::default_2d();
+	orth.scale = 2.0;
+	let proj = Projection::Orthographic(orth);
+	cmds.spawn((Camera2d, proj));
 	// background plane
 	let mesh = meshes.add(Rectangle::from_length(450.0));
 	let material = materials.add(Color::srgb(0.75, 0.75, 0.75));
@@ -70,58 +75,25 @@ fn visuals(
 	mut meshes: ResMut<Assets<Mesh>>,
 	mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
-	// points to be used
-	let points = vec![
-		Vec2::new(-380.0, -380.0),
-		Vec2::new(-355.0, -375.0),
-		Vec2::new(-350.0, -233.0),
-		Vec2::new(-241.0, -296.0),
-		Vec2::new(-169.0, -201.0),
-		Vec2::new(-124.0, -86.0),
-		Vec2::new(-53.0, -124.0),
-		Vec2::new(-94.0, -75.0),
-		Vec2::new(-22.0, -35.0),
-		//
-		Vec2::new(366.0, -24.0),
-		Vec2::new(340.0, -284.0),
-		Vec2::new(285.0, -165.0),
-		Vec2::new(236.0, -94.0),
-		Vec2::new(156.0, -156.0),
-		Vec2::new(120.0, -85.0),
-		Vec2::new(99.0, -33.0),
-		Vec2::new(72.0, -199.0),
-		Vec2::new(16.0, -350.0),
-		//
-		Vec2::new(352.0, 42.0),
-		Vec2::new(326.0, 107.0),
-		Vec2::new(256.0, 251.0),
-		Vec2::new(175.0, 365.0),
-		Vec2::new(142.0, 168.0),
-		Vec2::new(102.0, 72.0),
-		Vec2::new(84.0, 192.0),
-		Vec2::new(58.0, 247.0),
-		Vec2::new(19.0, 27.0),
-		//
-		Vec2::new(-385.0, 36.0),
-		Vec2::new(-321.0, 354.0),
-		Vec2::new(-276.0, 68.0),
-		Vec2::new(-244.0, 302.0),
-		Vec2::new(-153.0, 168.0),
-		Vec2::new(-122.0, 272.0),
-		Vec2::new(-84.0, 196.0),
-		Vec2::new(-63.0, 241.0),
-		Vec2::new(-24.0, 202.0),
-		//
-		Vec2::new(399.0, 399.0),
-		Vec2::new(-399.0, 399.0),
-		Vec2::new(-399.0, -399.0),
-		Vec2::new(399.0, -399.0),
-		//
-		Vec2::new(0.0, 399.0),
-		Vec2::new(-399.0, 0.0),
-		Vec2::new(0.0, -399.0),
-		Vec2::new(399.0, 0.0),
-	];
+	let mut rng_seed = ChaCha20Rng::seed_from_u64(123456789);
+	let mut points = vec![];
+	let point_count = 200;
+	while points.len() < point_count {
+		let x_range = std::ops::Range {
+			start: -1000,
+			end: 1000,
+		};
+		let y_range = std::ops::Range {
+			start: -1000,
+			end: 1000,
+		};
+		let x = x_range.step_by(100).choose(&mut rng_seed).unwrap();
+		let y = y_range.step_by(100).choose(&mut rng_seed).unwrap();
+		let point = Vec2::new(x as f32, y as f32);
+		if !points.contains(&point) {
+			points.push(point);
+		}
+	}
 	// compute data
 	let mosaic = Mosaic2d::new(&points);
 	if let Some(delaunay) = mosaic.get_delaunay() {
@@ -130,7 +102,7 @@ fn visuals(
 			// create the voronoi markers before mutation so it can be
 			// seen with the actual meshes how they have been clipped
 			create_voronoi_cell_visuals(&mut cmds, &mut meshes, &mut materials, voronoi);
-			// let boundary = vec![Vec2::new(400.0, 400.0), Vec2::new(-400.0, 400.0), Vec2::new(-400.0, -400.0), Vec2::new(400.0, -400.0)];
+			create_mesh_visuals(&mut cmds, &mut meshes, &mut materials, voronoi);
 			let boundary = vec![
 				Vec2::new(200.0, 200.0),
 				Vec2::new(-200.0, 200.0),
@@ -257,12 +229,38 @@ fn create_voronoi_cell_visuals(
 
 /// Labels an entity in the bevy mesh view for querying
 #[derive(Component)]
+struct MeshLabel;
+
+/// Create the meshes
+fn create_mesh_visuals(
+	cmds: &mut Commands,
+	meshe_assets: &mut ResMut<Assets<Mesh>>,
+	materials: &mut ResMut<Assets<ColorMaterial>>,
+	voronoi: &Voronoi2d,
+) {
+	let meshes = voronoi.as_bevy2d_meshes();
+	for (i, (mesh, position)) in meshes.values().enumerate() {
+		// randomise mesh colour
+		let colour = Color::hsl(360. * i as f32 / meshes.len() as f32, 0.95, 0.7);
+		let tform = Transform::from_translation(position.extend(MESH_Z));
+		cmds.spawn((
+			Mesh2d(meshe_assets.add(mesh.clone())),
+			MeshMaterial2d(materials.add(colour)),
+			tform,
+			MeshLabel,
+			Visibility::Visible,
+		));
+	}
+}
+
+/// Labels an entity in the bevy mesh view for querying
+#[derive(Component)]
 struct MeshClippedLabel;
 
 /// Create the meshes
 fn create_clipped_mesh_visuals(
 	cmds: &mut Commands,
-	mesh_assets: &mut ResMut<Assets<Mesh>>,
+	meshe_assets: &mut ResMut<Assets<Mesh>>,
 	materials: &mut ResMut<Assets<ColorMaterial>>,
 	voronoi: &Voronoi2d,
 	boundary: &[Vec2],
@@ -273,11 +271,11 @@ fn create_clipped_mesh_visuals(
 		let colour = Color::hsl(360. * i as f32 / meshes.len() as f32, 0.95, 0.7);
 		let tform = Transform::from_translation(position.extend(MESH_Z));
 		cmds.spawn((
-			Mesh2d(mesh_assets.add(mesh.clone())),
+			Mesh2d(meshe_assets.add(mesh.clone())),
 			MeshMaterial2d(materials.add(colour)),
 			tform,
 			MeshClippedLabel,
-			Visibility::Visible,
+			Visibility::Hidden,
 		));
 	}
 }
@@ -291,6 +289,8 @@ enum ButtonLabel {
 	Voronoi,
 	/// Button label to toggle mesh visibility
 	Mesh,
+	/// Clipped meshes
+	Clipped,
 }
 
 impl std::fmt::Display for ButtonLabel {
@@ -299,6 +299,7 @@ impl std::fmt::Display for ButtonLabel {
 			ButtonLabel::Delaunay => write!(f, "Toggle Delaunay"),
 			ButtonLabel::Voronoi => write!(f, "Toggle Voronoi"),
 			ButtonLabel::Mesh => write!(f, "Toggle Meshes"),
+			ButtonLabel::Clipped => write!(f, "Toggle Clipped"),
 		}
 	}
 }
@@ -309,6 +310,7 @@ fn create_ui_buttons(mut cmds: Commands) {
 		ButtonLabel::Delaunay,
 		ButtonLabel::Voronoi,
 		ButtonLabel::Mesh,
+		ButtonLabel::Clipped,
 	];
 	cmds.spawn(Node {
 		flex_direction: FlexDirection::Column,
@@ -352,6 +354,7 @@ fn handle_toggle_buttons(
 		(
 			With<DelaunayLabel>,
 			Without<VoronoiLabel>,
+			Without<MeshLabel>,
 			Without<MeshClippedLabel>,
 		),
 	>,
@@ -360,6 +363,7 @@ fn handle_toggle_buttons(
 		(
 			Without<DelaunayLabel>,
 			With<VoronoiLabel>,
+			Without<MeshLabel>,
 			Without<MeshClippedLabel>,
 		),
 	>,
@@ -368,6 +372,16 @@ fn handle_toggle_buttons(
 		(
 			Without<DelaunayLabel>,
 			Without<VoronoiLabel>,
+			With<MeshLabel>,
+			Without<MeshClippedLabel>,
+		),
+	>,
+	mut mesh_clipped_q: Query<
+		&mut Visibility,
+		(
+			Without<DelaunayLabel>,
+			Without<VoronoiLabel>,
+			Without<MeshLabel>,
 			With<MeshClippedLabel>,
 		),
 	>,
@@ -389,6 +403,11 @@ fn handle_toggle_buttons(
 					}
 					ButtonLabel::Mesh => {
 						for mut vis in &mut mesh_q {
+							vis.toggle_visible_hidden();
+						}
+					}
+					ButtonLabel::Clipped => {
+						for mut vis in &mut mesh_clipped_q {
 							vis.toggle_visible_hidden();
 						}
 					}

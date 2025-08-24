@@ -101,6 +101,7 @@ impl TetrahedronNode {
 			),
 		]
 	}
+	//TODO bool degenerate check? Could use 3d trinagle degenerancy check
 }
 
 #[cfg(test)]

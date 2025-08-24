@@ -108,6 +108,7 @@ impl Delaunay3d {
 				}
 
 				//TODO is this needed?
+				//TODO should check for degenerancy?
 				// only store a new tetra if it is Delaunay - test to
 				// // ensure it doesn't intersect with any existing tetras
 				while let Some(n_tet) = new_tetras.pop() {

@@ -129,6 +129,11 @@ path = "examples/2d/2d_meshes_clipped.rs"
 required-features = ["2d"]
 
 [[example]]
+name = "2d_seeded_rand"
+path = "examples/2d/2d_seeded_rand.rs"
+required-features = ["2d"]
+
+[[example]]
 name = "3d_delaunay"
 path = "examples/3d/3d_delaunay.rs"
 required-features = ["3d"]
