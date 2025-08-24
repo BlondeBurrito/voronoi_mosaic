@@ -12,7 +12,7 @@ Bevy mesh generation from a series of points in space using [Delaunay Triangulat
 
 | bevy | voronoi_mosaic |
 |------|----------------|
-| 0.16 | 0.1 - 0.3 |
+| 0.16 | 0.1 - 0.4 |
 
 ## Table of Contents
 

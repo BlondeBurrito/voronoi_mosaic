@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.0] - 2025-08-24
+
+### Bug Fixes
+
+- Resolved cell vertex duplication from overlapping circumcentres (#5)
+
 ## [0.3.0] - 2025-08-16
 
 ### Refactor
