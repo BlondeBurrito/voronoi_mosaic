@@ -81,18 +81,9 @@ impl Voronoi3d {
 		let delaunay_vertex_lookup = delaunay.get_vertex_lookup();
 
 		// store IDs for all the cirumcentres
-		let mut voronoi_vertex_lookup = BTreeMap::new();
 		// store the tetrahedron ID and what circumcentre ID is corresponds to
-		let mut tetrahedron_to_circumcentre_ids = BTreeMap::new();
-
-		for (tet_id, tet) in tetras_store.iter() {
-			if let Some(circumsphere) = tet.compute_circumsphere(delaunay_vertex_lookup) {
-				let centre = circumsphere.get_centre();
-				let voronoi_id = voronoi_vertex_lookup.len();
-				voronoi_vertex_lookup.insert(voronoi_id, *centre);
-				tetrahedron_to_circumcentre_ids.insert(*tet_id, voronoi_id);
-			}
-		}
+		let (voronoi_vertex_lookup, tetrahedron_to_circumcentre_ids) =
+			create_voronoi_lookup(tetras_store, delaunay_vertex_lookup);
 
 		// loop thorugh tetrahedra and find cases where 4 or more tetrahedra
 		// have a vertex id in common, this means that the circumcentres of
@@ -130,6 +121,45 @@ impl Voronoi3d {
 	}
 }
 
+/// Find and store all Voronoi vertices with a unique ID for each one.
+/// Additionally create a map of tetrahedron ids to circumcircle ids
+fn create_voronoi_lookup(
+	tetras_store: &BTreeMap<usize, TetrahedronNode>,
+	delaunay_vertex_lookup: &BTreeMap<usize, Vec3>,
+) -> (BTreeMap<usize, Vec3>, BTreeMap<usize, usize>) {
+	// store IDs for all the cirumcentres
+	let mut voronoi_vertex_lookup = BTreeMap::new();
+	// store the triangle ID and what circumcentre ID is corresponds to
+	let mut tetrahedron_to_circumcentre_ids = BTreeMap::new();
+
+	let mut temp_centre_store = vec![];
+	let mut temp_id_store = vec![];
+	for (tet_id, tet) in tetras_store.iter() {
+		if let Some(circumsphere) = tet.compute_circumsphere(delaunay_vertex_lookup) {
+			let centre = circumsphere.get_centre();
+			let voronoi_id = voronoi_vertex_lookup.len();
+			// handle cases where centres overlap, link the tetra
+			// creating a duplicate centre to an exsting circumspehre id
+			if !temp_centre_store.contains(centre) {
+				temp_centre_store.push(*centre);
+				temp_id_store.push(voronoi_id);
+
+				voronoi_vertex_lookup.insert(voronoi_id, *centre);
+				tetrahedron_to_circumcentre_ids.insert(*tet_id, voronoi_id);
+			} else {
+				for (i, t) in temp_centre_store.iter().enumerate() {
+					if *t == *centre {
+						let shared_voronoi_id = temp_id_store.get(i).unwrap();
+						tetrahedron_to_circumcentre_ids.insert(*tet_id, *shared_voronoi_id);
+						break;
+					}
+				}
+			}
+		}
+	}
+	(voronoi_vertex_lookup, tetrahedron_to_circumcentre_ids)
+}
+
 /// Compare the vertices of tetrahedra and identify groupings of IDs whereby 4
 /// or more tetrahedra share a vertex.
 ///
@@ -142,11 +172,11 @@ fn find_shared_sets(
 		// loop through all vertex IDs
 		for this_vert_id in this_tet.get_vertex_ids() {
 			let mut shared_tet_ids = BTreeSet::from([this_tet_id]);
-			// loop over other triangles
+			// loop over other tetras
 			for (other_tet_id, other_tet) in tetras_store.iter() {
 				if this_tet_id != other_tet_id && other_tet.get_vertex_ids().contains(this_vert_id)
 				{
-					// triangles share a common vertex ID, store other
+					// tetras share a common vertex ID, store other
 					shared_tet_ids.insert(other_tet_id);
 				}
 			}
@@ -172,8 +202,17 @@ fn compute_cells_from_tetrahedra_sets(
 		let mut vertex_ids = vec![];
 		for tet_id in tet_ids.iter() {
 			if let Some(circum_id) = tetrahedron_to_circumcentre_ids.get(tet_id) {
-				vertex_ids.push(*circum_id);
+				// avoid duplciates from overlapping circumcentres
+				if !vertex_ids.contains(circum_id) {
+					vertex_ids.push(*circum_id);
+				}
+			} else {
+				warn!("Failed to lookup circumcentre ID");
 			}
+		}
+		// if duplacites removed and len drops below 4 then the cell is no longer valid
+		if vertex_ids.len() < 4 {
+			continue;
 		}
 		//TODO need to find a way of linking the vertices
 

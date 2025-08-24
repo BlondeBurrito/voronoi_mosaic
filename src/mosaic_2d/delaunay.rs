@@ -139,9 +139,6 @@ impl Delaunay2d {
 			})
 		} else {
 			warn!("No triangulation found");
-			for (key, value) in vertex_lookup.iter() {
-				warn!("key {}, value {}", key, value);
-			}
 			None
 		}
 	}

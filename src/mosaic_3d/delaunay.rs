@@ -108,7 +108,6 @@ impl Delaunay3d {
 				}
 
 				//TODO is this needed?
-				//TODO should check for degenerancy?
 				// only store a new tetra if it is Delaunay - test to
 				// // ensure it doesn't intersect with any existing tetras
 				while let Some(n_tet) = new_tetras.pop() {
@@ -160,6 +159,9 @@ impl Delaunay3d {
 					// if the tetra has no circumsphere then consider it invalid,
 					// i.e its vertices are coplanar so it is degenerate
 					if n_tet.compute_circumsphere(&vertex_lookup).is_none() {
+						is_valid = false;
+					}
+					if n_tet.is_degenerate(&vertex_lookup) {
 						is_valid = false;
 					}
 					if is_valid {
