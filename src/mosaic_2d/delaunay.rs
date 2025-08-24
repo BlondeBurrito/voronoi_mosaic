@@ -103,8 +103,10 @@ impl Delaunay2d {
 					let b = edge.get_vertex_a_id();
 					let c = edge.get_vertex_b_id();
 					let mut new_tri = TriangleNode2d::new(a, b, c);
-					new_tri.sort_vertices_anti_clockwise(&vertex_lookup);
-					triangles.insert(new_tri);
+					if !new_tri.is_degenerate(&vertex_lookup) {
+						new_tri.sort_vertices_anti_clockwise(&vertex_lookup);
+						triangles.insert(new_tri);
+					}
 				}
 			}
 		}

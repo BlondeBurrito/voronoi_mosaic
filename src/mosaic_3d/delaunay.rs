@@ -161,6 +161,9 @@ impl Delaunay3d {
 					if n_tet.compute_circumsphere(&vertex_lookup).is_none() {
 						is_valid = false;
 					}
+					if n_tet.is_degenerate(&vertex_lookup) {
+						is_valid = false;
+					}
 					if is_valid {
 						tetrahedra.insert(n_tet);
 					}

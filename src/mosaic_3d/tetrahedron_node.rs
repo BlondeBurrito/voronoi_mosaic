@@ -3,7 +3,7 @@
 
 use std::collections::BTreeMap;
 
-use bevy::math::Vec3;
+use bevy::math::{Mat3, Vec3};
 
 use crate::mosaic_3d::{
 	circumsphere::Circumsphere, edge_node3d::EdgeNode3d, triangle_node3d::TriangleNode3d,
@@ -101,6 +101,19 @@ impl TetrahedronNode {
 			),
 		]
 	}
+	/// Compute the volume of the tetrahedron (actually 6x volume but doesn't
+	/// matter), if zero then it means its vertices are coplanar and this
+	/// tetrahedron is degenerate
+	pub fn is_degenerate(&self, vertex_lookup: &BTreeMap<usize, Vec3>) -> bool {
+		let a = vertex_lookup.get(&self.get_vertex_a_id()).unwrap();
+		let b = vertex_lookup.get(&self.get_vertex_b_id()).unwrap();
+		let c = vertex_lookup.get(&self.get_vertex_c_id()).unwrap();
+		let d = vertex_lookup.get(&self.get_vertex_d_id()).unwrap();
+
+		let mat = Mat3::from_cols(a - d, b - d, c - d);
+		//TODO should use a tolerance to consider very small volumes as being degenerate?
+		mat.determinant() == 0.0
+	}
 }
 
 #[cfg(test)]
@@ -157,5 +170,37 @@ mod tests {
 			[d, b],
 			[edges[5].get_vertex_a_id(), edges[5].get_vertex_b_id()]
 		);
+	}
+
+	#[test]
+	fn degenerate_true() {
+		let a = 0;
+		let b = 1;
+		let c = 2;
+		let d = 3;
+		let vertex_lookup = BTreeMap::from([
+			(a, Vec3::new(-5.0, -5.0, 5.0)),
+			(b, Vec3::new(-5.0, -5.0, 10.0)),
+			(c, Vec3::new(-5.0, -5.0, 15.0)),
+			(d, Vec3::new(-5.0, -5.0, 20.0)),
+		]);
+		let tetrahedron = TetrahedronNode::new(a, b, c, d);
+		assert!(tetrahedron.is_degenerate(&vertex_lookup));
+	}
+
+	#[test]
+	fn degenerate_false() {
+		let a = 0;
+		let b = 1;
+		let c = 2;
+		let d = 3;
+		let vertex_lookup = BTreeMap::from([
+			(a, Vec3::new(0.0, 10.0, 0.0)),
+			(b, Vec3::new(-10.0, 0.0, -10.0)),
+			(c, Vec3::new(10.0, 0.0, -10.0)),
+			(d, Vec3::new(0.0, 0.0, -20.0)),
+		]);
+		let tetrahedron = TetrahedronNode::new(a, b, c, d);
+		assert!(!tetrahedron.is_degenerate(&vertex_lookup));
 	}
 }

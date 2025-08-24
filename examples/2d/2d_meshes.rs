@@ -249,7 +249,7 @@ struct MeshLabel;
 /// Create the meshes
 fn create_mesh_visuals(
 	cmds: &mut Commands,
-	meshe_assets: &mut ResMut<Assets<Mesh>>,
+	mesh_assets: &mut ResMut<Assets<Mesh>>,
 	materials: &mut ResMut<Assets<ColorMaterial>>,
 	voronoi: &Voronoi2d,
 ) {
@@ -259,7 +259,7 @@ fn create_mesh_visuals(
 		let colour = Color::hsl(360. * i as f32 / meshes.len() as f32, 0.95, 0.7);
 		let tform = Transform::from_translation(position.extend(MESH_Z));
 		cmds.spawn((
-			Mesh2d(meshe_assets.add(mesh.clone())),
+			Mesh2d(mesh_assets.add(mesh.clone())),
 			MeshMaterial2d(materials.add(colour)),
 			tform,
 			MeshLabel,

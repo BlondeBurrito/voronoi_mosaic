@@ -85,6 +85,15 @@ impl TriangleNode2d {
 			}
 		});
 	}
+	/// Checks if the triangle is degenerate, i.e vertices are colinear/an angle is zero
+	pub fn is_degenerate(&self, vertex_lookup: &BTreeMap<usize, Vec2>) -> bool {
+		let a = vertex_lookup.get(&self.get_vertex_a_id()).unwrap();
+		let b = vertex_lookup.get(&self.get_vertex_b_id()).unwrap();
+		let c = vertex_lookup.get(&self.get_vertex_c_id()).unwrap();
+
+		let twice_area = a.x * (b.y - c.y) + b.x * (c.y - a.y) + c.x * (a.y - b.y);
+		twice_area == 0.0
+	}
 }
 
 #[cfg(test)]
@@ -120,5 +129,33 @@ mod tests {
 		let mut triangle = TriangleNode2d::new(a, b, c);
 		triangle.sort_vertices_anti_clockwise(&vertex_lookup);
 		assert_eq!([c, b, a], *triangle.get_vertex_ids());
+	}
+
+	#[test]
+	fn degenerate_true() {
+		let a = 0;
+		let b = 1;
+		let c = 2;
+		let vertex_lookup = BTreeMap::from([
+			(a, Vec2::new(-5.0, 5.0)),
+			(b, Vec2::new(-5.0, 10.0)),
+			(c, Vec2::new(-5.0, 15.0)),
+		]);
+		let triangle = TriangleNode2d::new(a, b, c);
+		assert!(triangle.is_degenerate(&vertex_lookup))
+	}
+
+	#[test]
+	fn degenerate_false() {
+		let a = 0;
+		let b = 1;
+		let c = 2;
+		let vertex_lookup = BTreeMap::from([
+			(a, Vec2::new(-5.0, 0.0)),
+			(b, Vec2::new(0.0, 10.0)),
+			(c, Vec2::new(5.0, 0.0)),
+		]);
+		let triangle = TriangleNode2d::new(a, b, c);
+		assert!(!triangle.is_degenerate(&vertex_lookup))
 	}
 }

@@ -151,6 +151,7 @@ impl TriangleNode3d {
 		}
 		false
 	}
+	//TODO add degenerate bool check like 2d version?
 }
 
 #[cfg(test)]

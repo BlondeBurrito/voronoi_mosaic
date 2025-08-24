@@ -123,6 +123,7 @@ impl Voronoi2d {
 		let cells = self.get_cells();
 		let vertex_lookup = self.get_vertex_lookup();
 		for (id, cell) in cells.iter() {
+			let origin = cell.get_centre_position(vertex_lookup);
 			let cell_vertex_ids = cell.get_vertex_ids();
 			// find the vertices in real-space
 			let mut cell_vertices = vec![];
@@ -130,16 +131,16 @@ impl Voronoi2d {
 				let point = vertex_lookup.get(id).unwrap();
 				cell_vertices.push(*point);
 			}
+			sort_vertices_2d(&mut cell_vertices, &origin);
 
 			// normalise vertices around origin 0,0
-			let cell_vertices_normalised: Vec<Vec2> = cell_vertices
-				.iter()
-				.map(|v| v - cell.get_centre_position(vertex_lookup))
-				.collect();
-
+			let cell_vertices_normalised: Vec<Vec2> =
+				cell_vertices.iter().map(|v| v - origin).collect();
 			if let Some(mesh) = triangulate_mesh(&cell_vertices_normalised) {
-				let origin = cell.get_centre_position(vertex_lookup);
 				meshes.insert(*id, (mesh, origin));
+			} else {
+				warn!("Failed to generate a mesh");
+				warn!("Cell vertices {:?}", cell_vertices);
 			}
 		}
 		meshes
@@ -192,12 +193,30 @@ fn create_voronoi_lookup(
 	let mut voronoi_vertex_lookup = BTreeMap::new();
 	// store the triangle ID and what circumcentre ID is corresponds to
 	let mut triangle_to_circumcentre_ids = BTreeMap::new();
+
+	let mut temp_centre_store = vec![];
+	let mut temp_id_store = vec![];
 	for (tri_id, triangle) in triangle_store.iter() {
 		if let Some(circumcircle) = triangle.compute_circumcircle(delaunay_vertex_lookup) {
 			let centre = circumcircle.get_centre();
 			let voronoi_id = voronoi_vertex_lookup.len();
-			voronoi_vertex_lookup.insert(voronoi_id, *centre);
-			triangle_to_circumcentre_ids.insert(*tri_id, voronoi_id);
+			// NB: if you take a square made of two triangles their circumcentres will overlap
+			// ignore overlapping circumcentres and link the triangle to the existing stored lookup
+			if !temp_centre_store.contains(centre) {
+				temp_centre_store.push(*centre);
+				temp_id_store.push(voronoi_id);
+
+				voronoi_vertex_lookup.insert(voronoi_id, *centre);
+				triangle_to_circumcentre_ids.insert(*tri_id, voronoi_id);
+			} else {
+				for (i, t) in temp_centre_store.iter().enumerate() {
+					if *t == *centre {
+						let shared_voronoi_id = temp_id_store.get(i).unwrap();
+						triangle_to_circumcentre_ids.insert(*tri_id, *shared_voronoi_id);
+						break;
+					}
+				}
+			}
 		}
 	}
 	(voronoi_vertex_lookup, triangle_to_circumcentre_ids)
@@ -247,8 +266,17 @@ fn compute_cells_from_triangle_sets(
 		let mut vertex_ids = vec![];
 		for tri_id in tri_ids.iter() {
 			if let Some(circum_id) = triangle_to_circumcentre_ids.get(tri_id) {
-				vertex_ids.push(*circum_id);
+				// avoid duplciates from overlapping circumcentres
+				if !vertex_ids.contains(circum_id) {
+					vertex_ids.push(*circum_id);
+				}
+			} else {
+				warn!("Failed to lookup circumcentre ID");
 			}
+		}
+		// if duplacites removed and len drops below 3 then the cell is no onger valid
+		if vertex_ids.len() < 3 {
+			continue;
 		}
 		// order the vertex ids in an anti-clockwise fashion about their centre
 		let midpoint = {
@@ -290,7 +318,10 @@ fn triangulate_mesh(offset_cell_vertices: &Vec<Vec2>) -> Option<Mesh> {
 		let delaunay_vertex_lookup = delaunay.get_vertex_lookup();
 
 		// store all the vertices of the mesh
-		let positions: Vec<Vec3> = offset_cell_vertices.iter().map(|v| v.extend(0.0)).collect();
+		let positions: Vec<Vec3> = delaunay_vertex_lookup
+			.values()
+			.map(|v| v.extend(0.0))
+			.collect();
 		let normals = vec![Vec3::Z; positions.len()];
 		let uvs = compute_mesh_uvs(&positions);
 
@@ -323,15 +354,14 @@ fn triangulate_mesh(offset_cell_vertices: &Vec<Vec2>) -> Option<Mesh> {
 
 		Some(mesh)
 	} else {
-		warn!("Cannot compute triangulation for cell mesh");
 		None
 	}
 }
 
 /// Each vertex of a mesh requires a UV coordinate. A UV coordinate describes
 /// the texture mapping of a surface. UVs range from `[0, 0]` to `[1, 1]` with
-/// the origin being located in the bottom left corner of the surface and the
-/// maximum a the top right
+/// the origin being located in the top left (Bevy convention) corner of the
+/// surface and the maximum a the bottom right
 fn compute_mesh_uvs(vertices: &[Vec3]) -> Vec<Vec2> {
 	// find min-max x-y of vertices to allow them to be normalised in range of [0,0] [1, 1]
 	let mut min = Vec2::ZERO;
@@ -353,7 +383,10 @@ fn compute_mesh_uvs(vertices: &[Vec3]) -> Vec<Vec2> {
 	let mut uvs = vec![];
 	for v in vertices {
 		// transpose v coordinate to uv coordinate space
-		let transposed = v.truncate() - min;
+		let mut transposed = v.truncate() - Vec2::new(min.x, max.y);
+		if transposed.y.is_sign_negative() {
+			transposed.y *= -1.0;
+		}
 		if max - min != Vec2::ZERO {
 			// normalise transposed based on coord range to bring
 			// it in between 0 and 1
@@ -361,6 +394,7 @@ fn compute_mesh_uvs(vertices: &[Vec3]) -> Vec<Vec2> {
 			uvs.push(uv);
 		} else {
 			// safety
+			warn!("Failed to calcualte UV, defaulting to one");
 			uvs.push(Vec2::ONE);
 		}
 	}
@@ -632,10 +666,10 @@ mod tests {
 			Vec3::new(-5.0, 5.0, 0.0),
 		];
 		let actual = vec![
-			Vec2::new(0.0, 0.0),
-			Vec2::new(1.0, 0.0),
-			Vec2::new(1.0, 1.0),
 			Vec2::new(0.0, 1.0),
+			Vec2::new(1.0, 1.0),
+			Vec2::new(1.0, 0.0),
+			Vec2::new(0.0, 0.0),
 		];
 		assert_eq!(actual, compute_mesh_uvs(&vertices));
 	}
@@ -670,6 +704,24 @@ mod tests {
 			create_voronoi_lookup(triangle_store, delaunay_vertex_lookup);
 		assert!(voronoi_vertex_lookup.len() == 8);
 		assert!(triangle_to_circumcentre_ids.len() == 8);
+	}
+	#[test]
+	fn voronoi_lookup2() {
+		// special case of a a square made of 2 triangles, circumcentres overlap,
+		// ensure lookup records both trinagles sharing same circumcentre ID
+		let points = vec![
+			Vec2::new(10.0, -10.0),
+			Vec2::new(10.0, 10.0),
+			Vec2::new(-10.0, 10.0),
+			Vec2::new(-10.0, -10.0),
+		];
+		let delaunay = Delaunay2d::compute_triangulation_2d(&points).unwrap();
+		let triangle_store = delaunay.get_triangles();
+		let delaunay_vertex_lookup = delaunay.get_vertex_lookup();
+		let (voronoi_vertex_lookup, triangle_to_circumcentre_ids) =
+			create_voronoi_lookup(triangle_store, delaunay_vertex_lookup);
+		assert_eq!(voronoi_vertex_lookup.len(), 1);
+		assert_eq!(triangle_to_circumcentre_ids.len(), 2);
 	}
 	#[test]
 	fn compute_cells() {
