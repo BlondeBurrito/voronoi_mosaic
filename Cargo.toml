@@ -26,7 +26,7 @@ unimplemented = "warn"
 
 # Centralised way of managing versions across all crates and packages
 [workspace.dependencies]
-bevy = { version = "0.16", default-features = false, features = ["bevy_log"]}
+bevy = { version = "0.17", default-features = false, features = ["bevy_log"]}
 
 [package]
 name = "voronoi_mosaic"

@@ -15,8 +15,8 @@ use crate::{
 };
 use bevy::{
 	asset::RenderAssetUsages,
+	mesh::{Indices, PrimitiveTopology},
 	prelude::*,
-	render::mesh::{Indices, PrimitiveTopology},
 };
 
 /// The vertices of a Voronoi Cell in 2-dimensions
